@@ -6,4 +6,5 @@ export type HomeScreenProps = {
 	mode: DictionaryMode;
 	favorites: WordResult[];
 	onRemoveFavorite: (word: WordResult) => void;
+	userName: string;
 };

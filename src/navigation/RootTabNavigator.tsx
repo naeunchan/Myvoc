@@ -26,6 +26,7 @@ export function RootTabNavigator({
 	mode,
 	onModeChange,
 	lastQuery,
+	userName,
 }: RootTabNavigatorProps) {
 	return (
 		<Tab.Navigator
@@ -54,14 +55,24 @@ export function RootTabNavigator({
 						lastSearchedWord={lastQuery}
 						mode={mode}
 						favorites={favorites}
-						onRemoveFavorite={onToggleFavorite}
+						onRemoveFavorite={(word) => {
+							void onToggleFavorite(word);
+						}}
+						userName={userName}
 					/>
 				)}
 			</Tab.Screen>
 			<Tab.Screen
 				name="Favorites"
 			>
-				{() => <FavoritesScreen favorites={favorites} onRemove={onToggleFavorite} />}
+				{() => (
+					<FavoritesScreen
+						favorites={favorites}
+						onRemove={(word) => {
+							void onToggleFavorite(word);
+						}}
+					/>
+				)}
 			</Tab.Screen>
 			<Tab.Screen
 				name="Search"
@@ -73,8 +84,10 @@ export function RootTabNavigator({
 						onSubmit={onSubmitSearch}
 						loading={loading}
 						error={error}
-						result={result}
-						onToggleFavorite={onToggleFavorite}
+							result={result}
+							onToggleFavorite={(word) => {
+								void onToggleFavorite(word);
+							}}
 						isCurrentFavorite={isCurrentFavorite}
 						onPlayPronunciation={onPlayPronunciation}
 						mode={mode}

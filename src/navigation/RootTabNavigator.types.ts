@@ -14,4 +14,5 @@ export type RootTabNavigatorProps = {
 	mode: DictionaryMode;
 	onModeChange: (mode: DictionaryMode) => void;
 	lastQuery: string | null;
+	userName: string;
 };
