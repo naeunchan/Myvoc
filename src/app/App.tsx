@@ -3,9 +3,9 @@ import { StatusBar } from "expo-status-bar";
 import { Audio } from "expo-av";
 import React, { useCallback, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { RootTabNavigator } from "@/components/navigation/RootTabNavigator";
-import { getWordData } from "@/components/dictionary/api/getWordData";
-import { DictionaryMode, WordResult } from "@/components/dictionary/types";
+import { RootTabNavigator } from "@/navigation/RootTabNavigator";
+import { getWordData } from "@/features/dictionary/api/getWordData";
+import { DictionaryMode, WordResult } from "@/features/dictionary/types";
 
 export default function App() {
 	const [searchTerm, setSearchTerm] = useState("");
