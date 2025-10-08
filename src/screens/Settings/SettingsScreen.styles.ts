@@ -23,4 +23,16 @@ export const styles = StyleSheet.create({
 		color: "#4b5563",
 		marginBottom: 24,
 	},
+	homeButton: {
+		marginTop: 32,
+		backgroundColor: "#2563eb",
+		paddingVertical: 14,
+		borderRadius: 12,
+		alignItems: "center",
+	},
+	homeButtonText: {
+		color: "#ffffff",
+		fontSize: 16,
+		fontWeight: "600",
+	},
 });

@@ -8,9 +8,12 @@ import { RootTabNavigator } from "@/navigation/RootTabNavigator";
 import { getWordData } from "@/features/dictionary/api/getWordData";
 import { DictionaryMode, WordResult } from "@/features/dictionary/types";
 import {
+	clearSession,
+	createUser,
+	findUserByUsername,
 	getActiveSession,
 	getFavoritesByUser,
-	getOrCreateUser,
+	hashPassword,
 	initializeDatabase,
 	removeFavoriteForUser,
 	setGuestSession,
@@ -18,6 +21,49 @@ import {
 	upsertFavoriteForUser,
 	type UserRecord,
 } from "@/database";
+const GOOGLE_USERNAME_MIN_LENGTH = 6;
+const GOOGLE_USERNAME_MAX_LENGTH = 30;
+
+function getGoogleUsernameValidationError(username: string): string | null {
+	if (!username) {
+		return "아이디를 입력해주세요.";
+	}
+	const lowercaseUsername = username.toLowerCase();
+	if (username !== lowercaseUsername) {
+		return "아이디는 영문 소문자, 숫자, 마침표만 사용할 수 있어요.";
+	}
+	if (lowercaseUsername.length < GOOGLE_USERNAME_MIN_LENGTH || lowercaseUsername.length > GOOGLE_USERNAME_MAX_LENGTH) {
+		return `아이디는 ${GOOGLE_USERNAME_MIN_LENGTH}자 이상 ${GOOGLE_USERNAME_MAX_LENGTH}자 이하로 입력해주세요.`;
+	}
+	if (!/^[a-z0-9.]+$/.test(lowercaseUsername)) {
+		return "아이디는 영문 소문자, 숫자, 마침표만 사용할 수 있어요.";
+	}
+	if (lowercaseUsername.startsWith(".") || lowercaseUsername.endsWith(".")) {
+		return "아이디는 마침표로 시작하거나 끝날 수 없어요.";
+	}
+	if (lowercaseUsername.includes("..")) {
+		return "아이디에는 연속된 마침표를 사용할 수 없어요.";
+	}
+	return null;
+}
+
+function getGooglePasswordValidationError(password: string): string | null {
+	if (!password) {
+		return "비밀번호를 입력해주세요.";
+	}
+	if (password.length < 8) {
+		return "비밀번호는 8자 이상이어야 해요.";
+	}
+	if (/\s/.test(password)) {
+		return "비밀번호에는 공백을 사용할 수 없어요.";
+	}
+	const hasLetter = /[A-Za-z]/.test(password);
+	const hasNumber = /[0-9]/.test(password);
+	if (!hasLetter || !hasNumber) {
+		return "비밀번호에는 영문과 숫자를 모두 포함해야 해요.";
+	}
+	return null;
+}
 
 export default function App() {
 	const [searchTerm, setSearchTerm] = useState("");
@@ -54,7 +100,11 @@ export default function App() {
 				}
 
 				if (session.isGuest) {
-					setIsGuest(true);
+					await clearSession();
+					if (!isMounted) {
+						return;
+					}
+					setIsGuest(false);
 					setUser(null);
 					setFavorites([]);
 					setGuestSearchCount(0);
@@ -232,29 +282,51 @@ export default function App() {
 		}
 	}, []);
 
+	const loadUserState = useCallback(async (userRecord: UserRecord) => {
+		await setUserSession(userRecord.id);
+		const storedFavorites = await getFavoritesByUser(userRecord.id);
+		setIsGuest(false);
+		setUser(userRecord);
+		setFavorites(storedFavorites);
+		setGuestSearchCount(0);
+		setSearchTerm("");
+		setResult(null);
+		setLastQuery(null);
+		setError(null);
+		setAuthError(null);
+	}, []);
+
 	const handleLogin = useCallback(
-		async (username: string, displayName: string) => {
+		async (username: string, password: string) => {
 			const trimmedUsername = username.trim();
-			const trimmedDisplayName = displayName.trim();
-			if (!trimmedUsername) {
-				setAuthError("사용자 이름을 입력해주세요.");
+			const trimmedPassword = password.trim();
+			if (!trimmedUsername || !trimmedPassword) {
+				setAuthError("아이디와 비밀번호를 모두 입력해주세요.");
 				return;
 			}
 
 			setAuthLoading(true);
 			setAuthError(null);
 			try {
-				const userRecord = await getOrCreateUser(trimmedUsername, trimmedDisplayName || trimmedUsername);
-				await setUserSession(userRecord.id);
-				const storedFavorites = await getFavoritesByUser(userRecord.id);
-				setIsGuest(false);
-				setUser(userRecord);
-				setFavorites(storedFavorites);
-				setGuestSearchCount(0);
-				setSearchTerm("");
-				setResult(null);
-				setLastQuery(null);
-				setError(null);
+				const sanitizedUsername = trimmedUsername.toLowerCase();
+				const userRecord = await findUserByUsername(sanitizedUsername);
+				if (!userRecord || !userRecord.passwordHash) {
+					setAuthError("아이디 또는 비밀번호가 올바르지 않아요.");
+					return;
+				}
+
+				const hashedPassword = await hashPassword(trimmedPassword);
+				if (userRecord.passwordHash !== hashedPassword) {
+					setAuthError("아이디 또는 비밀번호가 올바르지 않아요.");
+					return;
+				}
+
+				const userWithoutPassword: UserRecord = {
+					id: userRecord.id,
+					username: userRecord.username,
+					displayName: userRecord.displayName,
+				};
+				await loadUserState(userWithoutPassword);
 			} catch (err) {
 				const message = err instanceof Error ? err.message : "로그인 중 문제가 발생했어요.";
 				setAuthError(message);
@@ -262,7 +334,51 @@ export default function App() {
 				setAuthLoading(false);
 			}
 		},
-		[],
+		[loadUserState],
+	);
+
+	const handleSignUp = useCallback(
+		async (username: string, password: string, displayName: string) => {
+			const trimmedUsername = username.trim();
+			const trimmedPassword = password.trim();
+			const trimmedDisplayName = displayName.trim();
+
+			const usernameValidationError = getGoogleUsernameValidationError(trimmedUsername);
+			if (usernameValidationError) {
+				setAuthError(usernameValidationError);
+				return;
+			}
+
+			const passwordValidationError = getGooglePasswordValidationError(trimmedPassword);
+			if (passwordValidationError) {
+				setAuthError(passwordValidationError);
+				return;
+			}
+
+			const sanitizedUsername = trimmedUsername.toLowerCase();
+			setAuthLoading(true);
+			setAuthError(null);
+			try {
+				const existingUser = await findUserByUsername(sanitizedUsername);
+				if (existingUser) {
+					setAuthError("이미 사용 중인 아이디예요. 다른 아이디를 선택해주세요.");
+					return;
+				}
+
+				const newUser = await createUser(sanitizedUsername, trimmedPassword, trimmedDisplayName || sanitizedUsername);
+				await loadUserState(newUser);
+			} catch (err) {
+				if (err instanceof Error && err.message.includes("UNIQUE")) {
+					setAuthError("이미 사용 중인 아이디예요. 다른 아이디를 선택해주세요.");
+				} else {
+					const message = err instanceof Error ? err.message : "회원가입 중 문제가 발생했어요.";
+					setAuthError(message);
+				}
+			} finally {
+				setAuthLoading(false);
+			}
+		},
+		[loadUserState],
 	);
 
 	const isAuthenticated = isGuest || user !== null;
@@ -283,6 +399,7 @@ export default function App() {
 					) : !isAuthenticated ? (
 						<LoginScreen
 							onLogin={handleLogin}
+							onSignUp={handleSignUp}
 							onGuest={handleGuestAccess}
 							loading={authLoading}
 							errorMessage={authError}
