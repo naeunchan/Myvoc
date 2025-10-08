@@ -27,6 +27,8 @@ export function RootTabNavigator({
 	onModeChange,
 	lastQuery,
 	userName,
+	onLogout,
+	canLogout,
 }: RootTabNavigatorProps) {
 	return (
 		<Tab.Navigator
@@ -98,7 +100,12 @@ export function RootTabNavigator({
 			<Tab.Screen
 				name="Settings"
 			>
-				{() => <SettingsScreen mode={mode} onModeChange={onModeChange} />}
+				{() => (
+					<SettingsScreen
+						onLogout={onLogout}
+						canLogout={canLogout}
+					/>
+				)}
 			</Tab.Screen>
 		</Tab.Navigator>
 	);
