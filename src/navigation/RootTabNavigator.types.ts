@@ -15,4 +15,6 @@ export type RootTabNavigatorProps = {
 	onModeChange: (mode: DictionaryMode) => void;
 	lastQuery: string | null;
 	userName: string;
+	onLogout: () => void;
+	canLogout: boolean;
 };

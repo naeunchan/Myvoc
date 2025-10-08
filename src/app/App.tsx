@@ -282,6 +282,17 @@ export default function App() {
 		}
 	}, []);
 
+	const resetToLoginState = useCallback(() => {
+		setIsGuest(false);
+		setUser(null);
+		setFavorites([]);
+		setGuestSearchCount(0);
+		setSearchTerm("");
+		setResult(null);
+		setLastQuery(null);
+		setError(null);
+	}, []);
+
 	const loadUserState = useCallback(async (userRecord: UserRecord) => {
 		await setUserSession(userRecord.id);
 		const storedFavorites = await getFavoritesByUser(userRecord.id);
@@ -295,6 +306,20 @@ export default function App() {
 		setError(null);
 		setAuthError(null);
 	}, []);
+
+	const handleLogout = useCallback(async () => {
+		setAuthLoading(true);
+		setAuthError(null);
+		try {
+			await clearSession();
+		} catch (err) {
+			const message = err instanceof Error ? err.message : "로그아웃 중 문제가 발생했어요.";
+			setAuthError(message);
+		} finally {
+			setAuthLoading(false);
+			resetToLoginState();
+		}
+	}, [resetToLoginState]);
 
 	const handleLogin = useCallback(
 		async (username: string, password: string) => {
@@ -423,6 +448,8 @@ export default function App() {
 								onModeChange={handleModeChange}
 								lastQuery={lastQuery}
 								userName={user?.displayName ?? user?.username ?? "게스트"}
+								onLogout={handleLogout}
+								canLogout={user !== null}
 							/>
 						</NavigationContainer>
 					)}

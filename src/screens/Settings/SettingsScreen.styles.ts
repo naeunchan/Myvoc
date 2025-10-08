@@ -23,8 +23,21 @@ export const styles = StyleSheet.create({
 		color: "#4b5563",
 		marginBottom: 24,
 	},
+	logoutButton: {
+		marginTop: 24,
+		marginBottom: 16,
+		backgroundColor: "#ef4444",
+		paddingVertical: 14,
+		borderRadius: 12,
+		alignItems: "center",
+	},
+	logoutButtonText: {
+		color: "#ffffff",
+		fontSize: 16,
+		fontWeight: "600",
+	},
 	homeButton: {
-		marginTop: 32,
+		marginTop: 24,
 		backgroundColor: "#2563eb",
 		paddingVertical: 14,
 		borderRadius: 12,
