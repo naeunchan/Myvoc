@@ -78,6 +78,29 @@ export const styles = StyleSheet.create({
 		fontSize: 14,
 		marginBottom: 16,
 	},
+	ruleText: {
+		fontSize: 12,
+		color: "#6b7280",
+		marginTop: -8,
+		marginBottom: 16,
+		lineHeight: 16,
+	},
+	modeSwitch: {
+		flexDirection: "row",
+		justifyContent: "center",
+		alignItems: "center",
+		marginTop: 20,
+		gap: 6,
+	},
+	modeSwitchText: {
+		fontSize: 14,
+		color: "#6b7280",
+	},
+	modeSwitchAction: {
+		fontSize: 14,
+		color: "#2563eb",
+		fontWeight: "600",
+	},
 	footerNote: {
 		fontSize: 13,
 		color: "#6b7280",

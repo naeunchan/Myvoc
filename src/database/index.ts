@@ -7,12 +7,17 @@ type UserRow = {
 	id: number;
 	username: string;
 	display_name: string | null;
+	password_hash: string | null;
 };
 
 export type UserRecord = {
 	id: number;
 	username: string;
 	displayName: string | null;
+};
+
+export type UserWithPasswordRecord = UserRecord & {
+	passwordHash: string | null;
 };
 
 let databasePromise: Promise<SQLiteDatabase> | null = null;
@@ -32,6 +37,73 @@ function mapUserRow(row: UserRow, fallbackDisplayName?: string): UserRecord {
 	};
 }
 
+function mapUserRowWithPassword(row: UserRow, fallbackDisplayName?: string): UserWithPasswordRecord {
+	return {
+		...mapUserRow(row, fallbackDisplayName),
+		passwordHash: row.password_hash ?? null,
+	};
+}
+
+function fnv1a32(input: string) {
+	let hash = 0x811c9dc5;
+	for (let index = 0; index < input.length; index += 1) {
+		hash ^= input.charCodeAt(index);
+		hash = Math.imul(hash, 0x01000193);
+	}
+	return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+export async function hashPassword(password: string) {
+	const salt = "myvoc::salt";
+	const firstPass = fnv1a32(`${salt}:${password}`);
+	const secondPass = fnv1a32(`${firstPass}:${password}`);
+	return `${firstPass}${secondPass}`;
+}
+
+export async function findUserByUsername(username: string): Promise<UserWithPasswordRecord | null> {
+	const normalizedUsername = username.trim();
+	if (!normalizedUsername) {
+		throw new Error("사용자 이름을 입력해주세요.");
+	}
+	const db = await getDatabase();
+	const rows = await db.getAllAsync<UserRow>(
+		"SELECT id, username, display_name, password_hash FROM users WHERE username = ? LIMIT 1",
+		[normalizedUsername],
+	);
+
+	if (rows.length === 0) {
+		return null;
+	}
+
+	return mapUserRowWithPassword(rows[0]);
+}
+
+export async function createUser(username: string, password: string, displayName?: string) {
+	const normalizedUsername = username.trim();
+	if (!normalizedUsername) {
+		throw new Error("사용자 이름을 입력해주세요.");
+	}
+	const normalizedDisplayName = (displayName ?? normalizedUsername).trim() || normalizedUsername;
+	const passwordHash = await hashPassword(password);
+	const db = await getDatabase();
+
+	await db.runAsync("INSERT INTO users (username, display_name, password_hash) VALUES (?, ?, ?)", [
+		normalizedUsername,
+		normalizedDisplayName,
+		passwordHash,
+	]);
+
+	const inserted = await db.getAllAsync<UserRow>(
+		"SELECT id, username, display_name, password_hash FROM users WHERE username = ? LIMIT 1",
+		[normalizedUsername],
+	);
+	if (inserted.length === 0) {
+		throw new Error("사용자 정보를 생성하지 못했어요.");
+	}
+
+	return mapUserRow(inserted[0], normalizedDisplayName);
+}
+
 export async function initializeDatabase() {
 	const db = await getDatabase();
 	await db.execAsync("PRAGMA foreign_keys = ON;");
@@ -40,10 +112,16 @@ export async function initializeDatabase() {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			username TEXT NOT NULL UNIQUE,
 			display_name TEXT,
+			password_hash TEXT,
 			created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 			updated_at TEXT
 		);
 	`);
+	const userColumns = await db.getAllAsync<{ name: string }>("PRAGMA table_info(users)");
+	const hasPasswordColumn = userColumns.some((column) => column.name === "password_hash");
+	if (!hasPasswordColumn) {
+		await db.execAsync("ALTER TABLE users ADD COLUMN password_hash TEXT");
+	}
 	await db.execAsync(`
 		CREATE TABLE IF NOT EXISTS favorites (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,34 +143,6 @@ export async function initializeDatabase() {
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		);
 	`);
-}
-
-export async function getOrCreateUser(username: string, displayName?: string) {
-	const normalizedUsername = username.trim();
-	if (!normalizedUsername) {
-		throw new Error("사용자 이름을 입력해주세요.");
-	}
-	const normalizedDisplayName = (displayName ?? normalizedUsername).trim() || normalizedUsername;
-	const db = await getDatabase();
-	const existing = await db.getAllAsync<UserRow>(
-		"SELECT id, username, display_name FROM users WHERE username = ? LIMIT 1",
-		[normalizedUsername],
-	);
-
-	if (existing.length > 0) {
-		return mapUserRow(existing[0], normalizedDisplayName);
-	}
-
-	await db.runAsync("INSERT INTO users (username, display_name) VALUES (?, ?)", [normalizedUsername, normalizedDisplayName]);
-
-	const inserted = await db.getAllAsync<UserRow>(
-		"SELECT id, username, display_name FROM users WHERE username = ? LIMIT 1",
-		[normalizedUsername],
-	);
-	if (inserted.length === 0) {
-		throw new Error("사용자 정보를 생성하지 못했어요.");
-	}
-	return mapUserRow(inserted[0], normalizedDisplayName);
 }
 
 export async function updateUserDisplayName(userId: number, displayName: string | null) {
