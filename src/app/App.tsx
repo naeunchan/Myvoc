@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { Audio } from "expo-av";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { LoginScreen } from "@/screens/Auth/LoginScreen";
 import { RootTabNavigator } from "@/navigation/RootTabNavigator";
 import { getWordData } from "@/features/dictionary/api/getWordData";
@@ -409,7 +410,7 @@ export default function App() {
 	const isAuthenticated = isGuest || user !== null;
 
 	return (
-		<>
+		<SafeAreaProvider>
 			<StatusBar style="dark" />
 			<View style={styles.container}>
 				<View style={styles.bannerPlaceholder}>
@@ -455,7 +456,7 @@ export default function App() {
 					)}
 				</View>
 			</View>
-		</>
+		</SafeAreaProvider>
 	);
 }
 
