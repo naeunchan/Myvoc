@@ -198,6 +198,9 @@ export async function getWordData(searchTerm: string, mode: DictionaryMode): Pro
 	if (!trimmed) {
 		throw new Error("검색어를 입력해주세요.");
 	}
+	if (!/^[a-z\s'-]+$/.test(trimmed)) {
+		throw new Error("영어 단어만 검색할 수 있어요.");
+	}
 
 	switch (mode) {
 		case "en-ko":
