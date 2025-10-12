@@ -4,4 +4,5 @@ export type LoginScreenProps = {
 	onGuest: () => void;
 	loading?: boolean;
 	errorMessage?: string | null;
+	initialMode?: "login" | "signup";
 };

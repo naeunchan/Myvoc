@@ -17,4 +17,7 @@ export type RootTabNavigatorProps = {
 	userName: string;
 	onLogout: () => void;
 	canLogout: boolean;
+	isGuest: boolean;
+	onRequestLogin: () => void;
+	onRequestSignUp: () => void;
 };

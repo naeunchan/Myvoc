@@ -1,14 +1,28 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "@/screens/Auth/LoginScreen.styles";
 import { LoginScreenProps } from "@/screens/Auth/LoginScreen.types";
 
-export function LoginScreen({ onLogin, onSignUp, onGuest, loading = false, errorMessage }: LoginScreenProps) {
+export function LoginScreen({
+	onLogin,
+	onSignUp,
+	onGuest,
+	loading = false,
+	errorMessage,
+	initialMode = "login",
+}: LoginScreenProps) {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [displayName, setDisplayName] = useState("");
-	const [mode, setMode] = useState<"login" | "signup">("login");
+	const [mode, setMode] = useState<"login" | "signup">(initialMode);
+
+	useEffect(() => {
+		setMode(initialMode);
+		setUsername("");
+		setPassword("");
+		setDisplayName("");
+	}, [initialMode]);
 
 	const trimmedUsername = username.trim();
 	const trimmedPassword = password.trim();
@@ -153,7 +167,7 @@ export function LoginScreen({ onLogin, onSignUp, onGuest, loading = false, error
 					<Text style={styles.modeSwitchAction}>{toggleActionText}</Text>
 				</TouchableOpacity>
 
-				<Text style={styles.footerNote}>게스트 모드에서는 단어 저장이 제한되고, 검색은 최대 10회까지만 가능합니다.</Text>
+				<Text style={styles.footerNote}>게스트 모드에서는 단어 저장이 최대 10개로 제한돼요.</Text>
 			</View>
 		</SafeAreaView>
 	);
