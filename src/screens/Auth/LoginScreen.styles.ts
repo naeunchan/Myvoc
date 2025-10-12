@@ -64,6 +64,17 @@ export const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: "600",
 	},
+	rememberRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		marginBottom: 16,
+	},
+	rememberLabel: {
+		fontSize: 14,
+		color: "#374151",
+		fontWeight: "600",
+	},
 	disabledButton: {
 		opacity: 0.6,
 	},

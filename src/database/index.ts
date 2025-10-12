@@ -117,6 +117,14 @@ async function initializeDatabaseNative() {
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		);
 	`);
+	await db.execAsync(`
+		CREATE TABLE IF NOT EXISTS auto_login (
+			id INTEGER PRIMARY KEY CHECK (id = 1),
+			username TEXT NOT NULL,
+			password_hash TEXT NOT NULL,
+			updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+		);
+	`);
 }
 
 const WEB_DB_STORAGE_KEY = "myvoc:web-db";
@@ -136,10 +144,17 @@ type WebSessionState = {
 	updated_at: string;
 };
 
+type WebAutoLoginState = {
+	username: string;
+	password_hash: string;
+	updated_at: string;
+};
+
 type WebDatabaseState = {
 	users: UserRow[];
 	favorites: WebFavoriteRow[];
 	session: WebSessionState | null;
+	autoLogin: WebAutoLoginState | null;
 };
 
 function cloneDefaultWebState(): WebDatabaseState {
@@ -147,6 +162,7 @@ function cloneDefaultWebState(): WebDatabaseState {
 		users: [],
 		favorites: [],
 		session: null,
+		autoLogin: null,
 	};
 }
 
@@ -260,6 +276,24 @@ function normalizeSession(value: unknown): WebSessionState | null {
 	};
 }
 
+function normalizeAutoLogin(value: unknown): WebAutoLoginState | null {
+	if (typeof value !== "object" || value === null) {
+		return null;
+	}
+	const state = value as Partial<WebAutoLoginState>;
+	if (typeof state.username !== "string" || typeof state.password_hash !== "string") {
+		return null;
+	}
+	return {
+		username: state.username,
+		password_hash: state.password_hash,
+		updated_at:
+			typeof state.updated_at === "string"
+				? state.updated_at
+				: new Date().toISOString(),
+	};
+}
+
 function readWebState(): WebDatabaseState {
 	const storage = getBrowserStorage();
 	if (!storage) {
@@ -277,6 +311,7 @@ function readWebState(): WebDatabaseState {
 			users: normalizeUserRows(parsed.users),
 			favorites: normalizeFavoriteRows(parsed.favorites),
 			session: normalizeSession(parsed.session),
+			autoLogin: normalizeAutoLogin(parsed.autoLogin),
 		};
 	} catch (error) {
 		console.warn("저장된 데이터베이스 상태를 읽는 중 문제가 발생했어요.", error);
@@ -531,6 +566,71 @@ async function setGuestSessionWeb() {
 	writeWebState(nextState);
 }
 
+async function saveAutoLoginCredentialsNative(username: string, passwordHash: string) {
+	const db = await getDatabase();
+	await db.runAsync(
+		`
+			INSERT INTO auto_login (id, username, password_hash, updated_at)
+			VALUES (1, ?, ?, CURRENT_TIMESTAMP)
+			ON CONFLICT(id)
+			DO UPDATE SET username = excluded.username, password_hash = excluded.password_hash, updated_at = CURRENT_TIMESTAMP
+		`,
+		[username, passwordHash],
+	);
+}
+
+async function saveAutoLoginCredentialsWeb(username: string, passwordHash: string) {
+	const state = readWebState();
+	const nextState: WebDatabaseState = {
+		...state,
+		autoLogin: {
+			username,
+			password_hash: passwordHash,
+			updated_at: new Date().toISOString(),
+		},
+	};
+	writeWebState(nextState);
+}
+
+async function clearAutoLoginCredentialsNative() {
+	const db = await getDatabase();
+	await db.runAsync("DELETE FROM auto_login WHERE id = 1");
+}
+
+async function clearAutoLoginCredentialsWeb() {
+	const state = readWebState();
+	if (!state.autoLogin) {
+		return;
+	}
+	writeWebState({ ...state, autoLogin: null });
+}
+
+async function getAutoLoginCredentialsNative(): Promise<{ username: string; passwordHash: string } | null> {
+	const db = await getDatabase();
+	const rows = await db.getAllAsync<{ username: string; password_hash: string }>(
+		"SELECT username, password_hash FROM auto_login WHERE id = 1 LIMIT 1",
+		[],
+	);
+	if (rows.length === 0) {
+		return null;
+	}
+	return {
+		username: rows[0]?.username ?? "",
+		passwordHash: rows[0]?.password_hash ?? "",
+	};
+}
+
+async function getAutoLoginCredentialsWeb(): Promise<{ username: string; passwordHash: string } | null> {
+	const state = readWebState();
+	if (!state.autoLogin) {
+		return null;
+	}
+	return {
+		username: state.autoLogin.username,
+		passwordHash: state.autoLogin.password_hash,
+	};
+}
+
 async function setUserSessionNative(userId: number) {
 	const db = await getDatabase();
 	await db.runAsync(
@@ -714,4 +814,25 @@ export async function getActiveSession(): Promise<{ isGuest: boolean; user: User
 		return getActiveSessionWeb();
 	}
 	return getActiveSessionNative();
+}
+
+export async function saveAutoLoginCredentials(username: string, passwordHash: string) {
+	if (isWeb) {
+		return saveAutoLoginCredentialsWeb(username, passwordHash);
+	}
+	return saveAutoLoginCredentialsNative(username, passwordHash);
+}
+
+export async function clearAutoLoginCredentials() {
+	if (isWeb) {
+		return clearAutoLoginCredentialsWeb();
+	}
+	return clearAutoLoginCredentialsNative();
+}
+
+export async function getAutoLoginCredentials() {
+	if (isWeb) {
+		return getAutoLoginCredentialsWeb();
+	}
+	return getAutoLoginCredentialsNative();
 }

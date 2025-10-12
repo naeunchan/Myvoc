@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "@/screens/Auth/LoginScreen.styles";
 import { LoginScreenProps } from "@/screens/Auth/LoginScreen.types";
@@ -16,6 +16,7 @@ export function LoginScreen({
 	const [password, setPassword] = useState("");
 	const [displayName, setDisplayName] = useState("");
 	const [mode, setMode] = useState<"login" | "signup">(initialMode);
+	const [rememberMe, setRememberMe] = useState(false);
 
 	useEffect(() => {
 		setMode(initialMode);
@@ -36,12 +37,21 @@ export function LoginScreen({
 		}
 
 		if (mode === "login") {
-			onLogin(trimmedUsername, trimmedPassword);
+			onLogin(trimmedUsername, trimmedPassword, { rememberMe });
 			return;
 		}
 
-		onSignUp(trimmedUsername, trimmedPassword, trimmedDisplayName);
-	}, [isPrimaryDisabled, mode, onLogin, onSignUp, trimmedDisplayName, trimmedPassword, trimmedUsername]);
+		onSignUp(trimmedUsername, trimmedPassword, trimmedDisplayName, { rememberMe });
+	}, [
+		isPrimaryDisabled,
+		mode,
+		onLogin,
+		onSignUp,
+		rememberMe,
+		trimmedDisplayName,
+		trimmedPassword,
+		trimmedUsername,
+	]);
 
 	const handleGuestPress = useCallback(() => {
 		if (loading) {
@@ -131,6 +141,18 @@ export function LoginScreen({
 				) : null}
 
 				<Text style={styles.helperText}>{helperText}</Text>
+
+				<View style={styles.rememberRow}>
+					<Text style={styles.rememberLabel}>자동 로그인</Text>
+					<Switch
+						value={rememberMe}
+						onValueChange={setRememberMe}
+						disabled={loading}
+						trackColor={{ false: "#d1d5db", true: "#93c5fd" }}
+						thumbColor={rememberMe ? "#2563eb" : "#f9fafb"}
+						ios_backgroundColor="#d1d5db"
+					/>
+				</View>
 
 				<TouchableOpacity
 					style={[styles.button, isPrimaryDisabled && styles.disabledButton]}
