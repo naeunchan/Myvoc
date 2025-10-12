@@ -29,6 +29,9 @@ export function RootTabNavigator({
 	userName,
 	onLogout,
 	canLogout,
+	isGuest,
+	onRequestLogin,
+	onRequestSignUp,
 }: RootTabNavigatorProps) {
 	return (
 		<Tab.Navigator
@@ -86,10 +89,10 @@ export function RootTabNavigator({
 						onSubmit={onSubmitSearch}
 						loading={loading}
 						error={error}
-							result={result}
-							onToggleFavorite={(word) => {
-								void onToggleFavorite(word);
-							}}
+						result={result}
+						onToggleFavorite={(word) => {
+							void onToggleFavorite(word);
+						}}
 						isCurrentFavorite={isCurrentFavorite}
 						onPlayPronunciation={onPlayPronunciation}
 						mode={mode}
@@ -104,6 +107,9 @@ export function RootTabNavigator({
 					<SettingsScreen
 						onLogout={onLogout}
 						canLogout={canLogout}
+						isGuest={isGuest}
+						onRequestLogin={onRequestLogin}
+						onRequestSignUp={onRequestSignUp}
 					/>
 				)}
 			</Tab.Screen>

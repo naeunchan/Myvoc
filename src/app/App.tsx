@@ -79,6 +79,7 @@ export default function App() {
 	const [isGuest, setIsGuest] = useState(false);
 	const [authError, setAuthError] = useState<string | null>(null);
 	const [authLoading, setAuthLoading] = useState(false);
+	const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 
 	useEffect(() => {
 		let isMounted = true;
@@ -266,6 +267,7 @@ export default function App() {
 			setResult(null);
 			setLastQuery(null);
 			setError(null);
+			setAuthMode("login");
 		} catch (err) {
 			const message = err instanceof Error ? err.message : "게스트 모드로 전환하지 못했어요.";
 			setAuthError(message);
@@ -274,7 +276,8 @@ export default function App() {
 		}
 	}, []);
 
-	const resetToLoginState = useCallback(() => {
+	const resetToLoginState = useCallback((mode: "login" | "signup" = "login") => {
+		setAuthMode(mode);
 		setIsGuest(false);
 		setUser(null);
 		setFavorites([]);
@@ -282,7 +285,31 @@ export default function App() {
 		setResult(null);
 		setLastQuery(null);
 		setError(null);
+		setAuthLoading(false);
 	}, []);
+
+	const handleGuestAuthRedirect = useCallback(
+		async (mode: "login" | "signup") => {
+			setAuthError(null);
+			try {
+				await clearSession();
+			} catch (err) {
+				const message = err instanceof Error ? err.message : "계정 화면으로 이동하지 못했어요.";
+				setAuthError(message);
+			} finally {
+				resetToLoginState(mode);
+			}
+		},
+		[resetToLoginState],
+	);
+
+	const handleGuestLoginRequest = useCallback(() => {
+		void handleGuestAuthRedirect("login");
+	}, [handleGuestAuthRedirect]);
+
+	const handleGuestSignUpRequest = useCallback(() => {
+		void handleGuestAuthRedirect("signup");
+	}, [handleGuestAuthRedirect]);
 
 	const loadUserState = useCallback(async (userRecord: UserRecord) => {
 		await setUserSession(userRecord.id);
@@ -418,6 +445,7 @@ export default function App() {
 							onGuest={handleGuestAccess}
 							loading={authLoading}
 							errorMessage={authError}
+							initialMode={authMode}
 						/>
 					) : (
 						<NavigationContainer>
@@ -440,6 +468,9 @@ export default function App() {
 								userName={user?.displayName ?? user?.username ?? "게스트"}
 								onLogout={handleLogout}
 								canLogout={user !== null}
+								isGuest={isGuest}
+								onRequestLogin={handleGuestLoginRequest}
+								onRequestSignUp={handleGuestSignUpRequest}
 							/>
 						</NavigationContainer>
 					)}
