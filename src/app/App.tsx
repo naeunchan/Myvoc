@@ -14,9 +14,12 @@ import {
 	findUserByUsername,
 	getActiveSession,
 	getFavoritesByUser,
+	getAutoLoginCredentials,
 	hashPassword,
 	initializeDatabase,
+	saveAutoLoginCredentials,
 	removeFavoriteForUser,
+	clearAutoLoginCredentials,
 	setGuestSession,
 	setUserSession,
 	upsertFavoriteForUser,
@@ -93,6 +96,36 @@ export default function App() {
 				}
 
 				if (!session) {
+					const autoLoginEntry = await getAutoLoginCredentials();
+					if (autoLoginEntry) {
+						const rememberedUser = await findUserByUsername(autoLoginEntry.username);
+						if (
+							rememberedUser?.passwordHash &&
+							rememberedUser.passwordHash === autoLoginEntry.passwordHash
+						) {
+							const userRecord: UserRecord = {
+								id: rememberedUser.id,
+								username: rememberedUser.username,
+								displayName: rememberedUser.displayName,
+							};
+							await setUserSession(userRecord.id);
+							const storedFavorites = await getFavoritesByUser(userRecord.id);
+							if (!isMounted) {
+								return;
+							}
+							setIsGuest(false);
+							setUser(userRecord);
+							setFavorites(storedFavorites);
+							setSearchTerm("");
+							setResult(null);
+							setLastQuery(null);
+							setError(null);
+							setAuthError(null);
+							return;
+						}
+						await clearAutoLoginCredentials();
+					}
+
 					setIsGuest(false);
 					setUser(null);
 					setFavorites([]);
@@ -329,6 +362,7 @@ export default function App() {
 		setAuthError(null);
 		try {
 			await clearSession();
+			await clearAutoLoginCredentials();
 		} catch (err) {
 			const message = err instanceof Error ? err.message : "로그아웃 중 문제가 발생했어요.";
 			setAuthError(message);
@@ -336,10 +370,10 @@ export default function App() {
 			setAuthLoading(false);
 			resetToLoginState();
 		}
-	}, [resetToLoginState]);
+	}, [clearAutoLoginCredentials, resetToLoginState]);
 
 	const handleLogin = useCallback(
-		async (username: string, password: string) => {
+		async (username: string, password: string, options?: { rememberMe?: boolean }) => {
 			const trimmedUsername = username.trim();
 			const trimmedPassword = password.trim();
 			if (!trimmedUsername || !trimmedPassword) {
@@ -351,6 +385,7 @@ export default function App() {
 			setAuthError(null);
 			try {
 				const sanitizedUsername = trimmedUsername.toLowerCase();
+				const rememberMe = options?.rememberMe ?? false;
 				const userRecord = await findUserByUsername(sanitizedUsername);
 				if (!userRecord || !userRecord.passwordHash) {
 					setAuthError("아이디 또는 비밀번호가 올바르지 않아요.");
@@ -361,6 +396,12 @@ export default function App() {
 				if (userRecord.passwordHash !== hashedPassword) {
 					setAuthError("아이디 또는 비밀번호가 올바르지 않아요.");
 					return;
+				}
+
+				if (rememberMe) {
+					await saveAutoLoginCredentials(sanitizedUsername, hashedPassword);
+				} else {
+					await clearAutoLoginCredentials();
 				}
 
 				const userWithoutPassword: UserRecord = {
@@ -376,11 +417,16 @@ export default function App() {
 				setAuthLoading(false);
 			}
 		},
-		[loadUserState],
+		[clearAutoLoginCredentials, loadUserState, saveAutoLoginCredentials],
 	);
 
 	const handleSignUp = useCallback(
-		async (username: string, password: string, displayName: string) => {
+		async (
+			username: string,
+			password: string,
+			displayName: string,
+			options?: { rememberMe?: boolean },
+		) => {
 			const trimmedUsername = username.trim();
 			const trimmedPassword = password.trim();
 			const trimmedDisplayName = displayName.trim();
@@ -401,6 +447,7 @@ export default function App() {
 			setAuthLoading(true);
 			setAuthError(null);
 			try {
+				const rememberMe = options?.rememberMe ?? false;
 				const existingUser = await findUserByUsername(sanitizedUsername);
 				if (existingUser) {
 					setAuthError("이미 사용 중인 아이디예요. 다른 아이디를 선택해주세요.");
@@ -408,6 +455,12 @@ export default function App() {
 				}
 
 				const newUser = await createUser(sanitizedUsername, trimmedPassword, trimmedDisplayName || sanitizedUsername);
+				if (rememberMe) {
+					const passwordHash = await hashPassword(trimmedPassword);
+					await saveAutoLoginCredentials(sanitizedUsername, passwordHash);
+				} else {
+					await clearAutoLoginCredentials();
+				}
 				await loadUserState(newUser);
 			} catch (err) {
 				if (err instanceof Error && err.message.includes("UNIQUE")) {
@@ -420,7 +473,7 @@ export default function App() {
 				setAuthLoading(false);
 			}
 		},
-		[loadUserState],
+		[clearAutoLoginCredentials, loadUserState, saveAutoLoginCredentials],
 	);
 
 	const isAuthenticated = isGuest || user !== null;
