@@ -83,6 +83,10 @@ export default function App() {
 	const [authError, setAuthError] = useState<string | null>(null);
 	const [authLoading, setAuthLoading] = useState(false);
 	const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+	const [versionLabel] = useState(() => {
+		const extra = (globalThis as typeof globalThis & { __expo?: { extra?: { versionLabel?: string } } }).__expo?.extra;
+		return extra?.versionLabel ?? "1.0.0";
+	});
 
 	useEffect(() => {
 		let isMounted = true;
@@ -99,10 +103,7 @@ export default function App() {
 					const autoLoginEntry = await getAutoLoginCredentials();
 					if (autoLoginEntry) {
 						const rememberedUser = await findUserByUsername(autoLoginEntry.username);
-						if (
-							rememberedUser?.passwordHash &&
-							rememberedUser.passwordHash === autoLoginEntry.passwordHash
-						) {
+						if (rememberedUser?.passwordHash && rememberedUser.passwordHash === autoLoginEntry.passwordHash) {
 							const userRecord: UserRecord = {
 								id: rememberedUser.id,
 								username: rememberedUser.username,
@@ -233,9 +234,7 @@ export default function App() {
 		async (word: WordResult) => {
 			const previousFavorites = favorites;
 			const exists = previousFavorites.some((item) => item.word === word.word);
-			const nextFavorites = exists
-				? previousFavorites.filter((item) => item.word !== word.word)
-				: [word, ...previousFavorites];
+			const nextFavorites = exists ? previousFavorites.filter((item) => item.word !== word.word) : [word, ...previousFavorites];
 
 			if (isGuest) {
 				if (!exists && previousFavorites.length >= 10) {
@@ -421,12 +420,7 @@ export default function App() {
 	);
 
 	const handleSignUp = useCallback(
-		async (
-			username: string,
-			password: string,
-			displayName: string,
-			options?: { rememberMe?: boolean },
-		) => {
+		async (username: string, password: string, displayName: string, options?: { rememberMe?: boolean }) => {
 			const trimmedUsername = username.trim();
 			const trimmedPassword = password.trim();
 			const trimmedDisplayName = displayName.trim();
@@ -486,20 +480,16 @@ export default function App() {
 					<Text style={styles.bannerText}>광고 배너 영역</Text>
 				</View>
 				<View style={styles.content}>
+					<View style={styles.versionBadge}>
+						<Text style={styles.versionText}>버전 {versionLabel}</Text>
+					</View>
 					{initializing ? (
 						<View style={styles.initializingState}>
 							<ActivityIndicator size="large" color="#2f80ed" />
 							<Text style={styles.initializingText}>데이터를 불러오는 중이에요…</Text>
 						</View>
 					) : !isAuthenticated ? (
-						<LoginScreen
-							onLogin={handleLogin}
-							onSignUp={handleSignUp}
-							onGuest={handleGuestAccess}
-							loading={authLoading}
-							errorMessage={authError}
-							initialMode={authMode}
-						/>
+						<LoginScreen onLogin={handleLogin} onSignUp={handleSignUp} onGuest={handleGuestAccess} loading={authLoading} errorMessage={authError} initialMode={authMode} />
 					) : (
 						<NavigationContainer>
 							<RootTabNavigator
@@ -562,5 +552,18 @@ const styles = StyleSheet.create({
 	initializingText: {
 		fontSize: 15,
 		color: "#4b5563",
+	},
+	versionBadge: {
+		alignSelf: "flex-end",
+		backgroundColor: "#e5e7eb",
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		borderRadius: 999,
+		margin: 12,
+	},
+	versionText: {
+		fontSize: 12,
+		color: "#4b5563",
+		fontWeight: "600",
 	},
 });
