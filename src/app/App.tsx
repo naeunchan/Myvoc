@@ -77,7 +77,6 @@ export default function App() {
 	const [user, setUser] = useState<UserRecord | null>(null);
 	const [initializing, setInitializing] = useState(true);
 	const [isGuest, setIsGuest] = useState(false);
-	const [guestSearchCount, setGuestSearchCount] = useState(0);
 	const [authError, setAuthError] = useState<string | null>(null);
 	const [authLoading, setAuthLoading] = useState(false);
 
@@ -96,7 +95,6 @@ export default function App() {
 					setIsGuest(false);
 					setUser(null);
 					setFavorites([]);
-					setGuestSearchCount(0);
 					return;
 				}
 
@@ -108,7 +106,6 @@ export default function App() {
 					setIsGuest(false);
 					setUser(null);
 					setFavorites([]);
-					setGuestSearchCount(0);
 					return;
 				}
 
@@ -116,7 +113,6 @@ export default function App() {
 					setIsGuest(false);
 					setUser(null);
 					setFavorites([]);
-					setGuestSearchCount(0);
 					return;
 				}
 
@@ -128,7 +124,6 @@ export default function App() {
 				setUser(session.user);
 				setIsGuest(false);
 				setFavorites(storedFavorites);
-				setGuestSearchCount(0);
 			} catch (err) {
 				if (!isMounted) {
 					return;
@@ -175,22 +170,13 @@ export default function App() {
 
 	const handleSearch = useCallback(() => {
 		const normalizedTerm = searchTerm.trim();
-		if (isGuest && guestSearchCount >= 10) {
-			setError("게스트는 최대 10회까지 검색할 수 있어요.");
-			return;
-		}
-
 		if (!normalizedTerm) {
 			executeSearch(searchTerm, mode);
 			return;
 		}
 
-		if (isGuest) {
-			setGuestSearchCount((count) => count + 1);
-		}
-
 		executeSearch(searchTerm, mode);
-	}, [executeSearch, guestSearchCount, isGuest, mode, searchTerm]);
+	}, [executeSearch, mode, searchTerm]);
 
 	const handleModeChange = useCallback(
 		(nextMode: DictionaryMode) => {
@@ -211,20 +197,26 @@ export default function App() {
 
 	const toggleFavorite = useCallback(
 		async (word: WordResult) => {
-			if (isGuest) {
-				setError("게스트 모드에서는 단어를 저장할 수 없어요.");
-				return;
-			}
-			if (!user) {
-				setError("사용자 정보를 불러오지 못했어요.");
-				return;
-			}
-
 			const previousFavorites = favorites;
 			const exists = previousFavorites.some((item) => item.word === word.word);
 			const nextFavorites = exists
 				? previousFavorites.filter((item) => item.word !== word.word)
 				: [word, ...previousFavorites];
+
+			if (isGuest) {
+				if (!exists && previousFavorites.length >= 10) {
+					setError("게스트 모드는 단어를 최대 10개까지 저장할 수 있어요.");
+					return;
+				}
+				setError(null);
+				setFavorites(nextFavorites);
+				return;
+			}
+
+			if (!user) {
+				setError("사용자 정보를 불러오지 못했어요.");
+				return;
+			}
 
 			setFavorites(nextFavorites);
 
@@ -270,7 +262,6 @@ export default function App() {
 			setIsGuest(true);
 			setUser(null);
 			setFavorites([]);
-			setGuestSearchCount(0);
 			setSearchTerm("");
 			setResult(null);
 			setLastQuery(null);
@@ -287,7 +278,6 @@ export default function App() {
 		setIsGuest(false);
 		setUser(null);
 		setFavorites([]);
-		setGuestSearchCount(0);
 		setSearchTerm("");
 		setResult(null);
 		setLastQuery(null);
@@ -300,7 +290,6 @@ export default function App() {
 		setIsGuest(false);
 		setUser(userRecord);
 		setFavorites(storedFavorites);
-		setGuestSearchCount(0);
 		setSearchTerm("");
 		setResult(null);
 		setLastQuery(null);
