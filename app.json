@@ -28,7 +28,7 @@
 		},
 		"plugins": ["expo-sqlite"],
 		"experiments": {
-			"baseUrl": "/gh-pages"
+			"baseUrl": "/myvoc"
 		}
 	}
 }
