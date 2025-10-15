@@ -12,6 +12,9 @@ export const styles = StyleSheet.create({
 		paddingTop: 32,
 		paddingBottom: 24,
 	},
+	header: {
+		marginBottom: 16,
+	},
 	title: {
 		fontSize: 24,
 		fontWeight: "700",

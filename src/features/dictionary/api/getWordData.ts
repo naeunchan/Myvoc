@@ -1,8 +1,10 @@
 import { DictionaryMode, MeaningEntry, WordResult } from "@/features/dictionary/types";
-
-const EN_EN_ENDPOINT = "https://api.dictionaryapi.dev/api/v2/entries/en";
-const EN_KO_ENDPOINT = "https://glosbe.com/gapi/translate";
-const EN_KO_FALLBACK_ENDPOINT = "https://api.mymemory.translated.net/get";
+import {
+	ENGLISH_ENGLISH_ENDPOINT,
+	ENGLISH_KOREAN_ENDPOINT,
+	ENGLISH_KOREAN_FALLBACK_ENDPOINT,
+} from "@/features/dictionary/api/constants";
+import { fetchJson } from "@/features/dictionary/api/httpClient";
 
 function decodeHtmlEntities(value: string) {
 	return value
@@ -14,7 +16,7 @@ function decodeHtmlEntities(value: string) {
 }
 
 async function fetchEnglishEnglish(trimmed: string): Promise<WordResult> {
-	const response = await fetch(`${EN_EN_ENDPOINT}/${encodeURIComponent(trimmed)}`);
+	const response = await fetchJson(`${ENGLISH_ENGLISH_ENDPOINT}/${encodeURIComponent(trimmed)}`);
 
 	if (!response.ok) {
 		throw new Error("단어를 찾을 수 없어요.");
@@ -65,7 +67,7 @@ async function fetchEnglishKorean(trimmed: string): Promise<WordResult> {
 				pretty: "true",
 			});
 
-			const response = await fetch(`${EN_KO_ENDPOINT}?${params.toString()}`);
+			const response = await fetchJson(`${ENGLISH_KOREAN_ENDPOINT}?${params.toString()}`);
 
 			if (!response.ok) {
 				return null;
@@ -134,7 +136,7 @@ async function fetchEnglishKorean(trimmed: string): Promise<WordResult> {
 				mt: "1",
 			});
 
-			const response = await fetch(`${EN_KO_FALLBACK_ENDPOINT}?${params.toString()}`);
+			const response = await fetchJson(`${ENGLISH_KOREAN_FALLBACK_ENDPOINT}?${params.toString()}`);
 			if (!response.ok) {
 				return null;
 			}

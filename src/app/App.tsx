@@ -1,11 +1,10 @@
-import { NavigationContainer } from "@react-navigation/native";
+import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
 import { Audio } from "expo-av";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { LoginScreen } from "@/screens/Auth/LoginScreen";
-import { RootTabNavigator } from "@/navigation/RootTabNavigator";
 import { getWordData } from "@/features/dictionary/api/getWordData";
 import { DictionaryMode, WordResult } from "@/features/dictionary/types";
 import {
@@ -25,49 +24,15 @@ import {
 	upsertFavoriteForUser,
 	type UserRecord,
 } from "@/database";
-const GOOGLE_USERNAME_MIN_LENGTH = 6;
-const GOOGLE_USERNAME_MAX_LENGTH = 30;
-
-function getGoogleUsernameValidationError(username: string): string | null {
-	if (!username) {
-		return "아이디를 입력해주세요.";
-	}
-	const lowercaseUsername = username.toLowerCase();
-	if (username !== lowercaseUsername) {
-		return "아이디는 영문 소문자, 숫자, 마침표만 사용할 수 있어요.";
-	}
-	if (lowercaseUsername.length < GOOGLE_USERNAME_MIN_LENGTH || lowercaseUsername.length > GOOGLE_USERNAME_MAX_LENGTH) {
-		return `아이디는 ${GOOGLE_USERNAME_MIN_LENGTH}자 이상 ${GOOGLE_USERNAME_MAX_LENGTH}자 이하로 입력해주세요.`;
-	}
-	if (!/^[a-z0-9.]+$/.test(lowercaseUsername)) {
-		return "아이디는 영문 소문자, 숫자, 마침표만 사용할 수 있어요.";
-	}
-	if (lowercaseUsername.startsWith(".") || lowercaseUsername.endsWith(".")) {
-		return "아이디는 마침표로 시작하거나 끝날 수 없어요.";
-	}
-	if (lowercaseUsername.includes("..")) {
-		return "아이디에는 연속된 마침표를 사용할 수 없어요.";
-	}
-	return null;
-}
-
-function getGooglePasswordValidationError(password: string): string | null {
-	if (!password) {
-		return "비밀번호를 입력해주세요.";
-	}
-	if (password.length < 8) {
-		return "비밀번호는 8자 이상이어야 해요.";
-	}
-	if (/\s/.test(password)) {
-		return "비밀번호에는 공백을 사용할 수 없어요.";
-	}
-	const hasLetter = /[A-Za-z]/.test(password);
-	const hasNumber = /[0-9]/.test(password);
-	if (!hasLetter || !hasNumber) {
-		return "비밀번호에는 영문과 숫자를 모두 포함해야 해요.";
-	}
-	return null;
-}
+import {
+	getGooglePasswordValidationError,
+	getGoogleUsernameValidationError,
+} from "@/app/constants/authValidation";
+import { appStyles } from "@/app/styles/AppRoot.styles";
+import { VersionBadge } from "@/app/components/VersionBadge";
+import { BannerPlaceholder } from "@/app/components/BannerPlaceholder";
+import { LoadingState } from "@/app/components/LoadingState";
+import { AppNavigator } from "@/app/components/AppNavigator";
 
 export default function App() {
 	const [searchTerm, setSearchTerm] = useState("");
@@ -84,7 +49,7 @@ export default function App() {
 	const [authLoading, setAuthLoading] = useState(false);
 	const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 	const [versionLabel] = useState(() => {
-		const extra = (globalThis as typeof globalThis & { __expo?: { extra?: { versionLabel?: string } } }).__expo?.extra;
+		const extra = Constants.expoConfig?.extra;
 		return extra?.versionLabel ?? "1.0.0";
 	});
 
@@ -475,95 +440,48 @@ export default function App() {
 	return (
 		<SafeAreaProvider>
 			<StatusBar style="dark" />
-			<View style={styles.container}>
-				<View style={styles.bannerPlaceholder}>
-					<Text style={styles.bannerText}>광고 배너 영역</Text>
-				</View>
-				<View style={styles.content}>
-					<View style={styles.versionBadge}>
-						<Text style={styles.versionText}>버전 {versionLabel}</Text>
-					</View>
+			<View style={appStyles.container}>
+				<BannerPlaceholder />
+				<View style={appStyles.content}>
+					<VersionBadge label={versionLabel} />
 					{initializing ? (
-						<View style={styles.initializingState}>
-							<ActivityIndicator size="large" color="#2f80ed" />
-							<Text style={styles.initializingText}>데이터를 불러오는 중이에요…</Text>
-						</View>
+						<LoadingState message="데이터를 불러오는 중이에요…" />
 					) : !isAuthenticated ? (
-						<LoginScreen onLogin={handleLogin} onSignUp={handleSignUp} onGuest={handleGuestAccess} loading={authLoading} errorMessage={authError} initialMode={authMode} />
+						<LoginScreen
+							onLogin={handleLogin}
+							onSignUp={handleSignUp}
+							onGuest={handleGuestAccess}
+							loading={authLoading}
+							errorMessage={authError}
+							initialMode={authMode}
+						/>
 					) : (
-						<NavigationContainer>
-							<RootTabNavigator
-								favorites={favorites}
-								onToggleFavorite={(word) => {
-									void toggleFavorite(word);
-								}}
-								searchTerm={searchTerm}
-								onChangeSearchTerm={setSearchTerm}
-								onSubmitSearch={handleSearch}
-								loading={loading}
-								error={error}
-								result={result}
-								isCurrentFavorite={isCurrentFavorite}
-								onPlayPronunciation={playPronunciation}
-								mode={mode}
-								onModeChange={handleModeChange}
-								lastQuery={lastQuery}
-								userName={user?.displayName ?? user?.username ?? "게스트"}
-								onLogout={handleLogout}
-								canLogout={user !== null}
-								isGuest={isGuest}
-								onRequestLogin={handleGuestLoginRequest}
-								onRequestSignUp={handleGuestSignUpRequest}
-							/>
-						</NavigationContainer>
+						<AppNavigator
+							favorites={favorites}
+							onToggleFavorite={(word) => {
+								void toggleFavorite(word);
+							}}
+							searchTerm={searchTerm}
+							onChangeSearchTerm={setSearchTerm}
+							onSubmitSearch={handleSearch}
+							loading={loading}
+							error={error}
+							result={result}
+							isCurrentFavorite={isCurrentFavorite}
+							onPlayPronunciation={playPronunciation}
+							mode={mode}
+							onModeChange={handleModeChange}
+							lastQuery={lastQuery}
+							userName={user?.displayName ?? user?.username ?? "게스트"}
+							onLogout={handleLogout}
+							canLogout={user !== null}
+							isGuest={isGuest}
+							onRequestLogin={handleGuestLoginRequest}
+							onRequestSignUp={handleGuestSignUpRequest}
+						/>
 					)}
 				</View>
 			</View>
 		</SafeAreaProvider>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: "#ffffff",
-	},
-	bannerPlaceholder: {
-		height: 80,
-		backgroundColor: "#f3f4f6",
-		borderBottomWidth: 1,
-		borderBottomColor: "#e5e7eb",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	bannerText: {
-		fontSize: 14,
-		color: "#6b7280",
-	},
-	content: {
-		flex: 1,
-	},
-	initializingState: {
-		flex: 1,
-		alignItems: "center",
-		justifyContent: "center",
-		gap: 12,
-	},
-	initializingText: {
-		fontSize: 15,
-		color: "#4b5563",
-	},
-	versionBadge: {
-		alignSelf: "flex-end",
-		backgroundColor: "#e5e7eb",
-		paddingHorizontal: 12,
-		paddingVertical: 6,
-		borderRadius: 999,
-		margin: 12,
-	},
-	versionText: {
-		fontSize: 12,
-		color: "#4b5563",
-		fontWeight: "600",
-	},
-});
