@@ -3,15 +3,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { FavoritesFlashcardProps } from "@/screens/Favorites/components/FavoritesFlashcard.types";
 import { styles } from "@/screens/Favorites/components/FavoritesFlashcard.styles";
-
-const ICONS = {
-	reveal: {
-		visible: "visibility",
-		hidden: "visibility-off",
-	},
-	next: "navigate-next",
-	remove: "delete-outline",
-} as const;
+import { FAVORITES_FLASHCARD_ICONS } from "@/screens/Favorites/components/constants";
 
 export function FavoritesFlashcard({ favorites, onRemove }: FavoritesFlashcardProps) {
 	const [currentIndex, setCurrentIndex] = useState(0);
@@ -94,7 +86,9 @@ export function FavoritesFlashcard({ favorites, onRemove }: FavoritesFlashcardPr
 		return null;
 	}
 
-	const revealIconName = showMeaning ? ICONS.reveal.hidden : ICONS.reveal.visible;
+	const revealIconName = showMeaning
+		? FAVORITES_FLASHCARD_ICONS.reveal.hidden
+		: FAVORITES_FLASHCARD_ICONS.reveal.visible;
 
 	return (
 		<View style={styles.container}>
@@ -114,10 +108,10 @@ export function FavoritesFlashcard({ favorites, onRemove }: FavoritesFlashcardPr
 					<MaterialIcons name={revealIconName} size={28} color="#1f2937" />
 				</TouchableOpacity>
 				<TouchableOpacity style={styles.actionButton} onPress={handleNextWord} accessibilityLabel="다음 단어">
-					<MaterialIcons name={ICONS.next} size={28} color="#1f2937" />
+					<MaterialIcons name={FAVORITES_FLASHCARD_ICONS.next} size={28} color="#1f2937" />
 				</TouchableOpacity>
 				<TouchableOpacity style={styles.actionButton} onPress={handleRemove} accessibilityLabel="단어 제거">
-					<MaterialIcons name={ICONS.remove} size={28} color="#ef4444" />
+					<MaterialIcons name={FAVORITES_FLASHCARD_ICONS.remove} size={28} color="#ef4444" />
 				</TouchableOpacity>
 			</View>
 		</View>
