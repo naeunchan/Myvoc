@@ -1,10 +1,10 @@
-import { DictionaryMode, WordResult } from "@/features/dictionary/types";
+import { DictionaryMode } from "@/features/dictionary/types";
+import { FavoriteWordEntry, MemorizationStatus } from "@/features/favorites/types";
 
 export type HomeScreenProps = {
-	favoritesCount: number;
+	favorites: FavoriteWordEntry[];
 	lastSearchedWord: string | null;
 	mode: DictionaryMode;
-	favorites: WordResult[];
-	onRemoveFavorite: (word: WordResult) => void;
+	onMoveToStatus: (word: string, status: MemorizationStatus) => void;
 	userName: string;
 };

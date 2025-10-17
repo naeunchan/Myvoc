@@ -15,6 +15,8 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 export function RootTabNavigator({
 	favorites,
 	onToggleFavorite,
+	onUpdateFavoriteStatus,
+	onRemoveFavorite,
 	searchTerm,
 	onChangeSearchTerm,
 	onSubmitSearch,
@@ -54,31 +56,27 @@ export function RootTabNavigator({
 			<Tab.Screen
 				name="Home"
 			>
-				{() => (
-					<HomeScreen
-						favoritesCount={favorites.length}
-						lastSearchedWord={lastQuery}
-						mode={mode}
-						favorites={favorites}
-						onRemoveFavorite={(word) => {
-							void onToggleFavorite(word);
-						}}
-						userName={userName}
-					/>
-				)}
-			</Tab.Screen>
-			<Tab.Screen
-				name="Favorites"
-			>
-				{() => (
-					<FavoritesScreen
-						favorites={favorites}
-						onRemove={(word) => {
-							void onToggleFavorite(word);
-						}}
-					/>
-				)}
-			</Tab.Screen>
+		{() => (
+			<HomeScreen
+				favorites={favorites}
+				lastSearchedWord={lastQuery}
+				mode={mode}
+				onMoveToStatus={onUpdateFavoriteStatus}
+				userName={userName}
+			/>
+		)}
+	</Tab.Screen>
+	<Tab.Screen
+		name="Favorites"
+	>
+		{() => (
+			<FavoritesScreen
+				favorites={favorites}
+				onUpdateStatus={onUpdateFavoriteStatus}
+				onRemoveFavorite={onRemoveFavorite}
+			/>
+		)}
+	</Tab.Screen>
 			<Tab.Screen
 				name="Search"
 			>

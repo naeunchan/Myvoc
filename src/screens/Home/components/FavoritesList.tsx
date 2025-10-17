@@ -1,64 +1,67 @@
 import React, { useCallback } from "react";
 import { FlatList, Text, TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { WordResult } from "@/features/dictionary/types";
 import { styles } from "@/screens/Home/HomeScreen.styles";
+import { FavoriteWordEntry } from "@/features/favorites/types";
 
 type FavoritesListProps = {
-	favorites: WordResult[];
-	onRemoveFavorite: (word: WordResult) => void;
+	entries: FavoriteWordEntry[];
+	emptyMessage?: string;
+	onMoveToReview: (word: string) => void;
 };
 
-function FavoriteItem({ item, onRemoveFavorite }: { item: WordResult; onRemoveFavorite: (word: WordResult) => void }) {
-	const primaryDefinition = item.meanings[0]?.definitions[0]?.definition ?? "뜻 정보가 없어요.";
+function FavoriteItem({ item, onMoveToReview }: { item: FavoriteWordEntry; onMoveToReview: (word: string) => void }) {
+	const primaryDefinition = item.word.meanings[0]?.definitions[0]?.definition ?? "뜻 정보가 없어요.";
 
 	return (
 		<View style={styles.favoriteItem}>
 			<View style={styles.favoriteItemText}>
-				<Text style={styles.favoriteWord}>{item.word}</Text>
+				<Text style={styles.favoriteWord}>{item.word.word}</Text>
 				<Text style={styles.favoriteDefinition}>{primaryDefinition}</Text>
 			</View>
-			<TouchableOpacity
-				style={styles.favoriteRemoveButton}
-				onPress={() => onRemoveFavorite(item)}
-				accessibilityLabel={`${item.word} 삭제`}
-			>
-				<MaterialIcons name="delete-outline" size={22} color="#ef4444" />
-			</TouchableOpacity>
+			<View style={styles.favoriteActions}>
+				<TouchableOpacity
+					style={styles.favoriteActionButton}
+					onPress={() => onMoveToReview(item.word.word)}
+					accessibilityLabel={`${item.word.word} 복습으로 이동`}
+				>
+					<MaterialIcons name="playlist-add" size={22} color="#2563eb" />
+				</TouchableOpacity>
+			</View>
 		</View>
 	);
 }
 
-export function FavoritesList({ favorites, onRemoveFavorite }: FavoritesListProps) {
-	const hasFavorites = favorites.length > 0;
+export function FavoritesList({ entries, emptyMessage = "저장된 단어가 없어요.", onMoveToReview }: FavoritesListProps) {
+	const hasFavorites = entries.length > 0;
 
 	const renderFavorite = useCallback(
-		({ item }: { item: WordResult }) => (
+		({ item }: { item: FavoriteWordEntry }) => (
 			<FavoriteItem
 				item={item}
-				onRemoveFavorite={onRemoveFavorite}
+				onMoveToReview={onMoveToReview}
 			/>
 		),
-		[onRemoveFavorite],
+		[onMoveToReview],
 	);
 
 	const renderSeparator = useCallback(() => <View style={styles.favoriteSeparator} />, []);
 
 	return (
 		<View style={styles.favoriteCard}>
-			<Text style={styles.cardTitle}>저장된 단어</Text>
+			<Text style={styles.cardTitle}>외울 단어장</Text>
 			{hasFavorites ? (
 				<FlatList
-					data={favorites}
+					data={entries}
 					renderItem={renderFavorite}
-					keyExtractor={(item, index) => `${item.word}-${index}`}
+					keyExtractor={(item) => item.word.word}
 					ItemSeparatorComponent={renderSeparator}
 					contentContainerStyle={styles.favoriteListContent}
 					showsVerticalScrollIndicator={false}
 					style={styles.favoriteList}
 				/>
 			) : (
-				<Text style={styles.emptyFavoriteText}>저장된 단어가 없어요.</Text>
+				<Text style={styles.emptyFavoriteText}>{emptyMessage}</Text>
 			)}
 		</View>
 	);

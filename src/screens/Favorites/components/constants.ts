@@ -5,4 +5,7 @@ export const FAVORITES_FLASHCARD_ICONS = {
 	},
 	next: "navigate-next",
 	remove: "delete-outline",
+	toReview: "playlist-add",
+	toMastered: "check-circle-outline",
+	restoreReview: "history",
 } as const;

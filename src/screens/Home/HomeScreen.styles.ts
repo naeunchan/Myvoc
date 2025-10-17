@@ -82,7 +82,12 @@ export const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#4b5563",
 	},
-	favoriteRemoveButton: {
+	favoriteActions: {
+		flexDirection: "row",
+		alignItems: "center",
+		columnGap: 8,
+	},
+	favoriteActionButton: {
 		padding: 6,
 	},
 	favoriteSeparator: {

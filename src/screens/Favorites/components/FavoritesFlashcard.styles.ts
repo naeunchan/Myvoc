@@ -44,6 +44,7 @@ export const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "center",
 		alignItems: "center",
+		flexWrap: "wrap",
 	},
 	actionButton: {
 		width: 56,
@@ -58,5 +59,6 @@ export const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 4 },
 		elevation: 3,
 		marginHorizontal: 12,
+		marginVertical: 8,
 	},
 });
