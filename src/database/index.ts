@@ -1,6 +1,12 @@
 import { Platform } from "react-native";
 import type { SQLiteDatabase } from "expo-sqlite";
 import type { WordResult } from "@/features/dictionary/types";
+import {
+	FavoriteWordEntry,
+	MemorizationStatus,
+	createFavoriteEntry,
+	isMemorizationStatus,
+} from "@/features/favorites/types";
 
 const DATABASE_NAME = "myvoc.db";
 const isWeb = Platform.OS === "web";
@@ -76,6 +82,38 @@ export async function hashPassword(password: string) {
 	const firstPass = fnv1a32(`${salt}:${password}`);
 	const secondPass = fnv1a32(`${firstPass}:${password}`);
 	return `${firstPass}${secondPass}`;
+}
+
+function normalizeFavoriteEntry(payload: unknown): FavoriteWordEntry | null {
+	if (!payload || typeof payload !== "object") {
+		return null;
+	}
+
+	const record = payload as Record<string, unknown>;
+	const now = new Date().toISOString();
+
+	if (record.word && typeof record.word === "object") {
+		const wordData = record.word as WordResult;
+		if (typeof wordData?.word !== "string") {
+			return null;
+		}
+		const status = isMemorizationStatus(record.status) ? (record.status as MemorizationStatus) : "toMemorize";
+		const updatedAt = typeof record.updatedAt === "string" ? (record.updatedAt as string) : now;
+		return {
+			word: wordData,
+			status,
+			updatedAt,
+		};
+	}
+
+	// Legacy payload (WordResult only)
+	const legacyWord = record as WordResult;
+	if (typeof legacyWord?.word === "string") {
+		const entry = createFavoriteEntry(legacyWord, "toMemorize");
+		return { ...entry, updatedAt: now };
+	}
+
+	return null;
 }
 
 async function initializeDatabaseNative() {
@@ -444,7 +482,7 @@ async function updateUserDisplayNameWeb(userId: number, displayName: string | nu
 	return mapUserRow(updated);
 }
 
-async function getFavoritesByUserNative(userId: number) {
+async function getFavoritesByUserNative(userId: number): Promise<FavoriteWordEntry[]> {
 	const db = await getDatabase();
 	const rows = await db.getAllAsync<{ data: string }>(
 		"SELECT data FROM favorites WHERE user_id = ? ORDER BY created_at DESC",
@@ -454,32 +492,38 @@ async function getFavoritesByUserNative(userId: number) {
 	return rows
 		.map((row) => {
 			try {
-				return JSON.parse(row.data) as WordResult;
+				const parsed = JSON.parse(row.data) as unknown;
+				return normalizeFavoriteEntry(parsed);
 			} catch (error) {
 				console.warn("즐겨찾기 데이터를 읽는 중 오류가 발생했어요.", error);
 				return null;
 			}
 		})
-		.filter((item): item is WordResult => item !== null);
+		.filter((item): item is FavoriteWordEntry => item !== null);
 }
 
-async function getFavoritesByUserWeb(userId: number) {
+async function getFavoritesByUserWeb(userId: number): Promise<FavoriteWordEntry[]> {
 	const state = readWebState();
 	return state.favorites
 		.filter((favorite) => favorite.user_id === userId)
 		.map((favorite) => {
 			try {
-				return JSON.parse(favorite.data) as WordResult;
+				const parsed = JSON.parse(favorite.data) as unknown;
+				return normalizeFavoriteEntry(parsed);
 			} catch (error) {
 				console.warn("즐겨찾기 데이터를 읽는 중 오류가 발생했어요.", error);
 				return null;
 			}
 		})
-		.filter((item): item is WordResult => item !== null);
+		.filter((item): item is FavoriteWordEntry => item !== null);
 }
 
-async function upsertFavoriteForUserNative(userId: number, word: WordResult) {
+async function upsertFavoriteForUserNative(userId: number, entry: FavoriteWordEntry) {
 	const db = await getDatabase();
+	const payload: FavoriteWordEntry = {
+		...entry,
+		updatedAt: new Date().toISOString(),
+	};
 	await db.runAsync(
 		`
 			INSERT INTO favorites (user_id, word, data)
@@ -487,16 +531,20 @@ async function upsertFavoriteForUserNative(userId: number, word: WordResult) {
 			ON CONFLICT(user_id, word)
 			DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP
 		`,
-		[userId, word.word, JSON.stringify(word)],
+		[userId, entry.word.word, JSON.stringify(payload)],
 	);
 }
 
-async function upsertFavoriteForUserWeb(userId: number, word: WordResult) {
+async function upsertFavoriteForUserWeb(userId: number, entry: FavoriteWordEntry) {
 	const state = readWebState();
-	const serialized = JSON.stringify(word);
+	const payload: FavoriteWordEntry = {
+		...entry,
+		updatedAt: new Date().toISOString(),
+	};
+	const serialized = JSON.stringify(payload);
 	const now = new Date().toISOString();
 	const existingIndex = state.favorites.findIndex(
-		(favorite) => favorite.user_id === userId && favorite.word === word.word,
+		(favorite) => favorite.user_id === userId && favorite.word === entry.word.word,
 	);
 
 	let nextFavorites: WebFavoriteRow[];
@@ -514,7 +562,7 @@ async function upsertFavoriteForUserWeb(userId: number, word: WordResult) {
 		const newFavorite: WebFavoriteRow = {
 			id: generateWebFavoriteId(state.favorites),
 			user_id: userId,
-			word: word.word,
+			word: entry.word.word,
 			data: serialized,
 			created_at: now,
 			updated_at: now,
@@ -767,18 +815,18 @@ export async function updateUserDisplayName(userId: number, displayName: string 
 	return updateUserDisplayNameNative(userId, displayName);
 }
 
-export async function getFavoritesByUser(userId: number) {
+export async function getFavoritesByUser(userId: number): Promise<FavoriteWordEntry[]> {
 	if (isWeb) {
 		return getFavoritesByUserWeb(userId);
 	}
 	return getFavoritesByUserNative(userId);
 }
 
-export async function upsertFavoriteForUser(userId: number, word: WordResult) {
+export async function upsertFavoriteForUser(userId: number, entry: FavoriteWordEntry) {
 	if (isWeb) {
-		return upsertFavoriteForUserWeb(userId, word);
+		return upsertFavoriteForUserWeb(userId, entry);
 	}
-	return upsertFavoriteForUserNative(userId, word);
+	return upsertFavoriteForUserNative(userId, entry);
 }
 
 export async function removeFavoriteForUser(userId: number, word: string) {

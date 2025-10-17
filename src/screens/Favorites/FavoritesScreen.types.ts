@@ -1,6 +1,7 @@
-import { WordResult } from "@/features/dictionary/types";
+import { FavoriteWordEntry, MemorizationStatus } from "@/features/favorites/types";
 
 export type FavoritesScreenProps = {
-	favorites: WordResult[];
-	onRemove: (word: WordResult) => void;
+	favorites: FavoriteWordEntry[];
+	onUpdateStatus: (word: string, status: MemorizationStatus) => void;
+	onRemoveFavorite: (word: string) => void;
 };

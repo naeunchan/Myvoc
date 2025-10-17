@@ -1,8 +1,11 @@
 import { DictionaryMode, WordResult } from "@/features/dictionary/types";
+import { FavoriteWordEntry, MemorizationStatus } from "@/features/favorites/types";
 
 export type RootTabNavigatorProps = {
-	favorites: WordResult[];
+	favorites: FavoriteWordEntry[];
 	onToggleFavorite: (word: WordResult) => void;
+	onUpdateFavoriteStatus: (word: string, status: MemorizationStatus) => void;
+	onRemoveFavorite: (word: string) => void;
 	searchTerm: string;
 	onChangeSearchTerm: (text: string) => void;
 	onSubmitSearch: () => void;

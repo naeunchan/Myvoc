@@ -2,10 +2,13 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { RootTabNavigator } from "@/navigation/RootTabNavigator";
 import { DictionaryMode, WordResult } from "@/features/dictionary/types";
+import { FavoriteWordEntry, MemorizationStatus } from "@/features/favorites/types";
 
 type AppNavigatorProps = {
-	favorites: WordResult[];
+	favorites: FavoriteWordEntry[];
 	onToggleFavorite: (word: WordResult) => void;
+	onUpdateFavoriteStatus: (word: string, status: MemorizationStatus) => void;
+	onRemoveFavorite: (word: string) => void;
 	searchTerm: string;
 	onChangeSearchTerm: (term: string) => void;
 	onSubmitSearch: () => void;

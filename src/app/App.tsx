@@ -7,6 +7,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { LoginScreen } from "@/screens/Auth/LoginScreen";
 import { getWordData } from "@/features/dictionary/api/getWordData";
 import { DictionaryMode, WordResult } from "@/features/dictionary/types";
+import { FavoriteWordEntry, MemorizationStatus, createFavoriteEntry } from "@/features/favorites/types";
 import {
 	clearSession,
 	createUser,
@@ -39,7 +40,7 @@ export default function App() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [result, setResult] = useState<WordResult | null>(null);
-	const [favorites, setFavorites] = useState<WordResult[]>([]);
+	const [favorites, setFavorites] = useState<FavoriteWordEntry[]>([]);
 	const [mode, setMode] = useState<DictionaryMode>("en-en");
 	const [lastQuery, setLastQuery] = useState<string | null>(null);
 	const [user, setUser] = useState<UserRecord | null>(null);
@@ -192,22 +193,47 @@ export default function App() {
 		if (!result) {
 			return false;
 		}
-		return favorites.some((item) => item.word === result.word);
+		return favorites.some((item) => item.word.word === result.word);
 	}, [favorites, result]);
+
+	const removeFavoritePersisted = useCallback(
+		async (word: string) => {
+			if (!user) {
+				setError("사용자 정보를 불러오지 못했어요.");
+				return;
+			}
+
+			const previousFavorites = favorites;
+			const nextFavorites = previousFavorites.filter((item) => item.word.word !== word);
+			setFavorites(nextFavorites);
+
+			try {
+				await removeFavoriteForUser(user.id, word);
+			} catch (err) {
+				setFavorites(previousFavorites);
+				const message = err instanceof Error ? err.message : "단어를 제거하지 못했어요.";
+				setError(message);
+			}
+		},
+		[favorites, user],
+	);
 
 	const toggleFavorite = useCallback(
 		async (word: WordResult) => {
 			const previousFavorites = favorites;
-			const exists = previousFavorites.some((item) => item.word === word.word);
-			const nextFavorites = exists ? previousFavorites.filter((item) => item.word !== word.word) : [word, ...previousFavorites];
+			const existingEntry = previousFavorites.find((item) => item.word.word === word.word);
 
 			if (isGuest) {
-				if (!exists && previousFavorites.length >= 10) {
+				if (!existingEntry && previousFavorites.length >= 10) {
 					setError("게스트 모드는 단어를 최대 10개까지 저장할 수 있어요.");
 					return;
 				}
 				setError(null);
-				setFavorites(nextFavorites);
+				if (existingEntry) {
+					setFavorites(previousFavorites.filter((item) => item.word.word !== word.word));
+				} else {
+					setFavorites([createFavoriteEntry(word), ...previousFavorites]);
+				}
 				return;
 			}
 
@@ -216,21 +242,73 @@ export default function App() {
 				return;
 			}
 
+			if (existingEntry) {
+				void removeFavoritePersisted(word.word);
+				return;
+			}
+
+			const newEntry = createFavoriteEntry(word, "toMemorize");
+			const nextFavorites = [newEntry, ...previousFavorites];
 			setFavorites(nextFavorites);
 
 			try {
-				if (exists) {
-					await removeFavoriteForUser(user.id, word.word);
-				} else {
-					await upsertFavoriteForUser(user.id, word);
-				}
+				await upsertFavoriteForUser(user.id, newEntry);
 			} catch (err) {
 				setFavorites(previousFavorites);
-				const message = err instanceof Error ? err.message : "즐겨찾기를 업데이트할 수 없어요.";
+				const message = err instanceof Error ? err.message : "단어를 저장하지 못했어요.";
+				setError(message);
+			}
+		},
+		[favorites, isGuest, removeFavoritePersisted, user],
+	);
+
+	const updateFavoriteStatus = useCallback(
+		async (word: string, nextStatus: MemorizationStatus) => {
+			const previousFavorites = favorites;
+			const target = previousFavorites.find((item) => item.word.word === word);
+			if (!target) {
+				return;
+			}
+
+			const updatedEntry: FavoriteWordEntry = {
+				...target,
+				status: nextStatus,
+				updatedAt: new Date().toISOString(),
+			};
+			const nextFavorites = previousFavorites.map((item) => (item.word.word === word ? updatedEntry : item));
+			setFavorites(nextFavorites);
+
+			if (isGuest) {
+				return;
+			}
+
+			if (!user) {
+				setFavorites(previousFavorites);
+				setError("사용자 정보를 불러오지 못했어요.");
+				return;
+			}
+
+			try {
+				await upsertFavoriteForUser(user.id, updatedEntry);
+			} catch (err) {
+				setFavorites(previousFavorites);
+				const message = err instanceof Error ? err.message : "단어 상태를 업데이트하지 못했어요.";
 				setError(message);
 			}
 		},
 		[favorites, isGuest, user],
+	);
+
+	const handleRemoveFavorite = useCallback(
+		(word: string) => {
+			if (isGuest) {
+				setFavorites((previous) => previous.filter((item) => item.word.word !== word));
+				return;
+			}
+
+			void removeFavoritePersisted(word);
+		},
+		[isGuest, removeFavoritePersisted],
 	);
 
 	const playPronunciation = useCallback(async () => {
@@ -456,14 +534,16 @@ export default function App() {
 							initialMode={authMode}
 						/>
 					) : (
-						<AppNavigator
-							favorites={favorites}
-							onToggleFavorite={(word) => {
-								void toggleFavorite(word);
-							}}
-							searchTerm={searchTerm}
-							onChangeSearchTerm={setSearchTerm}
-							onSubmitSearch={handleSearch}
+					<AppNavigator
+						favorites={favorites}
+						onToggleFavorite={(word) => {
+							void toggleFavorite(word);
+						}}
+						onUpdateFavoriteStatus={updateFavoriteStatus}
+						onRemoveFavorite={handleRemoveFavorite}
+						searchTerm={searchTerm}
+						onChangeSearchTerm={setSearchTerm}
+						onSubmitSearch={handleSearch}
 							loading={loading}
 							error={error}
 							result={result}

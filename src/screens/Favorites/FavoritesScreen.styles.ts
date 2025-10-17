@@ -18,6 +18,31 @@ export const styles = StyleSheet.create({
 		color: "#1f2937",
 		marginBottom: 16,
 	},
+	segmentedControl: {
+		flexDirection: "row",
+		backgroundColor: "#e5e7eb",
+		padding: 4,
+		borderRadius: 999,
+		marginBottom: 24,
+		gap: 4,
+	},
+	segmentButton: {
+		flex: 1,
+		borderRadius: 999,
+		paddingVertical: 8,
+		alignItems: "center",
+	},
+	segmentButtonActive: {
+		backgroundColor: "#2563eb",
+	},
+	segmentButtonText: {
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#1f2937",
+	},
+	segmentButtonTextActive: {
+		color: "#ffffff",
+	},
 	emptyText: {
 		fontSize: 16,
 		color: "#6b7280",
