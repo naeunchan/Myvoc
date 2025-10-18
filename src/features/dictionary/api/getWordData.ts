@@ -1,198 +1,82 @@
-import { DictionaryMode, MeaningEntry, WordResult } from "@/features/dictionary/types";
-import {
-	ENGLISH_ENGLISH_ENDPOINT,
-	ENGLISH_KOREAN_ENDPOINT,
-	ENGLISH_KOREAN_FALLBACK_ENDPOINT,
-} from "@/features/dictionary/api/constants";
-import { fetchJson } from "@/features/dictionary/api/httpClient";
+import { DictionaryMode, MeaningEntry, RawWordResult, WordResult } from "@/features/dictionary/types";
+import { callDictionaryModel } from "@/features/dictionary/api/openAIClient";
 
-function decodeHtmlEntities(value: string) {
-	return value
-		.replace(/&quot;/g, '"')
-		.replace(/&#39;/g, "'")
-		.replace(/&amp;/g, "&")
-		.replace(/&lt;/g, "<")
-		.replace(/&gt;/g, ">");
+function buildPrompt(term: string, mode: DictionaryMode): string {
+	const baseInstruction = `Return a JSON object with keys: word (string), phonetic (string or null), audioUrl (string or null), meanings (array). For meanings include up to 2 items. Each meaning should have partOfSpeech (string or null) and definitions (array). Each definition must have definition (string) and example (string or null). Provide at most 2 example sentences per meaning.`;
+
+	if (mode === "en-ko") {
+		return `${baseInstruction}\nWord: ${term}\nDefinitions must be written in Korean. For each example sentence, write the English sentence followed by a Korean translation in parentheses. Do not include romanization in the definition. If phonetic is unknown, set it to null. audioUrl should always be null.`;
+	}
+
+	return `${baseInstruction}\nWord: ${term}\nProvide English definitions and English example sentences. If phonetic is unknown, set it to null. audioUrl should always be null.`;
 }
 
-async function fetchEnglishEnglish(trimmed: string): Promise<WordResult> {
-	const response = await fetchJson(`${ENGLISH_ENGLISH_ENDPOINT}/${encodeURIComponent(trimmed)}`);
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;
 
-	if (!response.ok) {
-		throw new Error("단어를 찾을 수 없어요.");
+const sanitizeDefinition = (definition: unknown): { definition: string; example?: string } | null => {
+	if (!isRecord(definition)) {
+		return null;
 	}
 
-	const payload = (await response.json()) as Array<{
-		word: string;
-		phonetic?: string;
-		phonetics?: Array<{ text?: string; audio?: string }>;
-		meanings?: Array<{
-			partOfSpeech?: string;
-			definitions?: Array<{ definition: string; example?: string }>;
-		}>;
-	}>;
-
-	const [entry] = payload;
-	if (!entry) {
-		throw new Error("단어 정보를 불러오지 못했어요.");
+	const text = typeof definition.definition === "string" ? definition.definition.trim() : "";
+	if (!text) {
+		return null;
 	}
 
-	const phoneticText = entry.phonetic || entry.phonetics?.find((item) => item.text)?.text;
-	const audioUrl = entry.phonetics?.find((item) => item.audio)?.audio;
+	const example = typeof definition.example === "string" && definition.example.trim() ? definition.example.trim() : undefined;
+	return { definition: text, example };
+};
 
-	const meanings: MeaningEntry[] = (entry.meanings || []).map((meaning) => ({
-		partOfSpeech: meaning.partOfSpeech,
-		definitions: (meaning.definitions || []).map((definition) => ({
-			definition: definition.definition,
-			example: definition.example,
-		})),
-	}));
+function sanitizeMeanings(raw: unknown): MeaningEntry[] {
+	if (!Array.isArray(raw)) {
+		return [];
+	}
+
+	return raw
+		.map((meaning) => {
+			if (!isRecord(meaning)) {
+				return null;
+			}
+
+			const partOfSpeech = typeof meaning.partOfSpeech === "string" ? meaning.partOfSpeech : undefined;
+			const definitionsSource = Array.isArray(meaning.definitions) ? meaning.definitions : [];
+			const definitions = definitionsSource.map(sanitizeDefinition).filter((entry): entry is { definition: string; example?: string } => entry !== null);
+
+			if (definitions.length === 0) {
+				return null;
+			}
+
+			const meaningEntry: MeaningEntry = {
+				partOfSpeech,
+				definitions,
+			};
+
+			return meaningEntry;
+		})
+		.filter((entry): entry is MeaningEntry => entry !== null);
+}
+
+function normalizeWordResult(raw: unknown, fallbackWord: string): WordResult {
+	if (!isRecord(raw)) {
+		throw new Error("사전 응답을 해석하지 못했어요.");
+	}
+
+	const rawResult = raw as RawWordResult;
+	const word = typeof rawResult.word === "string" ? rawResult.word : fallbackWord;
+	const phonetic = typeof rawResult.phonetic === "string" && rawResult.phonetic.trim() ? rawResult.phonetic.trim() : undefined;
+	const audioUrl = typeof rawResult.audioUrl === "string" && rawResult.audioUrl.trim() ? rawResult.audioUrl.trim() : undefined;
+	const meanings = sanitizeMeanings(rawResult.meanings);
+
+	if (meanings.length === 0) {
+		throw new Error("사전 정보를 찾을 수 없어요.");
+	}
 
 	return {
-		word: entry.word,
-		phonetic: phoneticText,
+		word,
+		phonetic,
 		audioUrl,
 		meanings,
 	};
-}
-
-async function fetchEnglishKorean(trimmed: string): Promise<WordResult> {
-	async function fetchFromGlosbe(): Promise<WordResult | null> {
-		try {
-			const params = new URLSearchParams({
-				from: "eng",
-				dest: "kor",
-				format: "json",
-				phrase: trimmed,
-				pretty: "true",
-			});
-
-			const response = await fetchJson(`${ENGLISH_KOREAN_ENDPOINT}?${params.toString()}`);
-
-			if (!response.ok) {
-				return null;
-			}
-
-			type GlosbeMeaning = { language?: string; text?: string };
-			type GlosbeEntry = {
-				phrase?: { text?: string; language?: string };
-				meanings?: GlosbeMeaning[];
-			};
-			const payload = (await response.json()) as {
-				result?: string;
-				tuc?: GlosbeEntry[];
-			};
-
-			if (payload.result && payload.result !== "ok") {
-				return null;
-			}
-
-			const translations = new Set<string>();
-			for (const entry of payload.tuc || []) {
-				const phrase = entry.phrase?.text?.trim();
-				if (phrase) {
-					translations.add(phrase);
-				}
-
-				for (const meaning of entry.meanings || []) {
-					if (meaning.language && !/^ko/.test(meaning.language)) {
-						continue;
-					}
-					const text = meaning.text?.trim();
-					if (text) {
-						translations.add(text);
-					}
-				}
-			}
-
-			if (translations.size === 0) {
-				return null;
-			}
-
-			const definitions = Array.from(translations).map((translation) => ({
-				definition: decodeHtmlEntities(translation),
-			}));
-
-			return {
-				word: trimmed,
-				meanings: [
-					{
-						partOfSpeech: "번역",
-						definitions,
-					},
-				],
-			};
-		} catch (error) {
-			console.warn("Glosbe 번역 요청 실패:", error);
-			return null;
-		}
-	}
-
-	async function fetchFromMyMemory(): Promise<WordResult | null> {
-		try {
-			const params = new URLSearchParams({
-				q: trimmed,
-				langpair: "en|ko",
-				mt: "1",
-			});
-
-			const response = await fetchJson(`${ENGLISH_KOREAN_FALLBACK_ENDPOINT}?${params.toString()}`);
-			if (!response.ok) {
-				return null;
-			}
-
-			const payload = (await response.json()) as {
-				responseData?: { translatedText?: string | null };
-				matches?: Array<{ translation?: string | null; segment?: string | null }>;
-			};
-
-			const translations = new Set<string>();
-			const primary = payload.responseData?.translatedText?.trim();
-			if (primary) {
-				translations.add(primary);
-			}
-
-			for (const match of payload.matches || []) {
-				const text = match.translation?.trim();
-				if (text) {
-					translations.add(text);
-				}
-			}
-
-			if (translations.size === 0) {
-				return null;
-			}
-
-			const definitions = Array.from(translations).map((translation) => ({
-				definition: decodeHtmlEntities(translation),
-			}));
-
-			return {
-				word: trimmed,
-				meanings: [
-					{
-						partOfSpeech: "번역",
-						definitions,
-					},
-				],
-			};
-		} catch (error) {
-			console.warn("MyMemory 번역 요청 실패:", error);
-			return null;
-		}
-	}
-
-	const primary = await fetchFromGlosbe();
-	if (primary) {
-		return primary;
-	}
-
-	const fallback = await fetchFromMyMemory();
-	if (fallback) {
-		return fallback;
-	}
-
-	throw new Error("번역을 불러오지 못했어요.");
 }
 
 export async function getWordData(searchTerm: string, mode: DictionaryMode): Promise<WordResult> {
@@ -204,11 +88,15 @@ export async function getWordData(searchTerm: string, mode: DictionaryMode): Pro
 		throw new Error("영어 단어만 검색할 수 있어요.");
 	}
 
-	switch (mode) {
-		case "en-ko":
-			return fetchEnglishKorean(trimmed);
-		case "en-en":
-		default:
-			return fetchEnglishEnglish(trimmed);
+	const prompt = buildPrompt(trimmed, mode);
+	const content = await callDictionaryModel(prompt);
+
+	let parsed: unknown;
+	try {
+		parsed = JSON.parse(content);
+	} catch (error) {
+		throw new Error("사전 응답 형식이 올바르지 않아요.");
 	}
+
+	return normalizeWordResult(parsed, trimmed);
 }
