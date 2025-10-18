@@ -14,3 +14,10 @@ export type WordResult = {
 	audioUrl?: string;
 	meanings: MeaningEntry[];
 };
+
+export type RawWordResult = Record<string, unknown> & {
+	word?: unknown;
+	phonetic?: unknown;
+	audioUrl?: unknown;
+	meanings?: unknown;
+};
