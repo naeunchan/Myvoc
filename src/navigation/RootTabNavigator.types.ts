@@ -23,4 +23,5 @@ export type RootTabNavigatorProps = {
 	isGuest: boolean;
 	onRequestLogin: () => void;
 	onRequestSignUp: () => void;
+	onShowHelp: () => void;
 };

@@ -23,6 +23,27 @@ export const styles = StyleSheet.create({
 		color: "#4b5563",
 		marginBottom: 24,
 	},
+	helpButton: {
+		backgroundColor: "#ffffff",
+		borderRadius: 16,
+		paddingVertical: 16,
+		paddingHorizontal: 18,
+		borderWidth: 1,
+		borderColor: "#d1d5db",
+		marginBottom: 24,
+		alignItems: "flex-start",
+	},
+	helpButtonText: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#1f2937",
+	},
+	helpButtonHint: {
+		marginTop: 6,
+		fontSize: 13,
+		color: "#6b7280",
+		lineHeight: 18,
+	},
 	guestCard: {
 		backgroundColor: "#ffffff",
 		padding: 20,

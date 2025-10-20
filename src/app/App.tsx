@@ -15,8 +15,10 @@ import {
 	getActiveSession,
 	getFavoritesByUser,
 	getAutoLoginCredentials,
+	hasSeenAppHelp,
 	hashPassword,
 	initializeDatabase,
+	markAppHelpSeen,
 	saveAutoLoginCredentials,
 	removeFavoriteForUser,
 	clearAutoLoginCredentials,
@@ -34,6 +36,7 @@ import { VersionBadge } from "@/app/components/VersionBadge";
 import { BannerPlaceholder } from "@/app/components/BannerPlaceholder";
 import { LoadingState } from "@/app/components/LoadingState";
 import { AppNavigator } from "@/app/components/AppNavigator";
+import { AppHelpModal } from "@/app/components/AppHelpModal";
 
 export default function App() {
 	const [searchTerm, setSearchTerm] = useState("");
@@ -49,6 +52,7 @@ export default function App() {
 	const [authError, setAuthError] = useState<string | null>(null);
 	const [authLoading, setAuthLoading] = useState(false);
 	const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+	const [isHelpVisible, setIsHelpVisible] = useState(false);
 	const [versionLabel] = useState(() => {
 		const extra = Constants.expoConfig?.extra;
 		return extra?.versionLabel ?? "1.0.0";
@@ -58,8 +62,16 @@ export default function App() {
 		let isMounted = true;
 
 		async function bootstrap() {
+			let shouldShowHelp = false;
 			try {
 				await initializeDatabase();
+				try {
+					const alreadySeenHelp = await hasSeenAppHelp();
+					shouldShowHelp = !alreadySeenHelp;
+				} catch (prefError) {
+					console.warn("도움말 정보를 불러오지 못했어요.", prefError);
+					shouldShowHelp = true;
+				}
 				const session = await getActiveSession();
 				if (!isMounted) {
 					return;
@@ -133,6 +145,7 @@ export default function App() {
 				setError(message);
 			} finally {
 				if (isMounted) {
+					setIsHelpVisible(shouldShowHelp);
 					setInitializing(false);
 				}
 			}
@@ -399,6 +412,17 @@ export default function App() {
 		setAuthError(null);
 	}, []);
 
+	const handleShowHelp = useCallback(() => {
+		setIsHelpVisible(true);
+	}, []);
+
+	const handleDismissHelp = useCallback(() => {
+		setIsHelpVisible(false);
+		markAppHelpSeen().catch((err) => {
+			console.warn("도움말 표시 상태를 저장하지 못했어요.", err);
+		});
+	}, []);
+
 	const handleLogout = useCallback(async () => {
 		setAuthLoading(true);
 		setAuthError(null);
@@ -558,10 +582,12 @@ export default function App() {
 							isGuest={isGuest}
 							onRequestLogin={handleGuestLoginRequest}
 							onRequestSignUp={handleGuestSignUpRequest}
+							onShowHelp={handleShowHelp}
 						/>
 					)}
 				</View>
 			</View>
+			<AppHelpModal visible={isHelpVisible} onDismiss={handleDismissHelp} />
 		</SafeAreaProvider>
 	);
 }

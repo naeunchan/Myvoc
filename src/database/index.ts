@@ -10,6 +10,7 @@ import {
 
 const DATABASE_NAME = "myvoc.db";
 const isWeb = Platform.OS === "web";
+const APP_HELP_KEY = "app.help.seen";
 
 type ExpoSQLiteModule = typeof import("expo-sqlite");
 
@@ -163,6 +164,13 @@ async function initializeDatabaseNative() {
 			updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 		);
 	`);
+	await db.execAsync(`
+		CREATE TABLE IF NOT EXISTS app_preferences (
+			key TEXT PRIMARY KEY,
+			value TEXT NOT NULL,
+			updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+		);
+	`);
 }
 
 const WEB_DB_STORAGE_KEY = "myvoc:web-db";
@@ -193,6 +201,7 @@ type WebDatabaseState = {
 	favorites: WebFavoriteRow[];
 	session: WebSessionState | null;
 	autoLogin: WebAutoLoginState | null;
+	preferences: Record<string, string>;
 };
 
 function cloneDefaultWebState(): WebDatabaseState {
@@ -201,6 +210,7 @@ function cloneDefaultWebState(): WebDatabaseState {
 		favorites: [],
 		session: null,
 		autoLogin: null,
+		preferences: {},
 	};
 }
 
@@ -332,6 +342,24 @@ function normalizeAutoLogin(value: unknown): WebAutoLoginState | null {
 	};
 }
 
+function normalizePreferences(value: unknown): Record<string, string> {
+	if (typeof value !== "object" || value === null) {
+		return {};
+	}
+
+	const record = value as Record<string, unknown>;
+	const normalized: Record<string, string> = {};
+
+	for (const key of Object.keys(record)) {
+		const candidate = record[key];
+		if (typeof candidate === "string") {
+			normalized[key] = candidate;
+		}
+	}
+
+	return normalized;
+}
+
 function readWebState(): WebDatabaseState {
 	const storage = getBrowserStorage();
 	if (!storage) {
@@ -350,6 +378,7 @@ function readWebState(): WebDatabaseState {
 			favorites: normalizeFavoriteRows(parsed.favorites),
 			session: normalizeSession(parsed.session),
 			autoLogin: normalizeAutoLogin(parsed.autoLogin),
+			preferences: normalizePreferences(parsed.preferences),
 		};
 	} catch (error) {
 		console.warn("저장된 데이터베이스 상태를 읽는 중 문제가 발생했어요.", error);
@@ -679,6 +708,48 @@ async function getAutoLoginCredentialsWeb(): Promise<{ username: string; passwor
 	};
 }
 
+async function getHasSeenAppHelpNative(): Promise<boolean> {
+	const db = await getDatabase();
+	const rows = await db.getAllAsync<{ value: string }>(
+		"SELECT value FROM app_preferences WHERE key = ? LIMIT 1",
+		[APP_HELP_KEY],
+	);
+	if (rows.length === 0) {
+		return false;
+	}
+	return rows[0]?.value === "true";
+}
+
+async function markAppHelpSeenNative() {
+	const db = await getDatabase();
+	await db.runAsync(
+		`
+			INSERT INTO app_preferences (key, value, updated_at)
+			VALUES (?, ?, CURRENT_TIMESTAMP)
+			ON CONFLICT(key)
+			DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+		`,
+		[APP_HELP_KEY, "true"],
+	);
+}
+
+async function getHasSeenAppHelpWeb(): Promise<boolean> {
+	const state = readWebState();
+	return state.preferences[APP_HELP_KEY] === "true";
+}
+
+async function markAppHelpSeenWeb() {
+	const state = readWebState();
+	const nextState: WebDatabaseState = {
+		...state,
+		preferences: {
+			...state.preferences,
+			[APP_HELP_KEY]: "true",
+		},
+	};
+	writeWebState(nextState);
+}
+
 async function setUserSessionNative(userId: number) {
 	const db = await getDatabase();
 	await db.runAsync(
@@ -883,4 +954,18 @@ export async function getAutoLoginCredentials() {
 		return getAutoLoginCredentialsWeb();
 	}
 	return getAutoLoginCredentialsNative();
+}
+
+export async function hasSeenAppHelp() {
+	if (isWeb) {
+		return getHasSeenAppHelpWeb();
+	}
+	return getHasSeenAppHelpNative();
+}
+
+export async function markAppHelpSeen() {
+	if (isWeb) {
+		return markAppHelpSeenWeb();
+	}
+	return markAppHelpSeenNative();
 }

@@ -26,6 +26,7 @@ type AppNavigatorProps = {
 	isGuest: boolean;
 	onRequestLogin: () => void;
 	onRequestSignUp: () => void;
+	onShowHelp: () => void;
 };
 
 export function AppNavigator(props: AppNavigatorProps) {
