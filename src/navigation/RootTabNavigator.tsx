@@ -34,6 +34,7 @@ export function RootTabNavigator({
 	isGuest,
 	onRequestLogin,
 	onRequestSignUp,
+	onShowHelp,
 }: RootTabNavigatorProps) {
 	return (
 		<Tab.Navigator
@@ -108,6 +109,7 @@ export function RootTabNavigator({
 						isGuest={isGuest}
 						onRequestLogin={onRequestLogin}
 						onRequestSignUp={onRequestSignUp}
+						onShowHelp={onShowHelp}
 					/>
 				)}
 			</Tab.Screen>

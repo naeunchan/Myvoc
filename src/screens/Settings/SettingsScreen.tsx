@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { SettingsScreenProps } from "@/screens/Settings/SettingsScreen.types";
 import { styles } from "@/screens/Settings/SettingsScreen.styles";
 import { GuestActionCard } from "@/screens/Settings/components/GuestActionCard";
@@ -12,6 +12,7 @@ export function SettingsScreen({
 	isGuest,
 	onRequestLogin,
 	onRequestSignUp,
+	onShowHelp,
 }: SettingsScreenProps) {
 	const handleLogoutPress = useCallback(() => {
 		if (!canLogout) {
@@ -39,6 +40,10 @@ export function SettingsScreen({
 			<View style={styles.content}>
 				<Text style={styles.title}>설정</Text>
 				<Text style={styles.description}>계정을 관리하고 초기 화면으로 돌아갈 수 있어요.</Text>
+				<TouchableOpacity style={styles.helpButton} onPress={onShowHelp} activeOpacity={0.9}>
+					<Text style={styles.helpButtonText}>도움말 다시 보기</Text>
+					<Text style={styles.helpButtonHint}>앱 사용 방법 안내를 다시 확인할 수 있어요.</Text>
+				</TouchableOpacity>
 				{isGuest ? (
 					<GuestActionCard onSignUp={handleSignUpPress} onLogin={handleLoginPress} />
 				) : (
