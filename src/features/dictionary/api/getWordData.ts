@@ -1,5 +1,6 @@
 import { DictionaryMode, MeaningEntry, RawWordResult, WordResult } from "@/features/dictionary/types";
 import { callDictionaryModel } from "@/features/dictionary/api/openAIClient";
+import { getWordPhonetic } from "@/features/dictionary/api/getWordPhonetic";
 
 function buildPrompt(term: string, mode: DictionaryMode): string {
 	const baseInstruction = `Return a JSON object with keys: word (string), phonetic (string or null), audioUrl (string or null), meanings (array). For meanings include up to 2 items. Each meaning should have partOfSpeech (string or null) and definitions (array). Each definition must have definition (string) and example (string or null). Provide at most 2 example sentences per meaning.`;
@@ -98,5 +99,18 @@ export async function getWordData(searchTerm: string, mode: DictionaryMode): Pro
 		throw new Error("사전 응답 형식이 올바르지 않아요.");
 	}
 
-	return normalizeWordResult(parsed, trimmed);
+	const normalized = normalizeWordResult(parsed, trimmed);
+
+	if (!normalized.phonetic) {
+		try {
+			const fallbackPhonetic = await getWordPhonetic(normalized.word);
+			if (fallbackPhonetic) {
+				normalized.phonetic = fallbackPhonetic;
+			}
+		} catch (error) {
+			console.warn("발음 기호를 가져오는 중 문제가 발생했어요.", error);
+		}
+	}
+
+	return normalized;
 }

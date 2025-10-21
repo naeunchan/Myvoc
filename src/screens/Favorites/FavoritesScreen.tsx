@@ -6,7 +6,7 @@ import { FavoritesScreenProps } from "@/screens/Favorites/FavoritesScreen.types"
 import { styles } from "@/screens/Favorites/FavoritesScreen.styles";
 import { MEMORIZATION_STATUSES, MEMORIZATION_STATUS_ORDER, MemorizationStatus } from "@/features/favorites/types";
 
-export function FavoritesScreen({ favorites, onUpdateStatus, onRemoveFavorite }: FavoritesScreenProps) {
+export function FavoritesScreen({ favorites, onUpdateStatus, onRemoveFavorite, onPlayAudio }: FavoritesScreenProps) {
 	const [activeStatus, setActiveStatus] = useState<MemorizationStatus>("toMemorize");
 
 	const filteredEntries = useMemo(
@@ -36,12 +36,13 @@ export function FavoritesScreen({ favorites, onUpdateStatus, onRemoveFavorite }:
 				</View>
 
 				{filteredEntries.length > 0 ? (
-					<FavoritesFlashcard
-						entries={filteredEntries}
-						status={activeStatus}
-						onMoveToStatus={onUpdateStatus}
-						onRemoveFavorite={onRemoveFavorite}
-					/>
+			<FavoritesFlashcard
+				entries={filteredEntries}
+				status={activeStatus}
+				onMoveToStatus={onUpdateStatus}
+				onRemoveFavorite={onRemoveFavorite}
+				onPlayAudio={onPlayAudio}
+			/>
 				) : (
 					<Text style={styles.emptyText}>{emptyMessage}</Text>
 				)}

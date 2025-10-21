@@ -6,7 +6,7 @@ import { MemorizationStatus } from "@/features/favorites/types";
 import { styles } from "@/screens/Favorites/components/FavoritesFlashcard.styles";
 import { FAVORITES_FLASHCARD_ICONS } from "@/screens/Favorites/components/constants";
 
-export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFavorite }: FavoritesFlashcardProps) {
+export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFavorite, onPlayAudio }: FavoritesFlashcardProps) {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [showMeaning, setShowMeaning] = useState(false);
 	const [queue, setQueue] = useState<number[]>([]);
@@ -44,6 +44,8 @@ export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFa
 
 	const currentEntry = entries[currentIndex];
 
+	const phonetic = useMemo(() => currentEntry?.word.phonetic ?? null, [currentEntry]);
+	const hasAudio = useMemo(() => Boolean(currentEntry?.word.word?.trim()), [currentEntry]);
 	const primaryDefinition = useMemo(() => {
 		const word = currentEntry?.word;
 		if (!word) {
@@ -53,6 +55,13 @@ export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFa
 		const firstDefinition = firstMeaning?.definitions[0]?.definition;
 		return firstDefinition ?? "뜻 정보가 없어요.";
 	}, [currentEntry]);
+
+	const handlePlayAudio = useCallback(() => {
+		if (!currentEntry) {
+			return;
+		}
+		onPlayAudio(currentEntry.word);
+	}, [currentEntry, onPlayAudio]);
 
 	const handleToggleMeaning = useCallback(() => {
 		setShowMeaning((previous) => !previous);
@@ -147,7 +156,19 @@ export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFa
 	return (
 		<View style={styles.container}>
 			<View style={styles.card}>
-				<Text style={styles.word}>{currentEntry.word.word}</Text>
+				<View style={styles.wordHeader}>
+					<Text style={styles.word}>{currentEntry.word.word}</Text>
+					{hasAudio ? (
+						<TouchableOpacity
+							style={styles.audioButton}
+							onPress={handlePlayAudio}
+							accessibilityLabel={`${currentEntry.word.word} 발음 듣기`}
+						>
+							<MaterialIcons name="volume-up" size={28} color="#2563eb" />
+						</TouchableOpacity>
+					) : null}
+				</View>
+				{phonetic ? <Text style={styles.phonetic}>{phonetic}</Text> : null}
 			</View>
 
 			{showMeaning ? (

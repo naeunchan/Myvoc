@@ -2,7 +2,7 @@ import Constants from "expo-constants";
 import OpenAI from "openai";
 import { OPENAI_API_KEY } from "@env";
 
-const OPENAI_MODEL = "gpt-4o";
+const OPENAI_MODEL = "gpt-4o-mini";
 
 type ExtraConfig = {
 	openaiApiKey?: string;
@@ -29,7 +29,7 @@ function getOpenAIApiKey(): string {
 
 let cachedClient: OpenAI | null = null;
 
-function getClient(): OpenAI {
+export function getOpenAIClient(): OpenAI {
 	if (!cachedClient) {
 		cachedClient = new OpenAI({
 			apiKey: getOpenAIApiKey(),
@@ -40,7 +40,7 @@ function getClient(): OpenAI {
 }
 
 export async function callDictionaryModel(prompt: string): Promise<string> {
-	const client = getClient();
+	const client = getOpenAIClient();
 
 	try {
 		const completion = await client.chat.completions.create({
@@ -52,7 +52,6 @@ export async function callDictionaryModel(prompt: string): Promise<string> {
 				},
 				{ role: "user", content: prompt },
 			],
-			temperature: 0.3,
 			response_format: { type: "json_object" },
 		});
 
