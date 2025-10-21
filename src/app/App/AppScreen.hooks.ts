@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert } from "react-native";
 import Constants from "expo-constants";
-import { Audio } from "expo-av";
 import { getWordData } from "@/features/dictionary/api/getWordData";
 import { DictionaryMode, WordResult } from "@/features/dictionary/types";
 import {
@@ -36,6 +36,7 @@ import type { RootTabNavigatorProps } from "@/navigation/RootTabNavigator.types"
 import {
 	ACCOUNT_REDIRECT_ERROR_MESSAGE,
 	AUDIO_PLAY_ERROR_MESSAGE,
+	AUDIO_UNAVAILABLE_MESSAGE,
 	DATABASE_INIT_ERROR_MESSAGE,
 	DEFAULT_GUEST_NAME,
 	DEFAULT_VERSION_LABEL,
@@ -56,7 +57,10 @@ import {
 	TOGGLE_FAVORITE_ERROR_MESSAGE,
 	UPDATE_STATUS_ERROR_MESSAGE,
 } from "@/app/App/AppScreen.constants";
+import { getPronunciationAudio } from "@/features/dictionary/api/getPronunciationAudio";
+import { getWordPhonetic } from "@/features/dictionary/api/getWordPhonetic";
 import type { AppScreenHookResult } from "@/app/App/AppScreen.types";
+import { playRemoteAudio } from "@/utils/audio";
 
 export function useAppScreen(): AppScreenHookResult {
 	const [searchTerm, setSearchTerm] = useState("");
@@ -77,6 +81,64 @@ export function useAppScreen(): AppScreenHookResult {
 		const extra = Constants.expoConfig?.extra;
 		return extra?.versionLabel ?? DEFAULT_VERSION_LABEL;
 	});
+
+	const ensurePhoneticForWord = useCallback(async (word: WordResult) => {
+		if (word.phonetic && word.phonetic.trim()) {
+			return word;
+		}
+
+		try {
+			const fallback = await getWordPhonetic(word.word);
+			if (fallback) {
+				return {
+					...word,
+					phonetic: fallback,
+				};
+			}
+		} catch (error) {
+			console.warn("발음 기호를 가져오는 중 문제가 발생했어요.", error);
+		}
+
+		return word;
+	}, []);
+
+	const hydrateFavorites = useCallback(
+		async (entries: FavoriteWordEntry[], userId?: number | null) => {
+			if (entries.length === 0) {
+				return entries;
+			}
+
+			let hasChanges = false;
+			const nextEntries: FavoriteWordEntry[] = [];
+
+			for (const entry of entries) {
+				const updatedWord = await ensurePhoneticForWord(entry.word);
+				if (updatedWord === entry.word) {
+					nextEntries.push(entry);
+					continue;
+				}
+
+				const hydratedEntry: FavoriteWordEntry = {
+					...entry,
+					word: updatedWord,
+					updatedAt: new Date().toISOString(),
+				};
+				nextEntries.push(hydratedEntry);
+				hasChanges = true;
+
+				if (userId) {
+					try {
+						await upsertFavoriteForUser(userId, hydratedEntry);
+					} catch (error) {
+						console.warn("즐겨찾기 발음 기호 업데이트 중 문제가 발생했어요.", error);
+					}
+				}
+			}
+
+			return hasChanges ? nextEntries : entries;
+		},
+		[ensurePhoneticForWord, upsertFavoriteForUser],
+	);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -109,13 +171,14 @@ export function useAppScreen(): AppScreenHookResult {
 								displayName: rememberedUser.displayName,
 							};
 							await setUserSession(userRecord.id);
-							const storedFavorites = await getFavoritesByUser(userRecord.id);
-							if (!isMounted) {
-								return;
-							}
-							setIsGuest(false);
-							setUser(userRecord);
-							setFavorites(storedFavorites);
+						const storedFavorites = await getFavoritesByUser(userRecord.id);
+						const hydratedFavorites = await hydrateFavorites(storedFavorites, userRecord.id);
+						if (!isMounted) {
+							return;
+						}
+						setIsGuest(false);
+						setUser(userRecord);
+						setFavorites(hydratedFavorites);
 							setSearchTerm("");
 							setResult(null);
 							setLastQuery(null);
@@ -151,13 +214,14 @@ export function useAppScreen(): AppScreenHookResult {
 				}
 
 				const storedFavorites = await getFavoritesByUser(session.user.id);
+				const hydratedFavorites = await hydrateFavorites(storedFavorites, session.user.id);
 				if (!isMounted) {
 					return;
 				}
 
 				setUser(session.user);
 				setIsGuest(false);
-				setFavorites(storedFavorites);
+				setFavorites(hydratedFavorites);
 			} catch (err) {
 				if (!isMounted) {
 					return;
@@ -251,6 +315,7 @@ export function useAppScreen(): AppScreenHookResult {
 
 	const toggleFavoriteAsync = useCallback(
 		async (word: WordResult) => {
+			const wordWithPhonetic = await ensurePhoneticForWord(word);
 			const previousFavorites = favorites;
 			const existingEntry = previousFavorites.find((item) => item.word.word === word.word);
 
@@ -263,7 +328,7 @@ export function useAppScreen(): AppScreenHookResult {
 				if (existingEntry) {
 					setFavorites(previousFavorites.filter((item) => item.word.word !== word.word));
 				} else {
-					setFavorites([createFavoriteEntry(word), ...previousFavorites]);
+					setFavorites([createFavoriteEntry(wordWithPhonetic), ...previousFavorites]);
 				}
 				return;
 			}
@@ -278,7 +343,7 @@ export function useAppScreen(): AppScreenHookResult {
 				return;
 			}
 
-			const newEntry = createFavoriteEntry(word, "toMemorize");
+			const newEntry = createFavoriteEntry(wordWithPhonetic, "toMemorize");
 			const nextFavorites = [newEntry, ...previousFavorites];
 			setFavorites(nextFavorites);
 
@@ -290,7 +355,7 @@ export function useAppScreen(): AppScreenHookResult {
 				setError(message);
 			}
 		},
-		[favorites, isGuest, removeFavoritePersisted, user],
+		[ensurePhoneticForWord, favorites, isGuest, removeFavoritePersisted, user],
 	);
 
 	const updateFavoriteStatusAsync = useCallback(
@@ -343,23 +408,37 @@ export function useAppScreen(): AppScreenHookResult {
 	);
 
 	const playPronunciationAsync = useCallback(async () => {
-		if (!result?.audioUrl) {
+		const currentWord = result?.word?.trim();
+		if (!currentWord) {
+			Alert.alert(AUDIO_PLAY_ERROR_MESSAGE, AUDIO_UNAVAILABLE_MESSAGE);
 			return;
 		}
 
 		try {
-			const { sound } = await Audio.Sound.createAsync({ uri: result.audioUrl });
-			await sound.playAsync();
-			sound.setOnPlaybackStatusUpdate((status) => {
-				if (status.isLoaded && status.didJustFinish) {
-					void sound.unloadAsync();
-				}
-			});
+			const uri = await getPronunciationAudio(currentWord);
+			await playRemoteAudio(uri);
 		} catch (err) {
 			const message = err instanceof Error ? err.message : AUDIO_PLAY_ERROR_MESSAGE;
 			setError(message);
+			Alert.alert(AUDIO_PLAY_ERROR_MESSAGE, message);
 		}
-	}, [result]);
+	}, [result?.word]);
+
+	const handlePlayWordAudioAsync = useCallback(async (word: WordResult) => {
+		const target = word.word?.trim();
+		if (!target) {
+			Alert.alert(AUDIO_PLAY_ERROR_MESSAGE, AUDIO_UNAVAILABLE_MESSAGE);
+			return;
+		}
+
+		try {
+			const uri = await getPronunciationAudio(target);
+			await playRemoteAudio(uri);
+		} catch (err) {
+			const message = err instanceof Error ? err.message : AUDIO_PLAY_ERROR_MESSAGE;
+			Alert.alert(AUDIO_PLAY_ERROR_MESSAGE, message);
+		}
+	}, []);
 
 	const setInitialAuthState = useCallback(() => {
 		setIsGuest(false);
@@ -426,16 +505,17 @@ export function useAppScreen(): AppScreenHookResult {
 		async (userRecord: UserRecord) => {
 			await setUserSession(userRecord.id);
 			const storedFavorites = await getFavoritesByUser(userRecord.id);
+			const hydratedFavorites = await hydrateFavorites(storedFavorites, userRecord.id);
 			setIsGuest(false);
 			setUser(userRecord);
-			setFavorites(storedFavorites);
+			setFavorites(hydratedFavorites);
 			setSearchTerm("");
 			setResult(null);
 			setLastQuery(null);
 			setError(null);
 			setAuthError(null);
 		},
-		[],
+		[hydrateFavorites],
 	);
 
 	const handleShowHelp = useCallback(() => {
@@ -590,6 +670,13 @@ export function useAppScreen(): AppScreenHookResult {
 		void playPronunciationAsync();
 	}, [playPronunciationAsync]);
 
+	const handlePlayWordAudio = useCallback(
+		(word: WordResult) => {
+			void handlePlayWordAudioAsync(word);
+		},
+		[handlePlayWordAudioAsync],
+	);
+
 	const handleGuestAccess = useCallback(() => {
 		void handleGuestAccessAsync();
 	}, [handleGuestAccessAsync]);
@@ -640,6 +727,7 @@ export function useAppScreen(): AppScreenHookResult {
 			onRequestLogin: handleGuestLoginRequest,
 			onRequestSignUp: handleGuestSignUpRequest,
 			onShowHelp: handleShowHelp,
+			onPlayWordAudio: handlePlayWordAudio,
 		}),
 		[
 			canLogout,
@@ -647,6 +735,7 @@ export function useAppScreen(): AppScreenHookResult {
 			favorites,
 			handleGuestLoginRequest,
 			handleGuestSignUpRequest,
+			handlePlayWordAudio,
 			handleLogout,
 			handleModeChange,
 			handleRemoveFavorite,

@@ -10,6 +10,7 @@ export const FAVORITE_LIMIT_MESSAGE = "게스트 모드는 단어를 최대 10�
 export const TOGGLE_FAVORITE_ERROR_MESSAGE = "단어를 저장하지 못했어요.";
 export const UPDATE_STATUS_ERROR_MESSAGE = "단어 상태를 업데이트하지 못했어요.";
 export const AUDIO_PLAY_ERROR_MESSAGE = "발음을 재생할 수 없어요.";
+export const AUDIO_UNAVAILABLE_MESSAGE = "해당 단어의 발음 정보를 찾지 못했어요.";
 export const GUEST_ACCESS_ERROR_MESSAGE = "게스트 모드로 전환하지 못했어요.";
 export const ACCOUNT_REDIRECT_ERROR_MESSAGE = "계정 화면으로 이동하지 못했어요.";
 export const LOGOUT_ERROR_MESSAGE = "로그아웃 중 문제가 발생했어요.";

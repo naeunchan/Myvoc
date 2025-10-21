@@ -4,6 +4,7 @@ import { WordResultCardProps } from "@/features/dictionary/types/WordResultCard"
 import { styles } from "@/features/dictionary/styles/WordResultCard.styles";
 
 export function WordResultCard({ result, onToggleFavorite, onPlayPronunciation, isFavorite }: WordResultCardProps) {
+ const canPlayAudio = Boolean(result.word?.trim());
 	return (
 		<View style={styles.resultCard}>
 			<View style={styles.resultHeader}>
@@ -12,7 +13,7 @@ export function WordResultCard({ result, onToggleFavorite, onPlayPronunciation, 
 					{result.phonetic ? <Text style={styles.phoneticText}>{result.phonetic}</Text> : null}
 				</View>
 				<View style={styles.resultActions}>
-					{result.audioUrl ? (
+					{canPlayAudio ? (
 						<TouchableOpacity onPress={onPlayPronunciation} style={styles.actionButton}>
 							<Text style={styles.actionButtonText}>발음</Text>
 						</TouchableOpacity>

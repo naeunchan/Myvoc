@@ -35,6 +35,7 @@ export function RootTabNavigator({
 	onRequestLogin,
 	onRequestSignUp,
 	onShowHelp,
+	onPlayWordAudio,
 }: RootTabNavigatorProps) {
 	return (
 		<Tab.Navigator
@@ -54,9 +55,9 @@ export function RootTabNavigator({
 				};
 			}}
 		>
-			<Tab.Screen
-				name="Home"
-			>
+		<Tab.Screen
+			name="Home"
+		>
 		{() => (
 			<HomeScreen
 				favorites={favorites}
@@ -64,6 +65,7 @@ export function RootTabNavigator({
 				mode={mode}
 				onMoveToStatus={onUpdateFavoriteStatus}
 				userName={userName}
+				onPlayWordAudio={onPlayWordAudio}
 			/>
 		)}
 	</Tab.Screen>
@@ -75,6 +77,7 @@ export function RootTabNavigator({
 				favorites={favorites}
 				onUpdateStatus={onUpdateFavoriteStatus}
 				onRemoveFavorite={onRemoveFavorite}
+				onPlayAudio={onPlayWordAudio}
 			/>
 		)}
 	</Tab.Screen>

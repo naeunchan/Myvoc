@@ -7,7 +7,7 @@ import { HomeHeader } from "@/screens/Home/components/HomeHeader";
 import { SummaryCard } from "@/screens/Home/components/SummaryCard";
 import { FavoritesList } from "@/screens/Home/components/FavoritesList";
 
-export function HomeScreen({ favorites, lastSearchedWord, mode, onMoveToStatus, userName }: HomeScreenProps) {
+export function HomeScreen({ favorites, lastSearchedWord, mode, onMoveToStatus, userName, onPlayWordAudio }: HomeScreenProps) {
 	const { toMemorizeEntries, counts } = useMemo(() => {
 		const summary = {
 			toMemorize: 0,
@@ -35,8 +35,13 @@ export function HomeScreen({ favorites, lastSearchedWord, mode, onMoveToStatus, 
 			<View style={styles.content}>
 				<HomeHeader />
 				<SummaryCard userName={userName} mode={mode} counts={counts} lastSearchedWord={lastSearchedWord} />
-				<FavoritesList entries={toMemorizeEntries} emptyMessage="외울 단어장에 저장된 단어가 없어요." onMoveToReview={(word) => onMoveToStatus(word, "review")} />
-			</View>
-		</SafeAreaView>
-	);
+		<FavoritesList
+			entries={toMemorizeEntries}
+			emptyMessage="외울 단어장에 저장된 단어가 없어요."
+			onMoveToReview={(word) => onMoveToStatus(word, "review")}
+			onPlayAudio={onPlayWordAudio}
+		/>
+		</View>
+	</SafeAreaView>
+);
 }

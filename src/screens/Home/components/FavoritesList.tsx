@@ -8,18 +8,37 @@ type FavoritesListProps = {
 	entries: FavoriteWordEntry[];
 	emptyMessage?: string;
 	onMoveToReview: (word: string) => void;
+	onPlayAudio: (word: FavoriteWordEntry["word"]) => void;
 };
 
-function FavoriteItem({ item, onMoveToReview }: { item: FavoriteWordEntry; onMoveToReview: (word: string) => void }) {
+type FavoriteItemProps = {
+	item: FavoriteWordEntry;
+	onMoveToReview: (word: string) => void;
+	onPlayAudio: (word: FavoriteWordEntry["word"]) => void;
+};
+
+function FavoriteItem({ item, onMoveToReview, onPlayAudio }: FavoriteItemProps) {
 	const primaryDefinition = item.word.meanings[0]?.definitions[0]?.definition ?? "뜻 정보가 없어요.";
+	const phonetic = item.word.phonetic;
+	const hasAudio = Boolean(item.word.word?.trim());
 
 	return (
 		<View style={styles.favoriteItem}>
 			<View style={styles.favoriteItemText}>
 				<Text style={styles.favoriteWord}>{item.word.word}</Text>
+				{phonetic ? <Text style={styles.favoritePhonetic}>{phonetic}</Text> : null}
 				<Text style={styles.favoriteDefinition}>{primaryDefinition}</Text>
 			</View>
 			<View style={styles.favoriteActions}>
+				{hasAudio ? (
+					<TouchableOpacity
+						style={styles.favoriteActionButton}
+						onPress={() => onPlayAudio(item.word)}
+						accessibilityLabel={`${item.word.word} 발음 듣기`}
+					>
+						<MaterialIcons name="volume-up" size={22} color="#2563eb" />
+					</TouchableOpacity>
+				) : null}
 				<TouchableOpacity
 					style={styles.favoriteActionButton}
 					onPress={() => onMoveToReview(item.word.word)}
@@ -32,17 +51,14 @@ function FavoriteItem({ item, onMoveToReview }: { item: FavoriteWordEntry; onMov
 	);
 }
 
-export function FavoritesList({ entries, emptyMessage = "저장된 단어가 없어요.", onMoveToReview }: FavoritesListProps) {
+export function FavoritesList({ entries, emptyMessage = "저장된 단어가 없어요.", onMoveToReview, onPlayAudio }: FavoritesListProps) {
 	const hasFavorites = entries.length > 0;
 
 	const renderFavorite = useCallback(
 		({ item }: { item: FavoriteWordEntry }) => (
-			<FavoriteItem
-				item={item}
-				onMoveToReview={onMoveToReview}
-			/>
+			<FavoriteItem item={item} onMoveToReview={onMoveToReview} onPlayAudio={onPlayAudio} />
 		),
-		[onMoveToReview],
+		[onMoveToReview, onPlayAudio],
 	);
 
 	const renderSeparator = useCallback(() => <View style={styles.favoriteSeparator} />, []);

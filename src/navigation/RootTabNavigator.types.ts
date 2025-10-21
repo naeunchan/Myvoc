@@ -24,4 +24,5 @@ export type RootTabNavigatorProps = {
 	onRequestLogin: () => void;
 	onRequestSignUp: () => void;
 	onShowHelp: () => void;
+	onPlayWordAudio: (word: WordResult) => void;
 };

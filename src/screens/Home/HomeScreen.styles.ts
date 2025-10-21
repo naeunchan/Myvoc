@@ -78,6 +78,11 @@ export const styles = StyleSheet.create({
 		color: "#1f2937",
 		marginBottom: 4,
 	},
+	favoritePhonetic: {
+		fontSize: 13,
+		color: "#6b7280",
+		marginBottom: 4,
+	},
 	favoriteDefinition: {
 		fontSize: 14,
 		color: "#4b5563",

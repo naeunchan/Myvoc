@@ -21,6 +21,23 @@ export const styles = StyleSheet.create({
 		fontSize: 32,
 		fontWeight: "700",
 		color: "#111827",
+		textAlign: "center",
+	},
+	wordHeader: {
+		width: "100%",
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		columnGap: 12,
+	},
+	phonetic: {
+		marginTop: 16,
+		fontSize: 18,
+		color: "#4b5563",
+		textAlign: "center",
+	},
+	audioButton: {
+		padding: 4,
 	},
 	meaningContainer: {
 		marginTop: 24,
