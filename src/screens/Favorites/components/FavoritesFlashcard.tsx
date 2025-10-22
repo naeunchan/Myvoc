@@ -13,9 +13,7 @@ export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFa
 
 	const shuffleIndices = useCallback(
 		(excludeIndex?: number) => {
-			const indices = entries
-				.map((_, index) => index)
-				.filter((index) => index !== excludeIndex);
+			const indices = entries.map((_, index) => index).filter((index) => index !== excludeIndex);
 
 			for (let i = indices.length - 1; i > 0; i -= 1) {
 				const j = Math.floor(Math.random() * (i + 1));
@@ -156,45 +154,36 @@ export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFa
 	return (
 		<View style={styles.container}>
 			<View style={styles.card}>
-				<View style={styles.wordHeader}>
+				<View style={styles.headerSection}>
 					<Text style={styles.word}>{currentEntry.word.word}</Text>
+					{phonetic ? <Text style={styles.phonetic}>{phonetic}</Text> : null}
+				</View>
+
+				<View style={styles.actions}>
+					<TouchableOpacity style={styles.actionButton} onPress={handleToggleMeaning} accessibilityLabel="뜻 보기">
+						<MaterialIcons name={revealIconName} size={28} color="#1f2937" />
+					</TouchableOpacity>
 					{hasAudio ? (
-						<TouchableOpacity
-							style={styles.audioButton}
-							onPress={handlePlayAudio}
-							accessibilityLabel={`${currentEntry.word.word} 발음 듣기`}
-						>
+						<TouchableOpacity style={styles.actionButton} onPress={handlePlayAudio} accessibilityLabel={`${currentEntry.word.word} 발음 듣기`}>
 							<MaterialIcons name="volume-up" size={28} color="#2563eb" />
 						</TouchableOpacity>
 					) : null}
-				</View>
-				{phonetic ? <Text style={styles.phonetic}>{phonetic}</Text> : null}
-			</View>
-
-			{showMeaning ? (
-				<View style={styles.meaningContainer}>
-					<Text style={styles.meaningLabel}>뜻</Text>
-					<Text style={styles.meaningText}>{primaryDefinition}</Text>
-				</View>
-			) : null}
-
-			<View style={styles.actions}>
-				<TouchableOpacity style={styles.actionButton} onPress={handleToggleMeaning} accessibilityLabel="뜻 보기">
-					<MaterialIcons name={revealIconName} size={28} color="#1f2937" />
-				</TouchableOpacity>
-				<TouchableOpacity style={styles.actionButton} onPress={handleNextWord} accessibilityLabel="다음 단어">
-					<MaterialIcons name={FAVORITES_FLASHCARD_ICONS.next} size={28} color="#1f2937" />
-				</TouchableOpacity>
-				{statusActions.map((action) => (
-					<TouchableOpacity
-						key={action.label}
-						style={styles.actionButton}
-						onPress={action.onPress}
-						accessibilityLabel={action.label}
-					>
-						<MaterialIcons name={action.icon as any} size={28} color={action.color} />
+					<TouchableOpacity style={styles.actionButton} onPress={handleNextWord} accessibilityLabel="다음 단어">
+						<MaterialIcons name={FAVORITES_FLASHCARD_ICONS.next} size={28} color="#1f2937" />
 					</TouchableOpacity>
-				))}
+					{statusActions.map((action) => (
+						<TouchableOpacity key={action.label} style={styles.actionButton} onPress={action.onPress} accessibilityLabel={action.label}>
+							<MaterialIcons name={action.icon as any} size={28} color={action.color} />
+						</TouchableOpacity>
+					))}
+				</View>
+
+				{showMeaning ? (
+					<View style={styles.meaningContainer}>
+						<Text style={styles.meaningLabel}>뜻</Text>
+						<Text style={styles.meaningText}>{primaryDefinition}</Text>
+					</View>
+				) : null}
 			</View>
 		</View>
 	);
