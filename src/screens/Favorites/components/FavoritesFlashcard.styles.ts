@@ -3,19 +3,29 @@ import { StyleSheet } from "react-native";
 export const styles = StyleSheet.create({
 	container: {
 		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		paddingHorizontal: 12,
 	},
 	card: {
 		backgroundColor: "#ffffff",
 		borderRadius: 20,
-		paddingVertical: 48,
+		paddingVertical: 32,
 		paddingHorizontal: 24,
-		alignItems: "center",
-		justifyContent: "center",
+		alignItems: "stretch",
+		justifyContent: "flex-start",
 		shadowColor: "#000",
 		shadowOpacity: 0.05,
 		shadowRadius: 12,
 		shadowOffset: { width: 0, height: 4 },
 		elevation: 4,
+		width: "100%",
+		height: "80%",
+	},
+	headerSection: {
+		alignItems: "center",
+		marginBottom: 24,
+		marginTop: 36,
 	},
 	word: {
 		fontSize: 32,
@@ -23,27 +33,19 @@ export const styles = StyleSheet.create({
 		color: "#111827",
 		textAlign: "center",
 	},
-	wordHeader: {
-		width: "100%",
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "center",
-		columnGap: 12,
-	},
 	phonetic: {
 		marginTop: 16,
 		fontSize: 18,
 		color: "#4b5563",
 		textAlign: "center",
 	},
-	audioButton: {
-		padding: 4,
-	},
 	meaningContainer: {
 		marginTop: 24,
 		padding: 20,
 		backgroundColor: "#e0f2fe",
 		borderRadius: 16,
+		minHeight: 140,
+		justifyContent: "center",
 	},
 	meaningLabel: {
 		fontSize: 14,
@@ -62,6 +64,8 @@ export const styles = StyleSheet.create({
 		justifyContent: "center",
 		alignItems: "center",
 		flexWrap: "wrap",
+		columnGap: 16,
+		rowGap: 16,
 	},
 	actionButton: {
 		width: 56,
@@ -75,7 +79,7 @@ export const styles = StyleSheet.create({
 		shadowRadius: 10,
 		shadowOffset: { width: 0, height: 4 },
 		elevation: 3,
-		marginHorizontal: 12,
-		marginVertical: 8,
+		marginHorizontal: 4,
+		marginVertical: 4,
 	},
 });
