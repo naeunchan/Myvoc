@@ -6,14 +6,7 @@ import { styles } from "@/screens/Settings/SettingsScreen.styles";
 import { GuestActionCard } from "@/screens/Settings/components/GuestActionCard";
 import { AuthenticatedActions } from "@/screens/Settings/components/AuthenticatedActions";
 
-export function SettingsScreen({
-	onLogout,
-	canLogout,
-	isGuest,
-	onRequestLogin,
-	onRequestSignUp,
-	onShowHelp,
-}: SettingsScreenProps) {
+export function SettingsScreen({ onLogout, canLogout, isGuest, onRequestLogin, onRequestSignUp, onShowHelp, appVersion }: SettingsScreenProps) {
 	const handleLogoutPress = useCallback(() => {
 		if (!canLogout) {
 			return;
@@ -44,15 +37,11 @@ export function SettingsScreen({
 					<Text style={styles.helpButtonText}>도움말 다시 보기</Text>
 					<Text style={styles.helpButtonHint}>앱 사용 방법 안내를 다시 확인할 수 있어요.</Text>
 				</TouchableOpacity>
-				{isGuest ? (
-					<GuestActionCard onSignUp={handleSignUpPress} onLogin={handleLoginPress} />
-				) : (
-					<AuthenticatedActions
-						canLogout={canLogout}
-						onLogout={handleLogoutPress}
-						onNavigateHome={onLogout}
-					/>
-				)}
+				<View style={styles.versionCard}>
+					<Text style={styles.versionLabel}>앱 버전</Text>
+					<Text style={styles.versionValue}>{appVersion}</Text>
+				</View>
+				{isGuest ? <GuestActionCard onSignUp={handleSignUpPress} onLogin={handleLoginPress} /> : <AuthenticatedActions canLogout={canLogout} onLogout={handleLogoutPress} onNavigateHome={onLogout} />}
 			</View>
 		</SafeAreaView>
 	);

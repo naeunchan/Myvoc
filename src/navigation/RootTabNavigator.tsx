@@ -36,6 +36,7 @@ export function RootTabNavigator({
 	onRequestSignUp,
 	onShowHelp,
 	onPlayWordAudio,
+	appVersion,
 }: RootTabNavigatorProps) {
 	return (
 		<Tab.Navigator
@@ -102,20 +103,21 @@ export function RootTabNavigator({
 					/>
 				)}
 			</Tab.Screen>
-			<Tab.Screen
-				name="Settings"
-			>
-				{() => (
-					<SettingsScreen
-						onLogout={onLogout}
-						canLogout={canLogout}
-						isGuest={isGuest}
-						onRequestLogin={onRequestLogin}
-						onRequestSignUp={onRequestSignUp}
-						onShowHelp={onShowHelp}
-					/>
-				)}
-			</Tab.Screen>
-		</Tab.Navigator>
+		<Tab.Screen
+			name="Settings"
+		>
+			{() => (
+				<SettingsScreen
+					onLogout={onLogout}
+					canLogout={canLogout}
+					isGuest={isGuest}
+					onRequestLogin={onRequestLogin}
+					onRequestSignUp={onRequestSignUp}
+					onShowHelp={onShowHelp}
+					appVersion={appVersion}
+				/>
+			)}
+		</Tab.Screen>
+	</Tab.Navigator>
 	);
 }

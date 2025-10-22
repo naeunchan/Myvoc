@@ -728,6 +728,7 @@ export function useAppScreen(): AppScreenHookResult {
 			onRequestSignUp: handleGuestSignUpRequest,
 			onShowHelp: handleShowHelp,
 			onPlayWordAudio: handlePlayWordAudio,
+			appVersion: versionLabel,
 		}),
 		[
 			canLogout,
@@ -752,6 +753,7 @@ export function useAppScreen(): AppScreenHookResult {
 			toggleFavorite,
 			updateFavoriteStatus,
 			userName,
+			versionLabel,
 		],
 	);
 

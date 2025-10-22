@@ -5,4 +5,5 @@ export type SettingsScreenProps = {
 	onRequestLogin: () => void;
 	onRequestSignUp: () => void;
 	onShowHelp: () => void;
+	appVersion: string;
 };

@@ -23,6 +23,25 @@ export const styles = StyleSheet.create({
 		color: "#4b5563",
 		marginBottom: 24,
 	},
+	versionCard: {
+		backgroundColor: "#ffffff",
+		borderRadius: 16,
+		borderWidth: 1,
+		borderColor: "#e5e7eb",
+		paddingVertical: 14,
+		paddingHorizontal: 18,
+		marginBottom: 20,
+	},
+	versionLabel: {
+		fontSize: 13,
+		color: "#6b7280",
+		marginBottom: 4,
+	},
+	versionValue: {
+		fontSize: 16,
+		fontWeight: "600",
+		color: "#1f2937",
+	},
 	helpButton: {
 		backgroundColor: "#ffffff",
 		borderRadius: 16,
