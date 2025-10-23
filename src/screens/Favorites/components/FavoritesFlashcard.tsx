@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { FavoritesFlashcardProps } from "@/screens/Favorites/components/FavoritesFlashcard.types";
 import { MemorizationStatus } from "@/features/favorites/types";
@@ -131,21 +131,15 @@ export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFa
 						label: "터득한 단어장으로 이동",
 					},
 				];
-			case "mastered":
-				return [
-					{
-						icon: FAVORITES_FLASHCARD_ICONS.restoreReview,
-						color: "#2563eb",
-						onPress: () => moveToStatus("review"),
-						label: "복습 단어장으로 이동",
-					},
-					{
-						icon: FAVORITES_FLASHCARD_ICONS.remove,
-						color: "#ef4444",
-						onPress: handleRemove,
-						label: "단어 삭제",
-					},
-				];
+		case "mastered":
+			return [
+				{
+					icon: FAVORITES_FLASHCARD_ICONS.remove,
+					color: "#ef4444",
+					onPress: handleRemove,
+					label: "단어 삭제",
+				},
+			];
 			default:
 				return [];
 		}
@@ -180,8 +174,9 @@ export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFa
 
 				{showMeaning ? (
 					<View style={styles.meaningContainer}>
-						<Text style={styles.meaningLabel}>뜻</Text>
-						<Text style={styles.meaningText}>{primaryDefinition}</Text>
+						<ScrollView style={styles.meaningScroll} contentContainerStyle={styles.meaningContent} showsVerticalScrollIndicator={false}>
+							<Text style={styles.meaningText}>{primaryDefinition}</Text>
+						</ScrollView>
 					</View>
 				) : null}
 			</View>
