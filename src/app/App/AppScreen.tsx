@@ -2,7 +2,6 @@ import React from "react";
 import { View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { BannerPlaceholder } from "@/app/components/BannerPlaceholder";
 import { LoadingState } from "@/app/components/LoadingState";
 import { LoginScreen } from "@/screens/Auth/LoginScreen";
 import { AppNavigator } from "@/app/components/AppNavigator";
@@ -18,7 +17,6 @@ export function AppScreen() {
 		<SafeAreaProvider>
 			<StatusBar style="dark" />
 			<View style={styles.container}>
-				<BannerPlaceholder />
 				<View style={styles.content}>
 					{initializing ? <LoadingState message={INITIAL_LOADING_MESSAGE} /> : !isAuthenticated ? <LoginScreen {...loginBindings} /> : <AppNavigator {...navigatorProps} />}
 				</View>
