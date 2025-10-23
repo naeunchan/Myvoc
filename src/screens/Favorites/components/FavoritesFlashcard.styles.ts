@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 4 },
 		elevation: 4,
 		width: "100%",
-		height: "80%",
+		height: "100%",
 	},
 	headerSection: {
 		alignItems: "center",
@@ -41,17 +41,25 @@ export const styles = StyleSheet.create({
 	},
 	meaningContainer: {
 		marginTop: 24,
-		padding: 20,
+		paddingVertical: 16,
+		paddingHorizontal: 20,
 		backgroundColor: "#e0f2fe",
 		borderRadius: 16,
-		minHeight: 140,
-		justifyContent: "center",
+		minHeight: 160,
+		maxHeight: 240,
+		flexGrow: 1,
 	},
 	meaningLabel: {
 		fontSize: 14,
 		fontWeight: "600",
 		color: "#0369a1",
 		marginBottom: 6,
+	},
+	meaningScroll: {
+		flexGrow: 1,
+	},
+	meaningContent: {
+		paddingBottom: 4,
 	},
 	meaningText: {
 		fontSize: 16,
