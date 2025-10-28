@@ -5,7 +5,7 @@ import { tabStyles } from "@/app/styles/App.styles";
 import { FavoritesScreen } from "@/screens/Favorites/FavoritesScreen";
 import { HomeScreen } from "@/screens/Home/HomeScreen";
 import { SearchScreen } from "@/screens/Search/SearchScreen";
-import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
+import { SettingsNavigator } from "@/screens/Settings/SettingsNavigator";
 import { TAB_BAR_COLORS, TAB_BAR_OPTIONS, TAB_VISUAL_CONFIG } from "@/navigation/tabConfig";
 import { RootTabParamList } from "@/navigation/Navigation.types";
 import { RootTabNavigatorProps } from "@/navigation/RootTabNavigator.types";
@@ -37,6 +37,10 @@ export function RootTabNavigator({
 	onShowHelp,
 	onPlayWordAudio,
 	appVersion,
+	profileDisplayName,
+	profileUsername,
+	onUpdateProfile,
+	onUpdatePassword,
 }: RootTabNavigatorProps) {
 	return (
 		<Tab.Navigator
@@ -50,41 +54,33 @@ export function RootTabNavigator({
 					tabBarStyle: tabStyles.tabBar,
 					tabBarShowLabel: TAB_BAR_OPTIONS.showLabel,
 					tabBarLabel: label,
-					tabBarIcon: ({ color, size }) => (
-						<MaterialIcons name={icon} color={color} size={size} />
-					),
+					tabBarIcon: ({ color, size }) => <MaterialIcons name={icon} color={color} size={size} />,
 				};
 			}}
 		>
-		<Tab.Screen
-			name="Home"
-		>
-		{() => (
-			<HomeScreen
-				favorites={favorites}
-				lastSearchedWord={lastQuery}
-				mode={mode}
-				onMoveToStatus={onUpdateFavoriteStatus}
-				userName={userName}
-				onPlayWordAudio={onPlayWordAudio}
-			/>
-		)}
-	</Tab.Screen>
-	<Tab.Screen
-		name="Favorites"
-	>
-		{() => (
-			<FavoritesScreen
-				favorites={favorites}
-				onUpdateStatus={onUpdateFavoriteStatus}
-				onRemoveFavorite={onRemoveFavorite}
-				onPlayAudio={onPlayWordAudio}
-			/>
-		)}
-	</Tab.Screen>
-			<Tab.Screen
-				name="Search"
-			>
+			<Tab.Screen name="Home">
+				{() => (
+					<HomeScreen
+						favorites={favorites}
+						lastSearchedWord={lastQuery}
+						mode={mode}
+						onMoveToStatus={onUpdateFavoriteStatus}
+						userName={userName}
+						onPlayWordAudio={onPlayWordAudio}
+					/>
+				)}
+			</Tab.Screen>
+			<Tab.Screen name="Favorites">
+				{() => (
+					<FavoritesScreen
+						favorites={favorites}
+						onUpdateStatus={onUpdateFavoriteStatus}
+						onRemoveFavorite={onRemoveFavorite}
+						onPlayAudio={onPlayWordAudio}
+					/>
+				)}
+			</Tab.Screen>
+			<Tab.Screen name="Search">
 				{() => (
 					<SearchScreen
 						searchTerm={searchTerm}
@@ -103,21 +99,23 @@ export function RootTabNavigator({
 					/>
 				)}
 			</Tab.Screen>
-		<Tab.Screen
-			name="Settings"
-		>
-			{() => (
-				<SettingsScreen
-					onLogout={onLogout}
-					canLogout={canLogout}
-					isGuest={isGuest}
-					onRequestLogin={onRequestLogin}
-					onRequestSignUp={onRequestSignUp}
-					onShowHelp={onShowHelp}
-					appVersion={appVersion}
-				/>
-			)}
-		</Tab.Screen>
-	</Tab.Navigator>
+			<Tab.Screen name="Settings">
+				{() => (
+					<SettingsNavigator
+						onLogout={onLogout}
+						canLogout={canLogout}
+						isGuest={isGuest}
+						onRequestLogin={onRequestLogin}
+						onRequestSignUp={onRequestSignUp}
+						onShowHelp={onShowHelp}
+						appVersion={appVersion}
+						profileDisplayName={profileDisplayName}
+						profileUsername={profileUsername}
+						onUpdateProfile={onUpdateProfile}
+						onUpdatePassword={onUpdatePassword}
+					/>
+				)}
+			</Tab.Screen>
+		</Tab.Navigator>
 	);
 }

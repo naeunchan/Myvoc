@@ -23,6 +23,29 @@ export const styles = StyleSheet.create({
 		color: "#4b5563",
 		marginBottom: 24,
 	},
+	authenticatedActionsContainer: {
+		gap: 16,
+	},
+	profileButton: {
+		backgroundColor: "#111827",
+		borderRadius: 16,
+		paddingVertical: 18,
+		paddingHorizontal: 20,
+	},
+	profileButtonTitle: {
+		fontSize: 18,
+		fontWeight: "700",
+		color: "#ffffff",
+		marginBottom: 6,
+	},
+	profileButtonDescription: {
+		fontSize: 14,
+		color: "#e5e7eb",
+		lineHeight: 20,
+	},
+	accountActions: {
+		gap: 12,
+	},
 	versionCard: {
 		backgroundColor: "#ffffff",
 		borderRadius: 16,
@@ -103,8 +126,6 @@ export const styles = StyleSheet.create({
 		fontWeight: "600",
 	},
 	logoutButton: {
-		marginTop: 24,
-		marginBottom: 16,
 		backgroundColor: "#ef4444",
 		paddingVertical: 14,
 		borderRadius: 12,
@@ -116,7 +137,6 @@ export const styles = StyleSheet.create({
 		fontWeight: "600",
 	},
 	homeButton: {
-		marginTop: 24,
 		backgroundColor: "#2563eb",
 		paddingVertical: 14,
 		borderRadius: 12,

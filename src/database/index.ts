@@ -511,6 +511,42 @@ async function updateUserDisplayNameWeb(userId: number, displayName: string | nu
 	return mapUserRow(updated);
 }
 
+async function updateUserPasswordNative(userId: number, password: string) {
+	const db = await getDatabase();
+	const passwordHash = await hashPassword(password);
+	await db.runAsync(
+		"UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+		[passwordHash, userId],
+	);
+	const rows = await db.getAllAsync<UserRow>(
+		"SELECT id, username, display_name, password_hash FROM users WHERE id = ? LIMIT 1",
+		[userId],
+	);
+	if (rows.length === 0) {
+		throw new Error("사용자 정보를 찾을 수 없어요.");
+	}
+	return { user: mapUserRow(rows[0]), passwordHash };
+}
+
+async function updateUserPasswordWeb(userId: number, password: string) {
+	const state = readWebState();
+	const existing = state.users.find((user) => user.id === userId);
+	if (!existing) {
+		throw new Error("사용자 정보를 찾을 수 없어요.");
+	}
+	const passwordHash = await hashPassword(password);
+	const updated: UserRow = {
+		...existing,
+		password_hash: passwordHash,
+	};
+	const nextState: WebDatabaseState = {
+		...state,
+		users: state.users.map((user) => (user.id === userId ? updated : user)),
+	};
+	writeWebState(nextState);
+	return { user: mapUserRow(updated), passwordHash };
+}
+
 async function getFavoritesByUserNative(userId: number): Promise<FavoriteWordEntry[]> {
 	const db = await getDatabase();
 	const rows = await db.getAllAsync<{ data: string }>(
@@ -884,6 +920,13 @@ export async function updateUserDisplayName(userId: number, displayName: string 
 		return updateUserDisplayNameWeb(userId, displayName);
 	}
 	return updateUserDisplayNameNative(userId, displayName);
+}
+
+export async function updateUserPassword(userId: number, password: string) {
+	if (isWeb) {
+		return updateUserPasswordWeb(userId, password);
+	}
+	return updateUserPasswordNative(userId, password);
 }
 
 export async function getFavoritesByUser(userId: number): Promise<FavoriteWordEntry[]> {

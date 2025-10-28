@@ -26,4 +26,8 @@ export type RootTabNavigatorProps = {
 	onShowHelp: () => void;
 	onPlayWordAudio: (word: WordResult) => void;
 	appVersion: string;
+	profileDisplayName: string | null;
+	profileUsername: string | null;
+	onUpdateProfile: (displayName: string) => Promise<void>;
+	onUpdatePassword: (password: string) => Promise<void>;
 };
