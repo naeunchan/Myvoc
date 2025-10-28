@@ -1,12 +1,24 @@
 import React, { useCallback } from "react";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, TouchableOpacity, View } from "react-native";
 import { SettingsScreenProps } from "@/screens/Settings/SettingsScreen.types";
 import { styles } from "@/screens/Settings/SettingsScreen.styles";
 import { GuestActionCard } from "@/screens/Settings/components/GuestActionCard";
 import { AuthenticatedActions } from "@/screens/Settings/components/AuthenticatedActions";
+import { MISSING_USER_ERROR_MESSAGE } from "@/app/App/AppScreen.constants";
 
-export function SettingsScreen({ onLogout, canLogout, isGuest, onRequestLogin, onRequestSignUp, onShowHelp, appVersion }: SettingsScreenProps) {
+export function SettingsScreen({
+	onLogout,
+	canLogout,
+	isGuest,
+	onRequestLogin,
+	onRequestSignUp,
+	onShowHelp,
+	appVersion,
+	profileUsername,
+	onNavigateProfile,
+}: SettingsScreenProps) {
+
 	const handleLogoutPress = useCallback(() => {
 		if (!canLogout) {
 			return;
@@ -28,6 +40,14 @@ export function SettingsScreen({ onLogout, canLogout, isGuest, onRequestLogin, o
 		onRequestSignUp();
 	}, [isGuest, onRequestSignUp]);
 
+	const handleNavigateProfile = useCallback(() => {
+		if (!profileUsername) {
+			Alert.alert("마이 페이지", MISSING_USER_ERROR_MESSAGE);
+			return;
+		}
+		onNavigateProfile();
+	}, [profileUsername, onNavigateProfile]);
+
 	return (
 		<SafeAreaView style={styles.safeArea}>
 			<View style={styles.content}>
@@ -41,7 +61,16 @@ export function SettingsScreen({ onLogout, canLogout, isGuest, onRequestLogin, o
 					<Text style={styles.versionLabel}>앱 버전</Text>
 					<Text style={styles.versionValue}>{appVersion}</Text>
 				</View>
-				{isGuest ? <GuestActionCard onSignUp={handleSignUpPress} onLogin={handleLoginPress} /> : <AuthenticatedActions canLogout={canLogout} onLogout={handleLogoutPress} onNavigateHome={onLogout} />}
+				{isGuest ? (
+					<GuestActionCard onSignUp={handleSignUpPress} onLogin={handleLoginPress} />
+				) : (
+					<AuthenticatedActions
+						canLogout={canLogout}
+						onLogout={handleLogoutPress}
+						onNavigateHome={onLogout}
+						onNavigateProfile={handleNavigateProfile}
+					/>
+				)}
 			</View>
 		</SafeAreaView>
 	);

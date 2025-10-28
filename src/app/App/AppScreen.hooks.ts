@@ -24,6 +24,8 @@ import {
 	saveAutoLoginCredentials,
 	setGuestSession,
 	setUserSession,
+	updateUserPassword,
+	updateUserDisplayName,
 	upsertFavoriteForUser,
 	type UserRecord,
 } from "@/database";
@@ -52,6 +54,9 @@ import {
 	LOGOUT_ERROR_MESSAGE,
 	MISSING_USER_ERROR_MESSAGE,
 	REMOVE_FAVORITE_ERROR_MESSAGE,
+	PROFILE_UPDATE_ERROR_MESSAGE,
+	PASSWORD_REQUIRED_ERROR_MESSAGE,
+	PASSWORD_UPDATE_ERROR_MESSAGE,
 	SIGNUP_DUPLICATE_ERROR_MESSAGE,
 	SIGNUP_GENERIC_ERROR_MESSAGE,
 	TOGGLE_FAVORITE_ERROR_MESSAGE,
@@ -677,6 +682,61 @@ export function useAppScreen(): AppScreenHookResult {
 		[handlePlayWordAudioAsync],
 	);
 
+	const handleProfilePasswordUpdate = useCallback(
+		async (password: string) => {
+			if (!user) {
+				throw new Error(MISSING_USER_ERROR_MESSAGE);
+			}
+
+			const trimmedPassword = password.trim();
+			if (!trimmedPassword) {
+				throw new Error(PASSWORD_REQUIRED_ERROR_MESSAGE);
+			}
+
+			const passwordValidationError = getGooglePasswordValidationError(trimmedPassword);
+			if (passwordValidationError) {
+				throw new Error(passwordValidationError);
+			}
+
+			try {
+				const { user: updatedUser, passwordHash } = await updateUserPassword(user.id, trimmedPassword);
+				setUser(updatedUser);
+				try {
+					const autoLoginEntry = await getAutoLoginCredentials();
+					if (autoLoginEntry?.username === updatedUser.username) {
+						await saveAutoLoginCredentials(updatedUser.username, passwordHash);
+					} else if (autoLoginEntry) {
+						await clearAutoLoginCredentials();
+					}
+				} catch (autoLoginError) {
+					console.warn("자동 로그인 정보를 업데이트하는 중 문제가 발생했어요.", autoLoginError);
+				}
+			} catch (err) {
+				const message = err instanceof Error ? err.message : PASSWORD_UPDATE_ERROR_MESSAGE;
+				throw new Error(message);
+			}
+		},
+		[user, clearAutoLoginCredentials, getAutoLoginCredentials, saveAutoLoginCredentials],
+	);
+
+	const handleProfileUpdate = useCallback(
+		async (displayName: string) => {
+			if (!user) {
+				throw new Error(MISSING_USER_ERROR_MESSAGE);
+			}
+
+			const normalizedName = displayName.trim();
+			try {
+				const updated = await updateUserDisplayName(user.id, normalizedName || null);
+				setUser(updated);
+			} catch (err) {
+				const message = err instanceof Error ? err.message : PROFILE_UPDATE_ERROR_MESSAGE;
+				throw new Error(message);
+			}
+		},
+		[user],
+	);
+
 	const handleGuestAccess = useCallback(() => {
 		void handleGuestAccessAsync();
 	}, [handleGuestAccessAsync]);
@@ -729,6 +789,10 @@ export function useAppScreen(): AppScreenHookResult {
 			onShowHelp: handleShowHelp,
 			onPlayWordAudio: handlePlayWordAudio,
 			appVersion: versionLabel,
+			profileDisplayName: user?.displayName ?? null,
+			profileUsername: user?.username ?? null,
+			onUpdateProfile: handleProfileUpdate,
+			onUpdatePassword: handleProfilePasswordUpdate,
 		}),
 		[
 			canLogout,
@@ -736,6 +800,8 @@ export function useAppScreen(): AppScreenHookResult {
 			favorites,
 			handleGuestLoginRequest,
 			handleGuestSignUpRequest,
+			handleProfilePasswordUpdate,
+			handleProfileUpdate,
 			handlePlayWordAudio,
 			handleLogout,
 			handleModeChange,
@@ -752,6 +818,7 @@ export function useAppScreen(): AppScreenHookResult {
 			searchTerm,
 			toggleFavorite,
 			updateFavoriteStatus,
+			user,
 			userName,
 			versionLabel,
 		],
