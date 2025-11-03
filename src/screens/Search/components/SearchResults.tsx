@@ -8,6 +8,8 @@ type SearchResultsProps = {
 	loading: boolean;
 	error: string | null;
 	result: WordResult | null;
+	examplesVisible: boolean;
+	onToggleExamples: () => void;
 	isFavorite: boolean;
 	onToggleFavorite: (word: WordResult) => void;
 	onPlayPronunciation: () => void;
@@ -17,6 +19,8 @@ export function SearchResults({
 	loading,
 	error,
 	result,
+	examplesVisible,
+	onToggleExamples,
 	isFavorite,
 	onToggleFavorite,
 	onPlayPronunciation,
@@ -42,6 +46,8 @@ export function SearchResults({
 			result={result}
 			onToggleFavorite={onToggleFavorite}
 			onPlayPronunciation={onPlayPronunciation}
+			examplesVisible={examplesVisible}
+			onToggleExamples={onToggleExamples}
 			isFavorite={isFavorite}
 		/>
 	);

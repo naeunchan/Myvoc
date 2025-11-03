@@ -12,6 +12,8 @@ export type RootTabNavigatorProps = {
 	loading: boolean;
 	error: string | null;
 	result: WordResult | null;
+	examplesVisible: boolean;
+	onToggleExamples: () => void;
 	isCurrentFavorite: boolean;
 	onPlayPronunciation: () => void;
 	mode: DictionaryMode;

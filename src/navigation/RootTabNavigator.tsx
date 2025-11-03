@@ -23,6 +23,8 @@ export function RootTabNavigator({
 	loading,
 	error,
 	result,
+	examplesVisible,
+	onToggleExamples,
 	isCurrentFavorite,
 	onPlayPronunciation,
 	mode,
@@ -89,6 +91,8 @@ export function RootTabNavigator({
 						loading={loading}
 						error={error}
 						result={result}
+						examplesVisible={examplesVisible}
+						onToggleExamples={onToggleExamples}
 						onToggleFavorite={(word) => {
 							void onToggleFavorite(word);
 						}}
