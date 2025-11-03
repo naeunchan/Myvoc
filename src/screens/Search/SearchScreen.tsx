@@ -14,6 +14,8 @@ export function SearchScreen({
 	loading,
 	error,
 	result,
+	examplesVisible,
+	onToggleExamples,
 	onToggleFavorite,
 	isCurrentFavorite,
 	onPlayPronunciation,
@@ -33,6 +35,8 @@ export function SearchScreen({
 					loading={loading}
 					error={error}
 					result={result}
+					examplesVisible={examplesVisible}
+					onToggleExamples={onToggleExamples}
 					isFavorite={isCurrentFavorite}
 					onToggleFavorite={onToggleFavorite}
 					onPlayPronunciation={onPlayPronunciation}

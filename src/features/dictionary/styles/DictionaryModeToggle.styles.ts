@@ -15,6 +15,9 @@ export const styles = StyleSheet.create({
 		borderRadius: 10,
 		alignItems: "center",
 	},
+	disabledButton: {
+		opacity: 0.5,
+	},
 	activeButton: {
 		backgroundColor: "#ffffff",
 		shadowColor: "#000000",
@@ -30,5 +33,8 @@ export const styles = StyleSheet.create({
 	},
 	activeLabel: {
 		color: "#1f2937",
+	},
+	disabledLabel: {
+		color: "#9ca3af",
 	},
 });

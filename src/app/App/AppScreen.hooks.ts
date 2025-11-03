@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
 import Constants from "expo-constants";
 import { getWordData } from "@/features/dictionary/api/getWordData";
@@ -63,7 +63,8 @@ import {
 	UPDATE_STATUS_ERROR_MESSAGE,
 } from "@/app/App/AppScreen.constants";
 import { getPronunciationAudio } from "@/features/dictionary/api/getPronunciationAudio";
-import { getWordPhonetic } from "@/features/dictionary/api/getWordPhonetic";
+import { fetchDictionaryEntry } from "@/features/dictionary/api/freeDictionaryClient";
+import { applyExampleUpdates, clearPendingFlags } from "@/features/dictionary/utils/mergeExampleUpdates";
 import type { AppScreenHookResult } from "@/app/App/AppScreen.types";
 import { playRemoteAudio } from "@/utils/audio";
 
@@ -72,8 +73,10 @@ export function useAppScreen(): AppScreenHookResult {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [result, setResult] = useState<WordResult | null>(null);
+	const [examplesVisible, setExamplesVisible] = useState(false);
 	const [favorites, setFavorites] = useState<FavoriteWordEntry[]>([]);
 	const [mode, setMode] = useState<DictionaryMode>("en-en");
+	const modeRef = useRef<DictionaryMode>("en-en");
 	const [lastQuery, setLastQuery] = useState<string | null>(null);
 	const [user, setUser] = useState<UserRecord | null>(null);
 	const [initializing, setInitializing] = useState(true);
@@ -86,6 +89,7 @@ export function useAppScreen(): AppScreenHookResult {
 		const extra = Constants.expoConfig?.extra;
 		return extra?.versionLabel ?? DEFAULT_VERSION_LABEL;
 	});
+	const activeLookupRef = useRef(0);
 
 	const ensurePhoneticForWord = useCallback(async (word: WordResult) => {
 		if (word.phonetic && word.phonetic.trim()) {
@@ -93,11 +97,11 @@ export function useAppScreen(): AppScreenHookResult {
 		}
 
 		try {
-			const fallback = await getWordPhonetic(word.word);
-			if (fallback) {
+			const fallback = await fetchDictionaryEntry(word.word, "en-en");
+			if (fallback.phonetic) {
 				return {
 					...word,
-					phonetic: fallback,
+					phonetic: fallback.phonetic,
 				};
 			}
 		} catch (error) {
@@ -248,29 +252,91 @@ export function useAppScreen(): AppScreenHookResult {
 		};
 	}, []);
 
+	useEffect(() => {
+		modeRef.current = mode;
+	}, [mode]);
+
 	const executeSearch = useCallback(
 		async (term: string, dictionaryMode: DictionaryMode) => {
 			const normalizedTerm = term.trim();
 			if (!normalizedTerm) {
+				activeLookupRef.current += 1;
 				setError(EMPTY_SEARCH_ERROR_MESSAGE);
 				setResult(null);
+				setExamplesVisible(false);
 				setLastQuery(null);
+				setLoading(false);
 				return;
 			}
+
+			const lookupId = activeLookupRef.current + 1;
+			activeLookupRef.current = lookupId;
 
 			setError(null);
 			setLastQuery(normalizedTerm);
 			setLoading(true);
+			setExamplesVisible(false);
+
 			try {
-				const data = await getWordData(term, dictionaryMode);
-				setResult(data);
-			} catch (err) {
-				const message = err instanceof Error ? err.message : GENERIC_ERROR_MESSAGE;
-				setResult(null);
-				setError(message);
-			} finally {
+				const { base, examplesPromise } = await getWordData(normalizedTerm, dictionaryMode);
+				if (lookupId !== activeLookupRef.current) {
+					return;
+				}
+
+				setResult(base);
 				setLoading(false);
+
+				void examplesPromise
+					.then((updates) => {
+						if (lookupId !== activeLookupRef.current) {
+							return;
+						}
+						setResult((previous) => {
+							if (!previous) {
+								return previous;
+							}
+							if (updates.length === 0) {
+								return clearPendingFlags(previous);
+							}
+							return applyExampleUpdates(previous, updates, dictionaryMode);
+						});
+					})
+					.catch((err) => {
+						console.warn("예문 생성 중 문제가 발생했어요.", err);
+						if (lookupId !== activeLookupRef.current) {
+							return;
+						}
+						setResult((previous) => (previous ? clearPendingFlags(previous) : previous));
+					});
+			} catch (err) {
+				if (lookupId !== activeLookupRef.current) {
+					return;
+				}
+				setResult(null);
+				setExamplesVisible(false);
+				setLoading(false);
+				const message = err instanceof Error ? err.message : GENERIC_ERROR_MESSAGE;
+				setError(message);
 			}
+		},
+		[],
+	);
+
+	const handleSearchTermChange = useCallback(
+		(text: string) => {
+			setSearchTerm(text);
+
+			const trimmed = text.trim();
+			if (!trimmed) {
+				activeLookupRef.current += 1;
+				setError(null);
+				setLoading(false);
+				setExamplesVisible(false);
+				return;
+			}
+			// Cancel any in-flight result updates; user must submit explicitly.
+			activeLookupRef.current += 1;
+			setLoading(false);
 		},
 		[],
 	);
@@ -281,13 +347,27 @@ export function useAppScreen(): AppScreenHookResult {
 
 	const handleModeChange = useCallback(
 		(nextMode: DictionaryMode) => {
-			setMode(nextMode);
-			if (searchTerm.trim()) {
-				void executeSearch(searchTerm, nextMode);
+			if (nextMode === "en-ko") {
+				return;
 			}
+			if (modeRef.current === nextMode) {
+				return;
+			}
+			activeLookupRef.current += 1;
+			setMode(nextMode);
+			modeRef.current = nextMode;
+			setResult(null);
+			setError(null);
+			setLastQuery(null);
+			setLoading(false);
+			setExamplesVisible(false);
 		},
-		[executeSearch, searchTerm],
+		[],
 	);
+
+	const handleToggleExamples = useCallback(() => {
+		setExamplesVisible((previous) => !previous);
+	}, []);
 
 	const isCurrentFavorite = useMemo(() => {
 		if (!result) {
@@ -321,6 +401,7 @@ export function useAppScreen(): AppScreenHookResult {
 	const toggleFavoriteAsync = useCallback(
 		async (word: WordResult) => {
 			const wordWithPhonetic = await ensurePhoneticForWord(word);
+			const normalizedWord = clearPendingFlags(wordWithPhonetic);
 			const previousFavorites = favorites;
 			const existingEntry = previousFavorites.find((item) => item.word.word === word.word);
 
@@ -333,7 +414,7 @@ export function useAppScreen(): AppScreenHookResult {
 				if (existingEntry) {
 					setFavorites(previousFavorites.filter((item) => item.word.word !== word.word));
 				} else {
-					setFavorites([createFavoriteEntry(wordWithPhonetic), ...previousFavorites]);
+					setFavorites([createFavoriteEntry(normalizedWord), ...previousFavorites]);
 				}
 				return;
 			}
@@ -348,7 +429,7 @@ export function useAppScreen(): AppScreenHookResult {
 				return;
 			}
 
-			const newEntry = createFavoriteEntry(wordWithPhonetic, "toMemorize");
+			const newEntry = createFavoriteEntry(normalizedWord, "toMemorize");
 			const nextFavorites = [newEntry, ...previousFavorites];
 			setFavorites(nextFavorites);
 
@@ -451,6 +532,7 @@ export function useAppScreen(): AppScreenHookResult {
 		setFavorites([]);
 		setSearchTerm("");
 		setResult(null);
+		setExamplesVisible(false);
 		setLastQuery(null);
 		setError(null);
 		setAuthError(null);
@@ -466,6 +548,7 @@ export function useAppScreen(): AppScreenHookResult {
 			setFavorites([]);
 			setSearchTerm("");
 			setResult(null);
+			setExamplesVisible(false);
 			setLastQuery(null);
 			setError(null);
 			setAuthMode("login");
@@ -516,6 +599,7 @@ export function useAppScreen(): AppScreenHookResult {
 			setFavorites(hydratedFavorites);
 			setSearchTerm("");
 			setResult(null);
+			setExamplesVisible(false);
 			setLastQuery(null);
 			setError(null);
 			setAuthError(null);
@@ -770,11 +854,13 @@ export function useAppScreen(): AppScreenHookResult {
 			onUpdateFavoriteStatus: updateFavoriteStatus,
 			onRemoveFavorite: handleRemoveFavorite,
 			searchTerm,
-			onChangeSearchTerm: setSearchTerm,
+			onChangeSearchTerm: handleSearchTermChange,
 			onSubmitSearch: handleSearch,
 			loading,
 			error,
 			result,
+			examplesVisible,
+			onToggleExamples: handleToggleExamples,
 			isCurrentFavorite,
 			onPlayPronunciation: playPronunciation,
 			mode,
@@ -797,9 +883,11 @@ export function useAppScreen(): AppScreenHookResult {
 		[
 			canLogout,
 			error,
+			examplesVisible,
 			favorites,
 			handleGuestLoginRequest,
 			handleGuestSignUpRequest,
+			handleToggleExamples,
 			handleProfilePasswordUpdate,
 			handleProfileUpdate,
 			handlePlayWordAudio,
@@ -807,6 +895,7 @@ export function useAppScreen(): AppScreenHookResult {
 			handleModeChange,
 			handleRemoveFavorite,
 			handleSearch,
+			handleSearchTermChange,
 			handleShowHelp,
 			isCurrentFavorite,
 			isGuest,

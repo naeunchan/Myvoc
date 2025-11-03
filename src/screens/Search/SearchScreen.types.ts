@@ -7,6 +7,8 @@ export type SearchScreenProps = {
 	loading: boolean;
 	error: string | null;
 	result: WordResult | null;
+	examplesVisible: boolean;
+	onToggleExamples: () => void;
 	onToggleFavorite: (word: WordResult) => void;
 	isCurrentFavorite: boolean;
 	onPlayPronunciation: () => void;

@@ -1,6 +1,9 @@
 export type DefinitionEntry = {
 	definition: string;
 	example?: string;
+	originalDefinition?: string;
+	pendingExample?: boolean;
+	pendingTranslation?: boolean;
 };
 
 export type MeaningEntry = {
