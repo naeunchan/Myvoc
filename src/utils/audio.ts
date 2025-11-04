@@ -1,57 +1,82 @@
-import { Audio } from "expo-audio";
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer, type AudioStatus } from "expo-audio";
+import type { EventSubscription } from "expo-modules-core";
 
-type PlaybackStatus =
-	| {
-			isLoaded: true;
-			didJustFinish: boolean;
-	  }
-	| {
-			isLoaded: false;
-			error?: string;
-	  };
+let audioModePromise: Promise<void> | null = null;
 
-export async function playRemoteAudio(uri: string) {
-	const soundObject = await Audio.Sound.createAsync({ uri });
-	const sound = soundObject?.sound;
-	if (!sound) {
-		throw new Error("오디오를 재생할 수 없어요.");
+async function ensureAudioModeConfigured() {
+	if (!audioModePromise) {
+		audioModePromise = setAudioModeAsync({
+			playsInSilentMode: true,
+			shouldPlayInBackground: false,
+			allowsRecording: false,
+			interruptionMode: "mixWithOthers",
+			interruptionModeAndroid: "duckOthers",
+			shouldRouteThroughEarpiece: false,
+		}).catch((error) => {
+			console.warn("오디오 모드를 설정하는 중 문제가 발생했어요.", error);
+		});
 	}
-	let resolved = false;
+
+	await audioModePromise;
+}
+
+function disposePlayer(player: AudioPlayer) {
+	try {
+		player.pause();
+	} catch (error) {
+		console.warn("오디오 재생을 중단하는 중 문제가 발생했어요.", error);
+	}
 
 	try {
-		await new Promise<void>((resolve, reject) => {
-			sound.setOnPlaybackStatusUpdate((status: PlaybackStatus) => {
-				if (!status.isLoaded) {
-					if ("error" in status && status.error) {
-						if (!resolved) {
-							resolved = true;
-							reject(new Error(status.error));
-						}
-					}
-					return;
-				}
-
-				if (status.didJustFinish) {
-					if (!resolved) {
-						resolved = true;
-						void sound.unloadAsync().finally(resolve);
-					}
-				}
-			});
-
-			sound.playAsync().catch((error: unknown) => {
-				if (!resolved) {
-					resolved = true;
-					void sound.unloadAsync().finally(() => {
-						reject(error instanceof Error ? error : new Error("Failed to play audio"));
-					});
-				}
-			});
-		});
-	} finally {
-		sound.setOnPlaybackStatusUpdate(null);
-		if (!resolved) {
-			await sound.unloadAsync();
-		}
+		player.remove();
+	} catch (error) {
+		console.warn("오디오 리소스를 정리하는 중 문제가 발생했어요.", error);
 	}
+}
+
+export async function playRemoteAudio(uri: string) {
+	await ensureAudioModeConfigured();
+
+	const player = createAudioPlayer({ uri });
+
+	return new Promise<void>((resolve, reject) => {
+		let settled = false;
+		let subscription: EventSubscription | null = null;
+
+		const settle = (error?: Error) => {
+			if (settled) {
+				return;
+			}
+			settled = true;
+			subscription?.remove();
+			disposePlayer(player);
+			if (error) {
+				reject(error);
+			} else {
+				resolve();
+			}
+		};
+
+		subscription = player.addListener("playbackStatusUpdate", (status: AudioStatus) => {
+			if (status.playbackState === "failed") {
+				const message =
+					status.reasonForWaitingToPlay && status.reasonForWaitingToPlay !== "unknown"
+						? status.reasonForWaitingToPlay
+						: "오디오를 재생할 수 없어요.";
+				settle(new Error(message));
+				return;
+			}
+
+			if (status.didJustFinish) {
+				settle();
+			}
+		});
+
+		try {
+			player.play();
+		} catch (error) {
+			const normalized = error instanceof Error ? error : new Error("오디오를 재생할 수 없어요.");
+			settle(normalized);
+		}
+	});
 }
