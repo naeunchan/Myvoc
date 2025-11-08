@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FavoritesFlashcard } from "@/screens/Favorites/components/FavoritesFlashcard";
 import { FavoritesScreenProps } from "@/screens/Favorites/FavoritesScreen.types";
@@ -17,36 +17,46 @@ export function FavoritesScreen({ favorites, onUpdateStatus, onRemoveFavorite, o
 
 	return (
 		<SafeAreaView style={styles.safeArea}>
-			<View style={styles.content}>
-				<Text style={styles.title}>내 단어장</Text>
-				<View style={styles.segmentedControl}>
-					{MEMORIZATION_STATUS_ORDER.map((status) => {
-						const label = MEMORIZATION_STATUSES[status];
-						const isActive = status === activeStatus;
-						return (
-							<Pressable
-								key={status}
-								style={[styles.segmentButton, isActive && styles.segmentButtonActive]}
-								onPress={() => setActiveStatus(status)}
-							>
-								<Text style={[styles.segmentButtonText, isActive && styles.segmentButtonTextActive]}>{label}</Text>
-							</Pressable>
-						);
-					})}
+			<ScrollView contentContainerStyle={styles.scrollContent}>
+				<View style={styles.heroCard}>
+					<Text style={styles.heroTitle}>내 단어장</Text>
+					<Text style={styles.heroSubtitle}>단어를 단계별로 복습하며 기억을 단단히 다져봐요.</Text>
+				</View>
+
+				<View style={styles.segmentCard}>
+					<Text style={styles.segmentLabel}>학습 단계</Text>
+					<View style={styles.segmentedControl}>
+						{MEMORIZATION_STATUS_ORDER.map((status) => {
+							const label = MEMORIZATION_STATUSES[status];
+							const isActive = status === activeStatus;
+							return (
+								<Pressable
+									key={status}
+									style={[styles.segmentButton, isActive && styles.segmentButtonActive]}
+									onPress={() => setActiveStatus(status)}
+								>
+									<Text style={[styles.segmentButtonText, isActive && styles.segmentButtonTextActive]}>{label}</Text>
+								</Pressable>
+							);
+						})}
+					</View>
 				</View>
 
 				{filteredEntries.length > 0 ? (
-			<FavoritesFlashcard
-				entries={filteredEntries}
-				status={activeStatus}
-				onMoveToStatus={onUpdateStatus}
-				onRemoveFavorite={onRemoveFavorite}
-				onPlayAudio={onPlayAudio}
-			/>
+					<FavoritesFlashcard
+						entries={filteredEntries}
+						status={activeStatus}
+						onMoveToStatus={onUpdateStatus}
+						onRemoveFavorite={onRemoveFavorite}
+						onPlayAudio={onPlayAudio}
+					/>
 				) : (
-					<Text style={styles.emptyText}>{emptyMessage}</Text>
+					<View style={styles.emptyCard}>
+						<Text style={styles.emptyTitle}>{emptyMessage}</Text>
+						<Text style={styles.emptySubtitle}>검색 화면에서 단어를 저장하면 이곳에서 복습할 수 있어요.</Text>
+					</View>
 				)}
-			</View>
+			</ScrollView>
 		</SafeAreaView>
 	);
 }
