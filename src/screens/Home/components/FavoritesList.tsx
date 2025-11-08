@@ -65,7 +65,13 @@ export function FavoritesList({ entries, emptyMessage = "저장된 단어가 없
 
 	return (
 		<View style={styles.favoriteCard}>
-			<Text style={styles.cardTitle}>외울 단어장</Text>
+			<View style={styles.favoritesHeader}>
+				<View>
+					<Text style={styles.sectionLabel}>외울 단어장</Text>
+					<Text style={styles.favoritesSubtitle}>오늘 복습할 단어를 여기서 관리하세요.</Text>
+				</View>
+				{hasFavorites ? <Text style={styles.favoritesCount}>{entries.length}</Text> : null}
+			</View>
 			{hasFavorites ? (
 				<FlatList
 					data={entries}

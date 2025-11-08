@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SettingsScreenProps } from "@/screens/Settings/SettingsScreen.types";
 import { styles } from "@/screens/Settings/SettingsScreen.styles";
@@ -50,17 +50,22 @@ export function SettingsScreen({
 
 	return (
 		<SafeAreaView style={styles.safeArea}>
-			<View style={styles.content}>
-				<Text style={styles.title}>설정</Text>
-				<Text style={styles.description}>계정을 관리하고 초기 화면으로 돌아갈 수 있어요.</Text>
-				<TouchableOpacity style={styles.helpButton} onPress={onShowHelp} activeOpacity={0.9}>
-					<Text style={styles.helpButtonText}>도움말 다시 보기</Text>
-					<Text style={styles.helpButtonHint}>앱 사용 방법 안내를 다시 확인할 수 있어요.</Text>
+			<ScrollView contentContainerStyle={styles.scrollContent}>
+				<View style={styles.heroCard}>
+					<Text style={styles.heroTitle}>설정</Text>
+					<Text style={styles.heroSubtitle}>계정과 도움말, 앱 정보를 한 곳에서 확인하세요.</Text>
+				</View>
+
+				<TouchableOpacity style={styles.helpCard} onPress={onShowHelp} activeOpacity={0.9}>
+					<Text style={styles.helpTitle}>도움말 다시 보기</Text>
+					<Text style={styles.helpDescription}>앱 사용 가이드를 다시 보고 싶을 때 눌러주세요.</Text>
 				</TouchableOpacity>
+
 				<View style={styles.versionCard}>
 					<Text style={styles.versionLabel}>앱 버전</Text>
 					<Text style={styles.versionValue}>{appVersion}</Text>
 				</View>
+
 				{isGuest ? (
 					<GuestActionCard onSignUp={handleSignUpPress} onLogin={handleLoginPress} />
 				) : (
@@ -71,7 +76,7 @@ export function SettingsScreen({
 						onNavigateProfile={handleNavigateProfile}
 					/>
 				)}
-			</View>
+			</ScrollView>
 		</SafeAreaView>
 	);
 }

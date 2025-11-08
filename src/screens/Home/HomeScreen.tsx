@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { HomeScreenProps } from "@/screens/Home/HomeScreen.types";
 import { styles } from "@/screens/Home/HomeScreen.styles";
 import { HomeHeader } from "@/screens/Home/components/HomeHeader";
@@ -32,16 +32,16 @@ export function HomeScreen({ favorites, lastSearchedWord, mode, onMoveToStatus, 
 
 	return (
 		<SafeAreaView style={styles.safeArea}>
-			<View style={styles.content}>
-				<HomeHeader />
+			<ScrollView contentContainerStyle={styles.scrollContent}>
+				<HomeHeader userName={userName} />
 				<SummaryCard userName={userName} mode={mode} counts={counts} lastSearchedWord={lastSearchedWord} />
-		<FavoritesList
-			entries={toMemorizeEntries}
-			emptyMessage="외울 단어장에 저장된 단어가 없어요."
-			onMoveToReview={(word) => onMoveToStatus(word, "review")}
-			onPlayAudio={onPlayWordAudio}
-		/>
-		</View>
-	</SafeAreaView>
-);
+				<FavoritesList
+					entries={toMemorizeEntries}
+					emptyMessage="외울 단어장에 저장된 단어가 없어요."
+					onMoveToReview={(word) => onMoveToStatus(word, "review")}
+					onPlayAudio={onPlayWordAudio}
+				/>
+			</ScrollView>
+		</SafeAreaView>
+	);
 }
