@@ -1,21 +1,21 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { styles } from "@/screens/Home/HomeScreen.styles";
-
-type HomeHeaderProps = {
-	userName: string;
-};
+import { HOME_HEADER_TEXT } from "@/screens/Home/constants";
+import { styles } from "@/screens/Home/styles/HomeHeader.styles";
+import { HomeHeaderProps } from "@/screens/Home/types/HomeHeader.types";
 
 export function HomeHeader({ userName }: HomeHeaderProps) {
-	const displayName = userName?.trim() ? `${userName}님` : "나만의 영어 단어장";
+	const displayName = userName?.trim() ? `${userName}님` : HOME_HEADER_TEXT.defaultDisplayName;
+
 	return (
-		<View style={styles.heroCard}>
-			<Text style={styles.heroBadge}>나의 학습 공간</Text>
-			<Text style={styles.heroTitle}>
+		<View style={styles.container}>
+			<Text style={styles.badge}>{HOME_HEADER_TEXT.badgeLabel}</Text>
+			<Text style={styles.title}>
 				{displayName}
-				{"\n"}오늘도 단어를 만나봐요
+				{"\n"}
+				{HOME_HEADER_TEXT.titleSuffix}
 			</Text>
-			<Text style={styles.heroSubtitle}>최근에 저장한 단어와 요약 정보가 아래 카드에 정리돼요.</Text>
+			<Text style={styles.subtitle}>{HOME_HEADER_TEXT.subtitle}</Text>
 		</View>
 	);
 }
