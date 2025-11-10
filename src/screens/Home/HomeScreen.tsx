@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ScrollView, View } from "react-native";
-import { HomeScreenProps } from "@/screens/Home/HomeScreen.types";
-import { styles } from "@/screens/Home/HomeScreen.styles";
+import { ScrollView } from "react-native";
+import { HomeScreenProps } from "@/screens/Home/types/HomeScreen.types";
+import { styles } from "@/screens/Home/styles/HomeScreen.styles";
 import { HomeHeader } from "@/screens/Home/components/HomeHeader";
 import { SummaryCard } from "@/screens/Home/components/SummaryCard";
 import { FavoritesList } from "@/screens/Home/components/FavoritesList";
