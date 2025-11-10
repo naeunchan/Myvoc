@@ -13,9 +13,6 @@ export function SearchBar({ value, onChangeText, onSubmit }: SearchBarProps) {
 
 	return (
 		<View style={styles.card}>
-			<View style={styles.cardHeader}>
-				<Text style={styles.cardTitle}>입력</Text>
-			</View>
 			<View style={styles.inputWrapper}>
 				<TextInput
 					value={value}
@@ -26,8 +23,7 @@ export function SearchBar({ value, onChangeText, onSubmit }: SearchBarProps) {
 					style={styles.searchInput}
 					autoCapitalize="none"
 					autoCorrect={false}
-					multiline
-					textAlignVertical="top"
+					blurOnSubmit
 				/>
 			</View>
 			<View style={styles.cardFooter}>

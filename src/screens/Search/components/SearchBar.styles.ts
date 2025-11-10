@@ -35,11 +35,11 @@ export const styles = StyleSheet.create({
 		justifyContent: "center",
 	},
 	inputWrapper: {
-		minHeight: 120,
+		minHeight: 36,
 	},
 	searchInput: {
 		flex: 1,
-		minHeight: 120,
+		minHeight: 36,
 		fontSize: 20,
 		color: "#0f172a",
 		fontWeight: "500",
