@@ -1,4 +1,4 @@
-import { FavoriteWordEntry, MemorizationStatus } from "@/features/favorites/types";
+import { FavoriteWordEntry, MemorizationStatus } from "@/services/favorites/types";
 
 export type FavoritesScreenProps = {
 	favorites: FavoriteWordEntry[];

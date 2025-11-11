@@ -1,5 +1,5 @@
-import { DictionaryMode } from "@/features/dictionary/types";
-import { FavoriteWordEntry, MemorizationStatus } from "@/features/favorites/types";
+import { DictionaryMode } from "@/services/dictionary/types";
+import { FavoriteWordEntry, MemorizationStatus } from "@/services/favorites/types";
 
 export type HomeScreenProps = {
 	favorites: FavoriteWordEntry[];

@@ -1,1 +1,1 @@
-export { default } from "@/app/App";
+export { AppScreen as default } from "@/screens/App/AppScreen";

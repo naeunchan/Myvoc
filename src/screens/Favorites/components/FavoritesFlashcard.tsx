@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { FavoritesFlashcardProps } from "@/screens/Favorites/components/FavoritesFlashcard.types";
-import { MemorizationStatus } from "@/features/favorites/types";
+import { MemorizationStatus } from "@/services/favorites/types";
 import { styles } from "@/screens/Favorites/components/FavoritesFlashcard.styles";
 import { FAVORITES_FLASHCARD_ICONS } from "@/screens/Favorites/components/constants";
 

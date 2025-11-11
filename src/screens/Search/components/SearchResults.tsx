@@ -1,7 +1,7 @@
 import React from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { WordResult } from "@/features/dictionary/types";
-import { WordResultCard } from "@/features/dictionary/components/WordResultCard";
+import { WordResult } from "@/services/dictionary/types";
+import { WordResultCard } from "@/services/dictionary/components/WordResultCard";
 import { styles } from "@/screens/Search/SearchScreen.styles";
 
 type SearchResultsProps = {
@@ -27,14 +27,18 @@ export function SearchResults({
 }: SearchResultsProps) {
 	if (loading) {
 		return (
-			<View style={styles.centered}>
+			<View style={styles.centered} testID="search-results-loading">
 				<ActivityIndicator size="small" color="#2f80ed" />
 			</View>
 		);
 	}
 
 	if (error) {
-		return <Text style={styles.errorText}>{error}</Text>;
+		return (
+			<Text style={styles.errorText} testID="search-results-error">
+				{error}
+			</Text>
+		);
 	}
 
 	if (!result) {

@@ -7,8 +7,8 @@ import {
 	PASSWORD_REQUIRED_ERROR_MESSAGE,
 	PASSWORD_UPDATE_ERROR_MESSAGE,
 	PASSWORD_UPDATE_SUCCESS_MESSAGE,
-} from "@/app/App/AppScreen.constants";
-import { getGooglePasswordValidationError } from "@/app/constants/authValidation";
+} from "@/screens/App/AppScreen.constants";
+import { getGooglePasswordValidationError } from "@/utils/authValidation";
 import { myPageStyles as styles } from "@/screens/Settings/MyPageScreen.styles";
 
 type MyPagePasswordScreenProps = {

@@ -1,4 +1,4 @@
-import { FavoriteWordEntry } from "@/features/favorites/types";
+import { FavoriteWordEntry } from "@/services/favorites/types";
 
 export type FavoritesListProps = {
 	entries: FavoriteWordEntry[];

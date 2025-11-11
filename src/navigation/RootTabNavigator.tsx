@@ -1,7 +1,7 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialIcons } from "@expo/vector-icons";
-import { tabStyles } from "@/app/styles/App.styles";
+import { tabStyles } from "@/styles/App.styles";
 import { FavoritesScreen } from "@/screens/Favorites/FavoritesScreen";
 import { HomeScreen } from "@/screens/Home/HomeScreen";
 import { SearchScreen } from "@/screens/Search/SearchScreen";
