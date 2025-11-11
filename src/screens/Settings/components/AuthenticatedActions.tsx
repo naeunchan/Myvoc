@@ -11,20 +11,19 @@ type AuthenticatedActionsProps = {
 
 export function AuthenticatedActions({ canLogout, onLogout, onNavigateHome, onNavigateProfile }: AuthenticatedActionsProps) {
 	return (
-		<View style={styles.authenticatedActionsContainer}>
-			<TouchableOpacity style={styles.profileButton} onPress={onNavigateProfile} activeOpacity={0.9}>
-				<Text style={styles.profileButtonTitle}>마이 페이지</Text>
-				<Text style={styles.profileButtonDescription}>내 정보와 학습 통계를 확인할 수 있어요.</Text>
-			</TouchableOpacity>
-			<View style={styles.accountActions}>
-			{canLogout ? (
-				<TouchableOpacity style={styles.logoutButton} onPress={onLogout} activeOpacity={0.9}>
-					<Text style={styles.logoutButtonText}>로그아웃</Text>
+		<View style={styles.section}>
+			<Text style={styles.sectionLabel}>계정</Text>
+			<View style={styles.sectionCard}>
+				<TouchableOpacity style={[styles.row, styles.rowBorder]} activeOpacity={0.6} onPress={onNavigateHome}>
+					<Text style={styles.rowLabel}>초기 화면으로 이동</Text>
+					<Text style={styles.rowChevron}>›</Text>
 				</TouchableOpacity>
-			) : null}
-			<TouchableOpacity style={styles.homeButton} onPress={onNavigateHome} activeOpacity={0.9}>
-				<Text style={styles.homeButtonText}>초기 화면으로 이동</Text>
-			</TouchableOpacity>
+				{canLogout ? (
+					<TouchableOpacity style={styles.row} activeOpacity={0.6} onPress={onLogout}>
+						<Text style={[styles.rowLabel, styles.rowDangerText]}>로그아웃</Text>
+						<Text style={[styles.rowChevron, styles.rowDangerText]}>›</Text>
+					</TouchableOpacity>
+				) : null}
 			</View>
 		</View>
 	);
