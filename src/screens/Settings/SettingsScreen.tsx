@@ -24,6 +24,7 @@ export function SettingsScreen({
 	onRequestSignUp,
 	onShowHelp,
 	appVersion,
+	profileDisplayName,
 	profileUsername,
 	onNavigateProfile,
 }: SettingsScreenProps) {
@@ -81,10 +82,12 @@ export function SettingsScreen({
 		}
 	}, [appVersion, isGuest, profileUsername]);
 
-	const displayName = useMemo(
-		() => profileUsername ?? (isGuest ? "게스트 사용자" : "MyVoc 회원"),
-		[profileUsername, isGuest],
-	);
+	const displayName = useMemo(() => {
+		if (profileDisplayName && profileDisplayName.trim()) {
+			return profileDisplayName;
+		}
+		return profileUsername ?? (isGuest ? "게스트 사용자" : "MyVoc 회원");
+	}, [profileDisplayName, profileUsername, isGuest]);
 	const profileSubtitle = useMemo(() => {
 		if (isGuest) {
 			return "게스트 모드";

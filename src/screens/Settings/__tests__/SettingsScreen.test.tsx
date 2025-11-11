@@ -17,12 +17,13 @@ describe("SettingsScreen", () => {
 		canLogout: true,
 		isGuest: false,
 		onRequestLogin: jest.fn(),
-		onRequestSignUp: jest.fn(),
-		onShowHelp: jest.fn(),
-		appVersion: "1.0.0",
-		profileUsername: "alex",
-		onNavigateProfile: jest.fn(),
-	};
+	onRequestSignUp: jest.fn(),
+	onShowHelp: jest.fn(),
+	appVersion: "1.0.0",
+	profileDisplayName: "Alex",
+	profileUsername: "alex",
+	onNavigateProfile: jest.fn(),
+};
 
 beforeEach(() => {
 	jest.clearAllMocks();
@@ -57,5 +58,20 @@ afterEach(() => {
 		});
 
 		expect(alertSpy).toHaveBeenCalledWith("문의하기", expect.stringContaining("support@myvoc.app"));
+	});
+
+	it("displays profile displayName and username subtitle", () => {
+		const { getByText } = render(<SettingsScreen {...baseProps} profileDisplayName="Alex Kim" profileUsername="alexkim" />);
+
+		expect(getByText("Alex Kim")).toBeTruthy();
+		expect(getByText("@alexkim")).toBeTruthy();
+	});
+
+	it("falls back to username and guest subtitle", () => {
+		const props = { ...baseProps, profileDisplayName: null, profileUsername: "john" };
+		const { getByText } = render(<SettingsScreen {...props} isGuest />);
+
+		expect(getByText("john")).toBeTruthy();
+		expect(getByText("게스트 모드")).toBeTruthy();
 	});
 });

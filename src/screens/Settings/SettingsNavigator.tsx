@@ -33,6 +33,7 @@ export function SettingsNavigator({
 						onRequestSignUp={onRequestSignUp}
 						onShowHelp={onShowHelp}
 						appVersion={appVersion}
+						profileDisplayName={profileDisplayName}
 						profileUsername={profileUsername}
 						onNavigateProfile={() => {
 							navigation.navigate("MyPage");

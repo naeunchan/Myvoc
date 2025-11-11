@@ -6,6 +6,7 @@ export type SettingsScreenProps = {
 	onRequestSignUp: () => void;
 	onShowHelp: () => void;
 	appVersion: string;
+	profileDisplayName: string | null;
 	profileUsername: string | null;
 	onNavigateProfile: () => void;
 };
