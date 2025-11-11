@@ -1,7 +1,7 @@
 import React from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MISSING_USER_ERROR_MESSAGE } from "@/app/App/AppScreen.constants";
+import { MISSING_USER_ERROR_MESSAGE } from "@/screens/App/AppScreen.constants";
 import { myPageStyles as styles } from "@/screens/Settings/MyPageScreen.styles";
 
 type MyPageScreenProps = {

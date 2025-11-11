@@ -1,4 +1,4 @@
-import { DictionaryMode } from "@/features/dictionary/types";
+import { DictionaryMode } from "@/services/dictionary/types";
 
 export const MODE_LABEL: Record<DictionaryMode, string> = {
 	"en-en": "영영사전",

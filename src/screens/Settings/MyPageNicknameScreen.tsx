@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MISSING_USER_ERROR_MESSAGE, PROFILE_UPDATE_ERROR_MESSAGE, PROFILE_UPDATE_SUCCESS_MESSAGE } from "@/app/App/AppScreen.constants";
+import { MISSING_USER_ERROR_MESSAGE, PROFILE_UPDATE_ERROR_MESSAGE, PROFILE_UPDATE_SUCCESS_MESSAGE } from "@/screens/App/AppScreen.constants";
 import { myPageStyles as styles } from "@/screens/Settings/MyPageScreen.styles";
 
 type MyPageNicknameScreenProps = {

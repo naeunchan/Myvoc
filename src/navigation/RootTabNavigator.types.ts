@@ -1,5 +1,5 @@
-import { DictionaryMode, WordResult } from "@/features/dictionary/types";
-import { FavoriteWordEntry, MemorizationStatus } from "@/features/favorites/types";
+import { DictionaryMode, WordResult } from "@/services/dictionary/types";
+import { FavoriteWordEntry, MemorizationStatus } from "@/services/favorites/types";
 
 export type RootTabNavigatorProps = {
 	favorites: FavoriteWordEntry[];

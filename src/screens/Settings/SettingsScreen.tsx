@@ -5,7 +5,7 @@ import { SettingsScreenProps } from "@/screens/Settings/SettingsScreen.types";
 import { styles } from "@/screens/Settings/SettingsScreen.styles";
 import { GuestActionCard } from "@/screens/Settings/components/GuestActionCard";
 import { AuthenticatedActions } from "@/screens/Settings/components/AuthenticatedActions";
-import { MISSING_USER_ERROR_MESSAGE } from "@/app/App/AppScreen.constants";
+import { MISSING_USER_ERROR_MESSAGE } from "@/screens/App/AppScreen.constants";
 
 export function SettingsScreen({
 	onLogout,

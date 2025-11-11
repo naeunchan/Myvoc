@@ -1,4 +1,4 @@
-import { DictionaryMode, WordResult } from "@/features/dictionary/types";
+import { DictionaryMode, WordResult } from "@/services/dictionary/types";
 
 export type SearchScreenProps = {
 	searchTerm: string;
