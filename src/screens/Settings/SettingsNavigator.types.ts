@@ -3,6 +3,8 @@ export type SettingsStackParamList = {
 	MyPage: undefined;
 	MyPageNickname: undefined;
 	MyPagePassword: undefined;
+	ThemeModeSettings: undefined;
+	FontSizeSettings: undefined;
 };
 
 import type { ThemeMode } from "@/theme/types";

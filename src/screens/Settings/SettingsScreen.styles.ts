@@ -157,64 +157,131 @@ export const createStyles = (theme: AppThemeColors, fontScale: number) =>
 			fontSize: scaleFont(16, fontScale),
 			fontWeight: "600",
 		},
-		preferenceGroup: {
-			paddingHorizontal: 16,
-			paddingVertical: 18,
-			gap: 12,
-			borderBottomWidth: 1,
-			borderBottomColor: theme.border,
-		},
-		preferenceGroupLast: {
-			borderBottomWidth: 0,
-		},
 		preferenceTitle: {
 			fontSize: scaleFont(15, fontScale),
 			fontWeight: "700",
 			color: theme.textPrimary,
 		},
-		preferenceOptions: {
-			flexDirection: "row",
-			gap: 10,
+		preferenceHeader: {
+			paddingHorizontal: 16,
+			paddingTop: 18,
+			paddingBottom: 6,
+			gap: 4,
 		},
-		preferenceButton: {
+		preferenceDescription: {
+			fontSize: scaleFont(13, fontScale),
+			color: theme.textSecondary,
+		},
+		appearanceOptions: {
+			flexDirection: "row",
+			paddingHorizontal: 16,
+			paddingBottom: 16,
+			gap: 12,
+		},
+		appearanceOption: {
 			flex: 1,
-			borderRadius: 14,
-			paddingVertical: 10,
-			alignItems: "center",
+			borderRadius: 18,
+			padding: 12,
 			borderWidth: 1,
 			borderColor: theme.border,
 			backgroundColor: theme.surfaceMuted,
+			alignItems: "center",
+			gap: 10,
 		},
-		preferenceButtonActive: {
-			backgroundColor: theme.accent,
+		appearanceOptionActive: {
 			borderColor: theme.accent,
 			shadowColor: theme.shadow,
-			shadowOffset: { width: 0, height: 4 },
-			shadowOpacity: 0.15,
-			shadowRadius: 8,
-			elevation: 2,
+			shadowOffset: { width: 0, height: 6 },
+			shadowOpacity: 0.12,
+			shadowRadius: 12,
+			elevation: 3,
 		},
-		preferenceButtonLabel: {
+		appearancePreview: {
+			width: "100%",
+			aspectRatio: 3 / 4,
+			borderRadius: 14,
+			borderWidth: 1,
+			borderColor: theme.border,
+			overflow: "hidden",
+		},
+		previewStatusBar: {
+			height: 12,
+			backgroundColor: "#f1f5f9",
+		},
+		previewStatusBarDark: {
+			backgroundColor: "#111827",
+		},
+		previewContent: {
+			flex: 1,
+			padding: 10,
+			gap: 6,
+			backgroundColor: "#ffffff",
+		},
+		previewContentDark: {
+			backgroundColor: "#1f2937",
+		},
+		previewBlock: {
+			height: 18,
+			borderRadius: 8,
+			backgroundColor: "#cbd5f5",
+		},
+		previewBlockLight: {
+			backgroundColor: "#e2e8f0",
+		},
+		previewBlockDark: {
+			backgroundColor: "#475569",
+		},
+		previewBlockSmall: {
+			height: 10,
+			width: "60%",
+			borderRadius: 6,
+			backgroundColor: "#e2e8f0",
+		},
+		previewBlockSmallLight: {
+			backgroundColor: "#e2e8f0",
+		},
+		previewBlockSmallDark: {
+			backgroundColor: "#475569",
+		},
+		appearanceLabel: {
 			fontSize: scaleFont(14, fontScale),
 			fontWeight: "600",
 			color: theme.textSecondary,
 		},
-		preferenceButtonLabelActive: {
-			color: theme.accentContrast,
+		appearanceLabelActive: {
+			color: theme.accent,
 		},
-		fontPreviewRow: {
+		preferenceDivider: {
+			height: 1,
+			backgroundColor: theme.border,
+			marginHorizontal: 16,
+		},
+		fontSizeList: {
+			marginTop: 4,
+		},
+		fontSizeRow: {
 			flexDirection: "row",
-			alignItems: "flex-end",
-			gap: 8,
+			alignItems: "center",
+			justifyContent: "space-between",
+			paddingHorizontal: 16,
+			paddingVertical: 14,
+			borderBottomWidth: 1,
+			borderBottomColor: theme.border,
 		},
-		fontPreviewText: {
-			fontSize: scaleFont(18, fontScale),
-			fontWeight: "700",
+		fontSizeRowLast: {
+			borderBottomWidth: 0,
+			paddingBottom: 18,
+			marginBottom: 4,
+		},
+		fontSizeRowLabel: {
+			fontSize: scaleFont(15, fontScale),
 			color: theme.textPrimary,
 		},
-		fontPreviewCaption: {
-			fontSize: scaleFont(13, fontScale),
-			color: theme.textSecondary,
-			marginBottom: 2,
+		fontSizeRowLabelActive: {
+			color: theme.accent,
+			fontWeight: "700",
+		},
+		fontSizeCheckmark: {
+			color: theme.accent,
 		},
 	});

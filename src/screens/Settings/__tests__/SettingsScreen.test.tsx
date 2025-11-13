@@ -3,6 +3,12 @@ import { act, fireEvent, render } from "@testing-library/react-native";
 import { Alert, Linking } from "react-native";
 import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
 
+jest.mock("@expo/vector-icons/Ionicons", () => {
+	const React = require("react");
+	const { Text } = require("react-native");
+	return (props: { name: string }) => <Text>{props.name}</Text>;
+});
+
 jest.mock("@/screens/Settings/components/GuestActionCard", () => ({
 	GuestActionCard: () => null,
 }));
@@ -24,9 +30,9 @@ describe("SettingsScreen", () => {
 		profileUsername: "alex",
 		onNavigateProfile: jest.fn(),
 		themeMode: "light" as const,
-		onChangeThemeMode: jest.fn(),
 		fontScale: 1,
-		onChangeFontScale: jest.fn(),
+		onNavigateThemeSettings: jest.fn(),
+		onNavigateFontSettings: jest.fn(),
 	};
 
 	beforeEach(() => {
@@ -79,17 +85,17 @@ describe("SettingsScreen", () => {
 		expect(getByText("게스트 모드")).toBeTruthy();
 	});
 
-	it("changes theme mode when preference selected", () => {
+	it("navigates to theme settings when preference tapped", () => {
 		const { getByText } = render(<SettingsScreen {...baseProps} />);
 
-		fireEvent.press(getByText("다크"));
-		expect(baseProps.onChangeThemeMode).toHaveBeenCalledWith("dark");
+		fireEvent.press(getByText("화면 모드"));
+		expect(baseProps.onNavigateThemeSettings).toHaveBeenCalled();
 	});
 
-	it("changes font scale when option tapped", () => {
+	it("navigates to font settings when preference tapped", () => {
 		const { getByText } = render(<SettingsScreen {...baseProps} />);
 
-		fireEvent.press(getByText("크게"));
-		expect(baseProps.onChangeFontScale).toHaveBeenCalledWith(1.15);
+		fireEvent.press(getByText("글자 크기"));
+		expect(baseProps.onNavigateFontSettings).toHaveBeenCalled();
 	});
 });

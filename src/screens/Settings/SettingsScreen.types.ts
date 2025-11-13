@@ -12,7 +12,7 @@ export type SettingsScreenProps = {
 	profileUsername: string | null;
 	onNavigateProfile: () => void;
 	themeMode: ThemeMode;
-	onChangeThemeMode: (mode: ThemeMode) => void;
 	fontScale: number;
-	onChangeFontScale: (scale: number) => void;
+	onNavigateThemeSettings: () => void;
+	onNavigateFontSettings: () => void;
 };
