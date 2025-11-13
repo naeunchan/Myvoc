@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, TouchableOpacity } from "react-native";
-import { styles } from "@/screens/Auth/LoginScreen.styles";
+import { createLoginScreenStyles } from "@/screens/Auth/LoginScreen.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
 
 type AuthModeSwitchProps = {
 	prompt: string;
@@ -10,6 +11,7 @@ type AuthModeSwitchProps = {
 };
 
 export function AuthModeSwitch({ prompt, actionLabel, disabled, onToggle }: AuthModeSwitchProps) {
+	const styles = useThemedStyles(createLoginScreenStyles);
 	return (
 		<TouchableOpacity
 			style={styles.modeSwitch}

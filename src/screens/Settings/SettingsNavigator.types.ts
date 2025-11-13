@@ -5,6 +5,8 @@ export type SettingsStackParamList = {
 	MyPagePassword: undefined;
 };
 
+import type { ThemeMode } from "@/theme/types";
+
 export type SettingsNavigatorProps = {
 	onLogout: () => void;
 	canLogout: boolean;
@@ -17,4 +19,8 @@ export type SettingsNavigatorProps = {
 	profileUsername: string | null;
 	onUpdateProfile: (displayName: string) => Promise<void>;
 	onUpdatePassword: (password: string) => Promise<void>;
+	themeMode: ThemeMode;
+	onThemeModeChange: (mode: ThemeMode) => void;
+	fontScale: number;
+	onFontScaleChange: (scale: number) => void;
 };

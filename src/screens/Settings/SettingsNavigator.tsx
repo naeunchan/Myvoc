@@ -20,6 +20,10 @@ export function SettingsNavigator({
 	profileUsername,
 	onUpdateProfile,
 	onUpdatePassword,
+	themeMode,
+	onThemeModeChange,
+	fontScale,
+	onFontScaleChange,
 }: SettingsNavigatorProps) {
 	return (
 		<Stack.Navigator>
@@ -38,6 +42,10 @@ export function SettingsNavigator({
 						onNavigateProfile={() => {
 							navigation.navigate("MyPage");
 						}}
+						themeMode={themeMode}
+						onChangeThemeMode={onThemeModeChange}
+						fontScale={fontScale}
+						onChangeFontScale={onFontScaleChange}
 					/>
 				)}
 			</Stack.Screen>

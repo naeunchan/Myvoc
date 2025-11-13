@@ -2,9 +2,13 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import React from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { WordResultCardProps } from "@/services/dictionary/types/WordResultCard";
-import { styles } from "@/services/dictionary/styles/WordResultCard.styles";
+import { createWordResultCardStyles } from "@/services/dictionary/styles/WordResultCard.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
+import { useAppAppearance } from "@/theme/AppearanceContext";
 
 export function WordResultCard({ result, onToggleFavorite, onPlayPronunciation, isFavorite, examplesVisible, onToggleExamples }: WordResultCardProps) {
+	const styles = useThemedStyles(createWordResultCardStyles);
+	const { theme } = useAppAppearance();
 	const canPlayAudio = Boolean(result.word?.trim());
 	const hasPendingExamples = result.meanings.some((meaning) => meaning.definitions.some((definition) => Boolean(definition.pendingExample)));
 	const hasExamples = result.meanings.some((meaning) => meaning.definitions.some((definition) => Boolean(definition.example)));
@@ -21,11 +25,11 @@ export function WordResultCard({ result, onToggleFavorite, onPlayPronunciation, 
 				<View style={styles.resultActions}>
 					{canPlayAudio ? (
 						<TouchableOpacity onPress={onPlayPronunciation} style={styles.iconButton}>
-							<Ionicons name="volume-high-outline" size={20} color="#0f172a" />
+							<Ionicons name="volume-high-outline" size={20} color={theme.textPrimary} />
 						</TouchableOpacity>
 					) : null}
 					<TouchableOpacity onPress={() => onToggleFavorite(result)} style={styles.iconButton}>
-						<Ionicons name={isFavorite ? "star" : "star-outline"} size={20} color={isFavorite ? "#facc15" : "#0f172a"} />
+						<Ionicons name={isFavorite ? "star" : "star-outline"} size={20} color={isFavorite ? "#facc15" : theme.textPrimary} />
 					</TouchableOpacity>
 				</View>
 			</View>
@@ -68,7 +72,7 @@ export function WordResultCard({ result, onToggleFavorite, onPlayPronunciation, 
 				disabled={hasPendingExamples}
 				activeOpacity={hasPendingExamples ? 1 : 0.9}
 			>
-				<Ionicons name={examplesVisible ? "chevron-up-outline" : "book-outline"} size={18} color={hasPendingExamples ? "#94a3b8" : "#ffffff"} />
+				<Ionicons name={examplesVisible ? "chevron-up-outline" : "book-outline"} size={18} color={hasPendingExamples ? theme.textMuted : theme.accentContrast} />
 				<Text style={[styles.exampleToggleButtonText, hasPendingExamples ? styles.exampleToggleButtonTextDisabled : null]}>{toggleButtonLabel}</Text>
 			</TouchableOpacity>
 		</View>

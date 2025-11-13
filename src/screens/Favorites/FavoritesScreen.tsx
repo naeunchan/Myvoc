@@ -3,10 +3,12 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FavoritesFlashcard } from "@/screens/Favorites/components/FavoritesFlashcard";
 import { FavoritesScreenProps } from "@/screens/Favorites/FavoritesScreen.types";
-import { styles } from "@/screens/Favorites/FavoritesScreen.styles";
+import { createFavoritesScreenStyles } from "@/screens/Favorites/FavoritesScreen.styles";
 import { MEMORIZATION_STATUSES, MEMORIZATION_STATUS_ORDER, MemorizationStatus } from "@/services/favorites/types";
+import { useThemedStyles } from "@/theme/useThemedStyles";
 
 export function FavoritesScreen({ favorites, onUpdateStatus, onRemoveFavorite, onPlayAudio }: FavoritesScreenProps) {
+	const styles = useThemedStyles(createFavoritesScreenStyles);
 	const [activeStatus, setActiveStatus] = useState<MemorizationStatus>("toMemorize");
 
 	const filteredEntries = useMemo(() => favorites.filter((entry) => entry.status === activeStatus), [favorites, activeStatus]);

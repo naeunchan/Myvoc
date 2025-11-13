@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { styles } from "@/screens/Auth/LoginScreen.styles";
+import { createLoginScreenStyles } from "@/screens/Auth/LoginScreen.styles";
 import { LoginScreenProps } from "@/screens/Auth/LoginScreen.types";
 import { LoginHeader } from "@/screens/Auth/components/LoginHeader";
 import { CredentialFields } from "@/screens/Auth/components/CredentialFields";
@@ -10,6 +10,7 @@ import { PrimaryActionButton } from "@/screens/Auth/components/PrimaryActionButt
 import { GuestButton } from "@/screens/Auth/components/GuestButton";
 import { AuthModeSwitch } from "@/screens/Auth/components/AuthModeSwitch";
 import { getLoginCopy } from "@/screens/Auth/constants/loginCopy";
+import { useThemedStyles } from "@/theme/useThemedStyles";
 
 export function LoginScreen({
 	onLogin,
@@ -19,6 +20,7 @@ export function LoginScreen({
 	errorMessage,
 	initialMode = "login",
 }: LoginScreenProps) {
+	const styles = useThemedStyles(createLoginScreenStyles);
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [displayName, setDisplayName] = useState("");

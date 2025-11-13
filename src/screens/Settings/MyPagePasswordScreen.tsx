@@ -9,7 +9,9 @@ import {
 	PASSWORD_UPDATE_SUCCESS_MESSAGE,
 } from "@/screens/App/AppScreen.constants";
 import { getGooglePasswordValidationError } from "@/utils/authValidation";
-import { myPageStyles as styles } from "@/screens/Settings/MyPageScreen.styles";
+import { createMyPageStyles } from "@/screens/Settings/MyPageScreen.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
+import { useAppAppearance } from "@/theme/AppearanceContext";
 
 type MyPagePasswordScreenProps = {
 	username: string;
@@ -18,6 +20,8 @@ type MyPagePasswordScreenProps = {
 };
 
 export function MyPagePasswordScreen({ username, onUpdatePassword, onGoBack }: MyPagePasswordScreenProps) {
+	const styles = useThemedStyles(createMyPageStyles);
+	const { theme } = useAppAppearance();
 	const [password, setPassword] = useState("");
 	const [passwordConfirm, setPasswordConfirm] = useState("");
 	const [error, setError] = useState<string | null>(null);
@@ -82,7 +86,7 @@ export function MyPagePasswordScreen({ username, onUpdatePassword, onGoBack }: M
 						value={password}
 						onChangeText={setPassword}
 						editable={!loading}
-						placeholderTextColor="#9ca3af"
+						placeholderTextColor={theme.textMuted}
 						autoCapitalize="none"
 						secureTextEntry
 						textContentType="newPassword"
@@ -93,14 +97,14 @@ export function MyPagePasswordScreen({ username, onUpdatePassword, onGoBack }: M
 						value={passwordConfirm}
 						onChangeText={setPasswordConfirm}
 						editable={!loading}
-						placeholderTextColor="#9ca3af"
+						placeholderTextColor={theme.textMuted}
 						autoCapitalize="none"
 						secureTextEntry
 						textContentType="newPassword"
 					/>
 					{error ? <Text style={styles.errorText}>{error}</Text> : null}
 					<TouchableOpacity style={[styles.submitButton, loading && styles.submitButtonDisabled]} onPress={handleSubmit} disabled={loading} activeOpacity={0.9}>
-						{loading ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitButtonText}>변경</Text>}
+						{loading ? <ActivityIndicator color={theme.accentContrast} /> : <Text style={styles.submitButtonText}>변경</Text>}
 					</TouchableOpacity>
 				</View>
 			</ScrollView>

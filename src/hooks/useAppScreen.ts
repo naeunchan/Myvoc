@@ -18,6 +18,7 @@ import {
 	getAutoLoginCredentials,
 	getFavoritesByUser,
 	getSearchHistoryEntries,
+	getPreferenceValue,
 	hasSeenAppHelp,
 	hashPassword,
 	initializeDatabase,
@@ -25,6 +26,7 @@ import {
 	removeFavoriteForUser,
 	saveAutoLoginCredentials,
 	saveSearchHistoryEntries,
+	setPreferenceValue,
 	setGuestSession,
 	setUserSession,
 	updateUserPassword,
@@ -71,6 +73,8 @@ import { applyExampleUpdates, clearPendingFlags } from "@/services/dictionary/ut
 import type { AppScreenHookResult } from "@/screens/App/AppScreen.types";
 import { playRemoteAudio } from "@/utils/audio";
 import { SearchHistoryEntry, SEARCH_HISTORY_LIMIT } from "@/services/searchHistory/types";
+import { DEFAULT_FONT_SCALE, FONT_SCALE_PREFERENCE_KEY, THEME_MODE_PREFERENCE_KEY } from "@/theme/constants";
+import type { ThemeMode } from "@/theme/types";
 
 export function useAppScreen(): AppScreenHookResult {
 	const [searchTerm, setSearchTerm] = useState("");
@@ -83,6 +87,8 @@ export function useAppScreen(): AppScreenHookResult {
 	const modeRef = useRef<DictionaryMode>("en-en");
 	const [lastQuery, setLastQuery] = useState<string | null>(null);
 	const [recentSearches, setRecentSearches] = useState<SearchHistoryEntry[]>([]);
+	const [themeMode, setThemeMode] = useState<ThemeMode>("light");
+	const [fontScale, setFontScale] = useState(DEFAULT_FONT_SCALE);
 	const [user, setUser] = useState<UserRecord | null>(null);
 	const [initializing, setInitializing] = useState(true);
 	const [isGuest, setIsGuest] = useState(false);
@@ -270,6 +276,41 @@ export function useAppScreen(): AppScreenHookResult {
 	useEffect(() => {
 		let isMounted = true;
 
+		getPreferenceValue(THEME_MODE_PREFERENCE_KEY)
+			.then((storedMode) => {
+				if (!isMounted || !storedMode) {
+					return;
+				}
+				if (storedMode === "dark" || storedMode === "light") {
+					setThemeMode(storedMode);
+				}
+			})
+			.catch((error) => {
+				console.warn("테마 정보를 불러오는 중 문제가 발생했어요.", error);
+			});
+
+		getPreferenceValue(FONT_SCALE_PREFERENCE_KEY)
+			.then((storedScale) => {
+				if (!isMounted || !storedScale) {
+					return;
+				}
+				const parsed = Number(storedScale);
+				if (Number.isFinite(parsed) && parsed >= 0.85 && parsed <= 1.3) {
+					setFontScale(parsed);
+				}
+			})
+			.catch((error) => {
+				console.warn("글자 크기를 불러오는 중 문제가 발생했어요.", error);
+			});
+
+		return () => {
+			isMounted = false;
+		};
+	}, []);
+
+	useEffect(() => {
+		let isMounted = true;
+
 		getSearchHistoryEntries()
 			.then((history) => {
 				if (isMounted) {
@@ -314,6 +355,21 @@ export function useAppScreen(): AppScreenHookResult {
 			console.warn("검색 이력을 삭제하는 중 문제가 발생했어요.", error);
 		});
 	}, [clearSearchHistoryEntries]);
+
+	const handleThemeModeChange = useCallback((nextMode: ThemeMode) => {
+		setThemeMode(nextMode);
+		void setPreferenceValue(THEME_MODE_PREFERENCE_KEY, nextMode).catch((error) => {
+			console.warn("테마 설정을 저장하는 중 문제가 발생했어요.", error);
+		});
+	}, []);
+
+	const handleFontScaleChange = useCallback((scale: number) => {
+		const clamped = Math.min(Math.max(scale, 0.85), 1.3);
+		setFontScale(clamped);
+		void setPreferenceValue(FONT_SCALE_PREFERENCE_KEY, clamped.toString()).catch((error) => {
+			console.warn("글자 크기를 저장하는 중 문제가 발생했어요.", error);
+		});
+	}, []);
 
 	const executeSearch = useCallback(
 		async (term: string, dictionaryMode: DictionaryMode) => {
@@ -945,6 +1001,10 @@ export function useAppScreen(): AppScreenHookResult {
 			onPlayPronunciation: playPronunciation,
 			mode,
 			onModeChange: handleModeChange,
+			themeMode,
+			onThemeModeChange: handleThemeModeChange,
+			fontScale,
+			onFontScaleChange: handleFontScaleChange,
 			recentSearches,
 			onSelectRecentSearch: handleSelectRecentSearch,
 			onClearRecentSearches: handleClearRecentSearches,
@@ -977,6 +1037,8 @@ export function useAppScreen(): AppScreenHookResult {
 			handlePlayWordAudio,
 			handleLogout,
 			handleModeChange,
+			handleThemeModeChange,
+			handleFontScaleChange,
 			handleRemoveFavorite,
 			handleSearch,
 			handleSearchTermChange,
@@ -986,6 +1048,8 @@ export function useAppScreen(): AppScreenHookResult {
 			lastQuery,
 			loading,
 			mode,
+			themeMode,
+			fontScale,
 			recentSearches,
 			playPronunciation,
 			result,
@@ -1019,5 +1083,9 @@ export function useAppScreen(): AppScreenHookResult {
 		loginBindings,
 		navigatorProps,
 		handleDismissHelp,
+		themeMode,
+		fontScale,
+		onThemeModeChange: handleThemeModeChange,
+		onFontScaleChange: handleFontScaleChange,
 	};
 }

@@ -3,10 +3,14 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { FavoritesFlashcardProps } from "@/screens/Favorites/components/FavoritesFlashcard.types";
 import { MemorizationStatus } from "@/services/favorites/types";
-import { styles } from "@/screens/Favorites/components/FavoritesFlashcard.styles";
+import { createFavoritesFlashcardStyles } from "@/screens/Favorites/components/FavoritesFlashcard.styles";
 import { FAVORITES_FLASHCARD_ICONS } from "@/screens/Favorites/components/constants";
+import { useThemedStyles } from "@/theme/useThemedStyles";
+import { useAppAppearance } from "@/theme/AppearanceContext";
 
 export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFavorite, onPlayAudio }: FavoritesFlashcardProps) {
+	const styles = useThemedStyles(createFavoritesFlashcardStyles);
+	const { theme } = useAppAppearance();
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [showMeaning, setShowMeaning] = useState(false);
 	const [queue, setQueue] = useState<number[]>([]);
@@ -117,7 +121,7 @@ export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFa
 				return [
 					{
 						icon: FAVORITES_FLASHCARD_ICONS.toReview,
-						color: "#2563eb",
+						color: theme.accent,
 						onPress: () => moveToStatus("review"),
 						label: "복습 단어장으로 이동",
 					},
@@ -126,20 +130,20 @@ export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFa
 				return [
 					{
 						icon: FAVORITES_FLASHCARD_ICONS.toMastered,
-						color: "#10b981",
+						color: theme.success,
 						onPress: () => moveToStatus("mastered"),
 						label: "터득한 단어장으로 이동",
 					},
 				];
-		case "mastered":
-			return [
-				{
-					icon: FAVORITES_FLASHCARD_ICONS.remove,
-					color: "#ef4444",
-					onPress: handleRemove,
-					label: "단어 삭제",
-				},
-			];
+			case "mastered":
+				return [
+					{
+						icon: FAVORITES_FLASHCARD_ICONS.remove,
+						color: theme.danger,
+						onPress: handleRemove,
+						label: "단어 삭제",
+					},
+				];
 			default:
 				return [];
 		}
@@ -155,15 +159,15 @@ export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFa
 
 				<View style={styles.actions}>
 					<TouchableOpacity style={styles.actionButton} onPress={handleToggleMeaning} accessibilityLabel="뜻 보기">
-						<MaterialIcons name={revealIconName} size={28} color="#1f2937" />
+						<MaterialIcons name={revealIconName} size={28} color={theme.textPrimary} />
 					</TouchableOpacity>
 					{hasAudio ? (
 						<TouchableOpacity style={styles.actionButton} onPress={handlePlayAudio} accessibilityLabel={`${currentEntry.word.word} 발음 듣기`}>
-							<MaterialIcons name="volume-up" size={28} color="#2563eb" />
+							<MaterialIcons name="volume-up" size={28} color={theme.accent} />
 						</TouchableOpacity>
 					) : null}
 					<TouchableOpacity style={styles.actionButton} onPress={handleNextWord} accessibilityLabel="다음 단어">
-						<MaterialIcons name={FAVORITES_FLASHCARD_ICONS.next} size={28} color="#1f2937" />
+						<MaterialIcons name={FAVORITES_FLASHCARD_ICONS.next} size={28} color={theme.textPrimary} />
 					</TouchableOpacity>
 					{statusActions.map((action) => (
 						<TouchableOpacity key={action.label} style={styles.actionButton} onPress={action.onPress} accessibilityLabel={action.label}>

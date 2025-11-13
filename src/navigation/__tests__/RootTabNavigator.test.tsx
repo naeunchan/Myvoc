@@ -62,6 +62,10 @@ const buildProps = (): RootTabNavigatorProps => {
 		onPlayPronunciation: noop,
 		mode: "en-en",
 		onModeChange: noop,
+		themeMode: "light",
+		onThemeModeChange: noop,
+		fontScale: 1,
+		onFontScaleChange: noop,
 		recentSearches: [],
 		onSelectRecentSearch: noop,
 		onClearRecentSearches: noop,
@@ -145,6 +149,10 @@ describe("RootTabNavigator", () => {
 				profileUsername: props.profileUsername,
 				onUpdateProfile: props.onUpdateProfile,
 				onUpdatePassword: props.onUpdatePassword,
+				themeMode: props.themeMode,
+				onThemeModeChange: props.onThemeModeChange,
+				fontScale: props.fontScale,
+				onFontScaleChange: props.onFontScaleChange,
 			}),
 		);
 	});
