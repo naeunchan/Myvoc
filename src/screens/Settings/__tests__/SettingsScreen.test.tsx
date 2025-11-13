@@ -17,21 +17,25 @@ describe("SettingsScreen", () => {
 		canLogout: true,
 		isGuest: false,
 		onRequestLogin: jest.fn(),
-	onRequestSignUp: jest.fn(),
-	onShowHelp: jest.fn(),
-	appVersion: "1.0.0",
-	profileDisplayName: "Alex",
-	profileUsername: "alex",
-	onNavigateProfile: jest.fn(),
-};
+		onRequestSignUp: jest.fn(),
+		onShowHelp: jest.fn(),
+		appVersion: "1.0.0",
+		profileDisplayName: "Alex",
+		profileUsername: "alex",
+		onNavigateProfile: jest.fn(),
+		themeMode: "light" as const,
+		onChangeThemeMode: jest.fn(),
+		fontScale: 1,
+		onChangeFontScale: jest.fn(),
+	};
 
-beforeEach(() => {
-	jest.clearAllMocks();
-});
+	beforeEach(() => {
+		jest.clearAllMocks();
+	});
 
-afterEach(() => {
-	jest.restoreAllMocks();
-});
+	afterEach(() => {
+		jest.restoreAllMocks();
+	});
 
 	it("opens mail composer when contact card pressed", async () => {
 		jest.spyOn(Linking, "canOpenURL").mockResolvedValue(true);
@@ -73,5 +77,19 @@ afterEach(() => {
 
 		expect(getByText("john")).toBeTruthy();
 		expect(getByText("게스트 모드")).toBeTruthy();
+	});
+
+	it("changes theme mode when preference selected", () => {
+		const { getByText } = render(<SettingsScreen {...baseProps} />);
+
+		fireEvent.press(getByText("다크"));
+		expect(baseProps.onChangeThemeMode).toHaveBeenCalledWith("dark");
+	});
+
+	it("changes font scale when option tapped", () => {
+		const { getByText } = render(<SettingsScreen {...baseProps} />);
+
+		fireEvent.press(getByText("크게"));
+		expect(baseProps.onChangeFontScale).toHaveBeenCalledWith(1.15);
 	});
 });

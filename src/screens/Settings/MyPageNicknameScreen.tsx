@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MISSING_USER_ERROR_MESSAGE, PROFILE_UPDATE_ERROR_MESSAGE, PROFILE_UPDATE_SUCCESS_MESSAGE } from "@/screens/App/AppScreen.constants";
-import { myPageStyles as styles } from "@/screens/Settings/MyPageScreen.styles";
+import { createMyPageStyles } from "@/screens/Settings/MyPageScreen.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
+import { useAppAppearance } from "@/theme/AppearanceContext";
 
 type MyPageNicknameScreenProps = {
 	username: string;
@@ -12,6 +14,8 @@ type MyPageNicknameScreenProps = {
 };
 
 export function MyPageNicknameScreen({ username, displayName, onUpdateProfile, onGoBack }: MyPageNicknameScreenProps) {
+	const styles = useThemedStyles(createMyPageStyles);
+	const { theme } = useAppAppearance();
 	const [nickname, setNickname] = useState(displayName ?? "");
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -60,13 +64,13 @@ export function MyPageNicknameScreen({ username, displayName, onUpdateProfile, o
 						value={nickname}
 						onChangeText={setNickname}
 						editable={!loading}
-						placeholderTextColor="#9ca3af"
+						placeholderTextColor={theme.textMuted}
 						autoCapitalize="none"
 						returnKeyType="done"
 					/>
 					{error ? <Text style={styles.errorText}>{error}</Text> : null}
 					<TouchableOpacity style={[styles.submitButton, loading && styles.submitButtonDisabled]} onPress={handleSubmit} disabled={loading} activeOpacity={0.9}>
-						{loading ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitButtonText}>저장</Text>}
+						{loading ? <ActivityIndicator color={theme.accentContrast} /> : <Text style={styles.submitButtonText}>저장</Text>}
 					</TouchableOpacity>
 				</View>
 			</ScrollView>

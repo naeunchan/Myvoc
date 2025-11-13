@@ -1,131 +1,134 @@
 import { StyleSheet } from "react-native";
+import type { AppThemeColors } from "@/theme/types";
+import { scaleFont } from "@/theme/utils";
 
-export const styles = StyleSheet.create({
-	safeArea: {
-		flex: 1,
-		backgroundColor: "#ffffff",
-	},
-	content: {
-		flex: 1,
-		paddingHorizontal: 24,
-		paddingTop: 48,
-		paddingBottom: 32,
-	},
-	title: {
-		fontSize: 26,
-		fontWeight: "700",
-		color: "#111827",
-		marginBottom: 8,
-	},
-	subtitle: {
-		fontSize: 16,
-		color: "#4b5563",
-		marginBottom: 24,
-		lineHeight: 22,
-	},
-	inputLabel: {
-		fontSize: 14,
-		color: "#374151",
-		marginBottom: 8,
-		fontWeight: "600",
-	},
-	textInput: {
-		borderWidth: 1,
-		borderColor: "#d1d5db",
-		borderRadius: 12,
-		paddingHorizontal: 16,
-		paddingVertical: 12,
-		fontSize: 15,
-		color: "#111827",
-		backgroundColor: "#f9fafb",
-		marginBottom: 16,
-	},
-	button: {
-		backgroundColor: "#2563eb",
-		paddingVertical: 14,
-		borderRadius: 12,
-		alignItems: "center",
-		marginBottom: 12,
-	},
-	buttonText: {
-		color: "#ffffff",
-		fontSize: 16,
-		fontWeight: "600",
-	},
-	ghostButton: {
-		borderWidth: 1,
-		borderColor: "#2563eb",
-		borderRadius: 12,
-		paddingVertical: 14,
-		alignItems: "center",
-	},
-	ghostButtonText: {
-		color: "#2563eb",
-		fontSize: 16,
-		fontWeight: "600",
-	},
-	rememberRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		marginBottom: 16,
-	},
-	rememberLabel: {
-		fontSize: 14,
-		color: "#374151",
-		fontWeight: "600",
-	},
-	disabledButton: {
-		opacity: 0.6,
-	},
-	helperText: {
-		fontSize: 13,
-		color: "#6b7280",
-		marginBottom: 24,
-		lineHeight: 18,
-	},
-	errorText: {
-		color: "#dc2626",
-		fontSize: 14,
-		marginBottom: 16,
-	},
-	ruleText: {
-		fontSize: 12,
-		color: "#6b7280",
-		marginTop: -8,
-		marginBottom: 16,
-		lineHeight: 16,
-	},
-	modeSwitch: {
-		flexDirection: "row",
-		justifyContent: "center",
-		alignItems: "center",
-		marginTop: 20,
-		gap: 6,
-	},
-	modeSwitchText: {
-		fontSize: 14,
-		color: "#6b7280",
-	},
-	modeSwitchAction: {
-		fontSize: 14,
-		color: "#2563eb",
-		fontWeight: "600",
-	},
-	footerNote: {
-		fontSize: 13,
-		color: "#6b7280",
-		marginTop: 32,
-		lineHeight: 20,
-	},
-	buttonLoadingRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 8,
-	},
-	buttonLoadingText: {
-		color: "#ffffff",
-		fontSize: 16,
-		fontWeight: "600",
-	},
-});
+export const createLoginScreenStyles = (theme: AppThemeColors, fontScale: number) =>
+	StyleSheet.create({
+		safeArea: {
+			flex: 1,
+			backgroundColor: theme.background,
+		},
+		content: {
+			flex: 1,
+			paddingHorizontal: 24,
+			paddingTop: 48,
+			paddingBottom: 32,
+		},
+		title: {
+			fontSize: scaleFont(26, fontScale),
+			fontWeight: "700",
+			color: theme.textPrimary,
+			marginBottom: 8,
+		},
+		subtitle: {
+			fontSize: scaleFont(16, fontScale),
+			color: theme.textSecondary,
+			marginBottom: 24,
+			lineHeight: scaleFont(22, fontScale),
+		},
+		inputLabel: {
+			fontSize: scaleFont(14, fontScale),
+			color: theme.textPrimary,
+			marginBottom: 8,
+			fontWeight: "600",
+		},
+		textInput: {
+			borderWidth: 1,
+			borderColor: theme.inputBorder,
+			borderRadius: 12,
+			paddingHorizontal: 16,
+			paddingVertical: 12,
+			fontSize: scaleFont(15, fontScale),
+			color: theme.textPrimary,
+			backgroundColor: theme.inputBackground,
+			marginBottom: 16,
+		},
+		button: {
+			backgroundColor: theme.accent,
+			paddingVertical: 14,
+			borderRadius: 12,
+			alignItems: "center",
+			marginBottom: 12,
+		},
+		buttonText: {
+			color: theme.accentContrast,
+			fontSize: scaleFont(16, fontScale),
+			fontWeight: "600",
+		},
+		ghostButton: {
+			borderWidth: 1,
+			borderColor: theme.accent,
+			borderRadius: 12,
+			paddingVertical: 14,
+			alignItems: "center",
+		},
+		ghostButtonText: {
+			color: theme.accent,
+			fontSize: scaleFont(16, fontScale),
+			fontWeight: "600",
+		},
+		rememberRow: {
+			flexDirection: "row",
+			alignItems: "center",
+			justifyContent: "space-between",
+			marginBottom: 16,
+		},
+		rememberLabel: {
+			fontSize: scaleFont(14, fontScale),
+			color: theme.textPrimary,
+			fontWeight: "600",
+		},
+		disabledButton: {
+			opacity: 0.6,
+		},
+		helperText: {
+			fontSize: scaleFont(13, fontScale),
+			color: theme.textSecondary,
+			marginBottom: 24,
+			lineHeight: scaleFont(18, fontScale),
+		},
+		errorText: {
+			color: theme.danger,
+			fontSize: scaleFont(14, fontScale),
+			marginBottom: 16,
+		},
+		ruleText: {
+			fontSize: scaleFont(12, fontScale),
+			color: theme.textMuted,
+			marginTop: -8,
+			marginBottom: 16,
+			lineHeight: scaleFont(16, fontScale),
+		},
+		modeSwitch: {
+			flexDirection: "row",
+			justifyContent: "center",
+			alignItems: "center",
+			marginTop: 20,
+			gap: 6,
+		},
+		modeSwitchText: {
+			fontSize: scaleFont(14, fontScale),
+			color: theme.textSecondary,
+		},
+		modeSwitchAction: {
+			fontSize: scaleFont(14, fontScale),
+			color: theme.accent,
+			fontWeight: "600",
+		},
+		footerNote: {
+			fontSize: scaleFont(13, fontScale),
+			color: theme.textSecondary,
+			marginTop: 32,
+			lineHeight: scaleFont(20, fontScale),
+		},
+		buttonLoadingRow: {
+			flexDirection: "row",
+			alignItems: "center",
+			gap: 8,
+		},
+		buttonLoadingText: {
+			color: theme.accentContrast,
+			fontSize: scaleFont(16, fontScale),
+			fontWeight: "600",
+		},
+	});

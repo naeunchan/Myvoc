@@ -1,14 +1,16 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialIcons } from "@expo/vector-icons";
-import { tabStyles } from "@/styles/App.styles";
+import { createTabStyles } from "@/styles/App.styles";
 import { FavoritesScreen } from "@/screens/Favorites/FavoritesScreen";
 import { HomeScreen } from "@/screens/Home/HomeScreen";
 import { SearchScreen } from "@/screens/Search/SearchScreen";
 import { SettingsNavigator } from "@/screens/Settings/SettingsNavigator";
-import { TAB_BAR_COLORS, TAB_BAR_OPTIONS, TAB_VISUAL_CONFIG } from "@/navigation/tabConfig";
+import { TAB_BAR_OPTIONS, TAB_VISUAL_CONFIG } from "@/navigation/tabConfig";
 import { RootTabParamList } from "@/navigation/Navigation.types";
 import { RootTabNavigatorProps } from "@/navigation/RootTabNavigator.types";
+import { useThemedStyles } from "@/theme/useThemedStyles";
+import { useAppAppearance } from "@/theme/AppearanceContext";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -29,6 +31,10 @@ export function RootTabNavigator({
 	onPlayPronunciation,
 	mode,
 	onModeChange,
+	themeMode,
+	onThemeModeChange,
+	fontScale,
+	onFontScaleChange,
 	recentSearches,
 	onSelectRecentSearch,
 	onClearRecentSearches,
@@ -47,14 +53,16 @@ export function RootTabNavigator({
 	onUpdateProfile,
 	onUpdatePassword,
 }: RootTabNavigatorProps) {
+	const tabStyles = useThemedStyles(createTabStyles);
+	const { theme } = useAppAppearance();
 	return (
 		<Tab.Navigator
 			screenOptions={({ route }) => {
 				const { icon, label } = TAB_VISUAL_CONFIG[route.name];
 				return {
 					headerShown: false,
-					tabBarActiveTintColor: TAB_BAR_COLORS.active,
-					tabBarInactiveTintColor: TAB_BAR_COLORS.inactive,
+					tabBarActiveTintColor: theme.tabIconActive,
+					tabBarInactiveTintColor: theme.tabIconInactive,
 					tabBarLabelStyle: tabStyles.tabLabel,
 					tabBarStyle: tabStyles.tabBar,
 					tabBarShowLabel: TAB_BAR_OPTIONS.showLabel,
@@ -123,6 +131,10 @@ export function RootTabNavigator({
 						profileUsername={profileUsername}
 						onUpdateProfile={onUpdateProfile}
 						onUpdatePassword={onUpdatePassword}
+						themeMode={themeMode}
+						onThemeModeChange={onThemeModeChange}
+						fontScale={fontScale}
+						onFontScaleChange={onFontScaleChange}
 					/>
 				)}
 			</Tab.Screen>

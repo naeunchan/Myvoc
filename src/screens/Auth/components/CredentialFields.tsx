@@ -1,6 +1,8 @@
 import React from "react";
 import { Text, TextInput, View } from "react-native";
-import { styles } from "@/screens/Auth/LoginScreen.styles";
+import { createLoginScreenStyles } from "@/screens/Auth/LoginScreen.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
+import { useAppAppearance } from "@/theme/AppearanceContext";
 
 type CredentialFieldsProps = {
 	mode: "login" | "signup";
@@ -23,6 +25,8 @@ export function CredentialFields({
 	onChangePassword,
 	onChangeDisplayName,
 }: CredentialFieldsProps) {
+	const styles = useThemedStyles(createLoginScreenStyles);
+	const { theme } = useAppAppearance();
 	const isSignUp = mode === "signup";
 
 	return (
@@ -39,6 +43,7 @@ export function CredentialFields({
 				autoComplete="username"
 				textContentType="username"
 				returnKeyType="next"
+				placeholderTextColor={theme.textMuted}
 			/>
 			{isSignUp ? <Text style={styles.ruleText}>아이디는 6~30자의 영문 소문자, 숫자, 마침표만 사용할 수 있어요.</Text> : null}
 
@@ -53,6 +58,7 @@ export function CredentialFields({
 				autoComplete={isSignUp ? "new-password" : "password"}
 				textContentType={isSignUp ? "newPassword" : "password"}
 				returnKeyType={isSignUp ? "next" : "done"}
+				placeholderTextColor={theme.textMuted}
 			/>
 			{isSignUp ? <Text style={styles.ruleText}>비밀번호는 8자 이상이며 영문과 숫자를 모두 포함해야 해요.</Text> : null}
 
@@ -68,6 +74,7 @@ export function CredentialFields({
 						autoCorrect={false}
 						editable={!loading}
 						returnKeyType="done"
+						placeholderTextColor={theme.textMuted}
 					/>
 					<Text style={styles.ruleText}>닉네임을 입력하지 않으면 랜덤 이름이 표시돼요.</Text>
 				</View>

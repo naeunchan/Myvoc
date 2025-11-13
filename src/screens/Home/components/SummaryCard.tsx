@@ -1,10 +1,12 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { MODE_LABEL, SUMMARY_CARD_TEXT, SUMMARY_STAT_CONFIG } from "@/screens/Home/constants";
-import { styles } from "@/screens/Home/styles/SummaryCard.styles";
+import { createSummaryCardStyles } from "@/screens/Home/styles/SummaryCard.styles";
 import { SummaryCardProps } from "@/screens/Home/types/SummaryCard.types";
+import { useThemedStyles } from "@/theme/useThemedStyles";
 
 export function SummaryCard({ userName, mode, counts, lastSearchedWord }: SummaryCardProps) {
+	const styles = useThemedStyles(createSummaryCardStyles);
 	const total = (counts?.toMemorize ?? 0) + (counts?.review ?? 0) + (counts?.mastered ?? 0);
 	const statValues = {
 		total,

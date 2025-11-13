@@ -2,7 +2,8 @@ import React from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MISSING_USER_ERROR_MESSAGE } from "@/screens/App/AppScreen.constants";
-import { myPageStyles as styles } from "@/screens/Settings/MyPageScreen.styles";
+import { createMyPageStyles } from "@/screens/Settings/MyPageScreen.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
 
 type MyPageScreenProps = {
 	username: string;
@@ -12,6 +13,7 @@ type MyPageScreenProps = {
 };
 
 export function MyPageScreen({ username, displayName, onNavigateNickname, onNavigatePassword }: MyPageScreenProps) {
+	const styles = useThemedStyles(createMyPageStyles);
 	const handleNavigateNickname = () => {
 		if (!username) {
 			Alert.alert("마이 페이지", MISSING_USER_ERROR_MESSAGE);

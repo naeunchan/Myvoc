@@ -893,6 +893,63 @@ async function clearSearchHistoryWeb() {
 	});
 }
 
+async function getPreferenceValueNative(key: string): Promise<string | null> {
+	const db = await getDatabase();
+	const rows = await db.getAllAsync<{ value: string }>(
+		"SELECT value FROM app_preferences WHERE key = ? LIMIT 1",
+		[key],
+	);
+	return rows[0]?.value ?? null;
+}
+
+async function setPreferenceValueNative(key: string, value: string) {
+	const db = await getDatabase();
+	await db.runAsync(
+		`
+			INSERT INTO app_preferences (key, value, updated_at)
+			VALUES (?, ?, CURRENT_TIMESTAMP)
+			ON CONFLICT(key)
+			DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+		`,
+		[key, value],
+	);
+}
+
+async function removePreferenceValueNative(key: string) {
+	const db = await getDatabase();
+	await db.runAsync("DELETE FROM app_preferences WHERE key = ?", [key]);
+}
+
+async function getPreferenceValueWeb(key: string): Promise<string | null> {
+	const state = readWebState();
+	return typeof state.preferences[key] === "string" ? (state.preferences[key] as string) : null;
+}
+
+async function setPreferenceValueWeb(key: string, value: string) {
+	const state = readWebState();
+	const nextState: WebDatabaseState = {
+		...state,
+		preferences: {
+			...state.preferences,
+			[key]: value,
+		},
+	};
+	writeWebState(nextState);
+}
+
+async function removePreferenceValueWeb(key: string) {
+	const state = readWebState();
+	if (!(key in state.preferences)) {
+		return;
+	}
+	const nextPreferences = { ...state.preferences };
+	delete nextPreferences[key];
+	writeWebState({
+		...state,
+		preferences: nextPreferences,
+	});
+}
+
 async function setUserSessionNative(userId: number) {
 	const db = await getDatabase();
 	await db.runAsync(
@@ -1118,6 +1175,27 @@ export async function markAppHelpSeen() {
 		return markAppHelpSeenWeb();
 	}
 	return markAppHelpSeenNative();
+}
+
+export async function getPreferenceValue(key: string) {
+	if (isWeb) {
+		return getPreferenceValueWeb(key);
+	}
+	return getPreferenceValueNative(key);
+}
+
+export async function setPreferenceValue(key: string, value: string) {
+	if (isWeb) {
+		return setPreferenceValueWeb(key, value);
+	}
+	return setPreferenceValueNative(key, value);
+}
+
+export async function removePreferenceValue(key: string) {
+	if (isWeb) {
+		return removePreferenceValueWeb(key);
+	}
+	return removePreferenceValueNative(key);
 }
 
 export async function getSearchHistoryEntries() {

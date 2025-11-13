@@ -1,3 +1,5 @@
+import type { ThemeMode } from "@/theme/types";
+
 export type SettingsScreenProps = {
 	onLogout: () => void;
 	canLogout: boolean;
@@ -9,4 +11,8 @@ export type SettingsScreenProps = {
 	profileDisplayName: string | null;
 	profileUsername: string | null;
 	onNavigateProfile: () => void;
+	themeMode: ThemeMode;
+	onChangeThemeMode: (mode: ThemeMode) => void;
+	fontScale: number;
+	onChangeFontScale: (scale: number) => void;
 };

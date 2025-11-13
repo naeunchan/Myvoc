@@ -1,7 +1,8 @@
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { DictionaryMode, DictionaryModeToggleProps } from "@/services/dictionary/types/DictionaryMode";
-import { styles } from "@/services/dictionary/styles/DictionaryModeToggle.styles";
+import { createDictionaryModeToggleStyles } from "@/services/dictionary/styles/DictionaryModeToggle.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
 
 const MODE_OPTIONS: Array<{ label: string; value: DictionaryMode }> = [
 	{ label: "영영사전", value: "en-en" },
@@ -11,6 +12,7 @@ const MODE_OPTIONS: Array<{ label: string; value: DictionaryMode }> = [
 const DISABLED_MODES = new Set<DictionaryMode>(["en-ko"]);
 
 export function DictionaryModeToggle({ mode, onChange }: DictionaryModeToggleProps) {
+	const styles = useThemedStyles(createDictionaryModeToggleStyles);
 	return (
 		<View style={styles.container}>
 			{MODE_OPTIONS.map((option) => {

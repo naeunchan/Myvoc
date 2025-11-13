@@ -5,7 +5,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { SearchBar } from "@/screens/Search/components/SearchBar";
 import { SearchResults } from "@/screens/Search/components/SearchResults";
 import { SearchScreenProps } from "@/screens/Search/SearchScreen.types";
-import { styles } from "@/screens/Search/SearchScreen.styles";
+import { createSearchScreenStyles } from "@/screens/Search/SearchScreen.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
+import { useAppAppearance } from "@/theme/AppearanceContext";
 
 const MODE_BUTTONS = [
 	{ label: "영영사전", value: "en-en", disabled: false },
@@ -35,6 +37,8 @@ export function SearchScreen({
 	onSelectRecentSearch,
 	onClearRecentSearches,
 }: SearchScreenProps) {
+	const styles = useThemedStyles(createSearchScreenStyles);
+	const { theme } = useAppAppearance();
 	const showPlaceholder = !loading && !error && !result;
 	const hasRecentSearches = recentSearches.length > 0;
 
@@ -72,7 +76,7 @@ export function SearchScreen({
 				<View style={styles.resultsWrapper}>
 					{showPlaceholder ? (
 						<View style={styles.placeholderCard}>
-							<Ionicons name="sparkles-outline" size={20} color="#2563eb" />
+							<Ionicons name="sparkles-outline" size={20} color={theme.accent} />
 							<Text style={styles.placeholderTitle}>검색 결과가 여기에 표시됩니다</Text>
 							<Text style={styles.placeholderSubtitle}>검색할 단어를 입력하고 검색 버튼을 눌러주세요.</Text>
 						</View>
@@ -102,7 +106,7 @@ export function SearchScreen({
 							{recentSearches.map((entry) => (
 								<TouchableOpacity key={`${entry.term}-${entry.searchedAt}`} style={styles.historyItem} onPress={() => onSelectRecentSearch(entry)} accessibilityLabel={`${entry.term} 검색어로 이동`}>
 									<View style={styles.historyIconWrapper}>
-										<Ionicons name="time-outline" size={16} color="#334155" />
+										<Ionicons name="time-outline" size={16} color={theme.textPrimary} />
 									</View>
 									<View style={styles.historyTexts}>
 										<Text style={styles.historyWord}>{entry.term}</Text>

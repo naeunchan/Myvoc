@@ -1,6 +1,8 @@
 import React from "react";
 import { Switch, Text, View } from "react-native";
-import { styles } from "@/screens/Auth/LoginScreen.styles";
+import { createLoginScreenStyles } from "@/screens/Auth/LoginScreen.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
+import { useAppAppearance } from "@/theme/AppearanceContext";
 
 type RememberMeToggleProps = {
 	value: boolean;
@@ -9,6 +11,8 @@ type RememberMeToggleProps = {
 };
 
 export function RememberMeToggle({ value, disabled = false, onChange }: RememberMeToggleProps) {
+	const styles = useThemedStyles(createLoginScreenStyles);
+	const { theme } = useAppAppearance();
 	return (
 		<View style={styles.rememberRow}>
 			<Text style={styles.rememberLabel}>자동 로그인</Text>
@@ -16,9 +20,9 @@ export function RememberMeToggle({ value, disabled = false, onChange }: Remember
 				value={value}
 				onValueChange={onChange}
 				disabled={disabled}
-				trackColor={{ false: "#d1d5db", true: "#93c5fd" }}
-				thumbColor={value ? "#2563eb" : "#f9fafb"}
-				ios_backgroundColor="#d1d5db"
+				trackColor={{ false: theme.inputBorder, true: theme.accentSoft }}
+				thumbColor={value ? theme.accent : theme.inputBackground}
+				ios_backgroundColor={theme.inputBorder}
 			/>
 		</View>
 	);

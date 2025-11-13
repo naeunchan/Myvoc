@@ -1,9 +1,11 @@
 import React from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { AppHelpModalProps } from "@/components/AppHelpModal/AppHelpModal.types";
-import { appHelpModalStyles as styles } from "@/components/AppHelpModal/AppHelpModal.styles";
+import { createAppHelpModalStyles } from "@/components/AppHelpModal/AppHelpModal.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
 
 export function AppHelpModal({ visible, onDismiss }: AppHelpModalProps) {
+	const styles = useThemedStyles(createAppHelpModalStyles);
 	return (
 		<Modal transparent animationType="fade" visible={visible} onRequestClose={onDismiss}>
 			<View style={styles.backdrop}>

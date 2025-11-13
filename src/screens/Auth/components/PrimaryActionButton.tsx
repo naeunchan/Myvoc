@@ -1,6 +1,8 @@
 import React from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
-import { styles } from "@/screens/Auth/LoginScreen.styles";
+import { createLoginScreenStyles } from "@/screens/Auth/LoginScreen.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
+import { useAppAppearance } from "@/theme/AppearanceContext";
 
 type PrimaryActionButtonProps = {
 	label: string;
@@ -11,6 +13,8 @@ type PrimaryActionButtonProps = {
 };
 
 export function PrimaryActionButton({ label, loading, disabled, onPress, mode }: PrimaryActionButtonProps) {
+	const styles = useThemedStyles(createLoginScreenStyles);
+	const { theme } = useAppAppearance();
 	return (
 		<TouchableOpacity
 			style={[styles.button, disabled && styles.disabledButton]}
@@ -20,7 +24,7 @@ export function PrimaryActionButton({ label, loading, disabled, onPress, mode }:
 		>
 			{loading ? (
 				<View style={styles.buttonLoadingRow}>
-					<ActivityIndicator size="small" color="#ffffff" />
+					<ActivityIndicator size="small" color={theme.accentContrast} />
 					<Text style={styles.buttonLoadingText}>{mode === "login" ? "로그인 중..." : "가입 중..."}</Text>
 				</View>
 			) : (

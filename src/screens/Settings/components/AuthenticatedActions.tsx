@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { styles } from "@/screens/Settings/SettingsScreen.styles";
+import { createStyles } from "@/screens/Settings/SettingsScreen.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
 
 type AuthenticatedActionsProps = {
 	canLogout: boolean;
@@ -10,6 +11,7 @@ type AuthenticatedActionsProps = {
 };
 
 export function AuthenticatedActions({ canLogout, onLogout, onNavigateHome, onNavigateProfile }: AuthenticatedActionsProps) {
+	const styles = useThemedStyles(createStyles);
 	return (
 		<View style={styles.section}>
 			<Text style={styles.sectionLabel}>계정</Text>

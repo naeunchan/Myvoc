@@ -2,12 +2,14 @@ import React, { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView } from "react-native";
 import { HomeScreenProps } from "@/screens/Home/types/HomeScreen.types";
-import { styles } from "@/screens/Home/styles/HomeScreen.styles";
+import { createHomeScreenStyles } from "@/screens/Home/styles/HomeScreen.styles";
 import { HomeHeader } from "@/screens/Home/components/HomeHeader";
 import { SummaryCard } from "@/screens/Home/components/SummaryCard";
 import { FavoritesList } from "@/screens/Home/components/FavoritesList";
+import { useThemedStyles } from "@/theme/useThemedStyles";
 
 export function HomeScreen({ favorites, lastSearchedWord, mode, onMoveToStatus, userName, onPlayWordAudio }: HomeScreenProps) {
+	const styles = useThemedStyles(createHomeScreenStyles);
 	const { toMemorizeEntries, counts } = useMemo(() => {
 		const summary = {
 			toMemorize: 0,

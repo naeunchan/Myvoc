@@ -2,10 +2,12 @@ import React, { useCallback, useMemo } from "react";
 import { Alert, Linking, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SettingsScreenProps } from "@/screens/Settings/SettingsScreen.types";
-import { styles } from "@/screens/Settings/SettingsScreen.styles";
+import { createStyles } from "@/screens/Settings/SettingsScreen.styles";
 import { GuestActionCard } from "@/screens/Settings/components/GuestActionCard";
 import { AuthenticatedActions } from "@/screens/Settings/components/AuthenticatedActions";
 import { MISSING_USER_ERROR_MESSAGE } from "@/screens/App/AppScreen.constants";
+import { useThemedStyles } from "@/theme/useThemedStyles";
+import { FONT_SCALE_OPTIONS, THEME_MODE_OPTIONS } from "@/theme/constants";
 
 const SUPPORT_EMAIL = "support@myvoc.app";
 const CONTACT_SUBJECT = "MyVoc 1:1 문의";
@@ -27,7 +29,12 @@ export function SettingsScreen({
 	profileDisplayName,
 	profileUsername,
 	onNavigateProfile,
+	themeMode,
+	onChangeThemeMode,
+	fontScale,
+	onChangeFontScale,
 }: SettingsScreenProps) {
+	const styles = useThemedStyles(createStyles);
 	const handleLogoutPress = useCallback(() => {
 		if (!canLogout) {
 			return;
@@ -136,6 +143,60 @@ export function SettingsScreen({
 						{renderRow("도움말 다시 보기", { onPress: onShowHelp })}
 						{renderRow("1:1 문의 보내기", { onPress: handleContactSupport })}
 						{renderRow("앱 버전", { value: appVersion, isLast: true })}
+					</View>
+				</View>
+
+				<View style={styles.section}>
+					<Text style={styles.sectionLabel}>디스플레이</Text>
+					<View style={styles.sectionCard}>
+						<View style={styles.preferenceGroup}>
+							<Text style={styles.preferenceTitle}>화면 모드</Text>
+							<View style={styles.preferenceOptions}>
+								{THEME_MODE_OPTIONS.map((option) => {
+									const isActive = option.value === themeMode;
+									return (
+										<TouchableOpacity
+											key={option.value}
+											style={[styles.preferenceButton, isActive && styles.preferenceButtonActive]}
+											onPress={() => onChangeThemeMode(option.value)}
+											activeOpacity={0.8}
+											accessibilityRole="button"
+											accessibilityState={{ selected: isActive }}
+										>
+											<Text style={[styles.preferenceButtonLabel, isActive && styles.preferenceButtonLabelActive]}>
+												{option.label}
+											</Text>
+										</TouchableOpacity>
+									);
+								})}
+							</View>
+						</View>
+						<View style={[styles.preferenceGroup, styles.preferenceGroupLast]}>
+							<Text style={styles.preferenceTitle}>글자 크기</Text>
+							<View style={styles.preferenceOptions}>
+								{FONT_SCALE_OPTIONS.map((option) => {
+									const isActive = option.value === fontScale;
+									return (
+										<TouchableOpacity
+											key={option.label}
+											style={[styles.preferenceButton, isActive && styles.preferenceButtonActive]}
+											onPress={() => onChangeFontScale(option.value)}
+											activeOpacity={0.8}
+											accessibilityRole="button"
+											accessibilityState={{ selected: isActive }}
+										>
+											<Text style={[styles.preferenceButtonLabel, isActive && styles.preferenceButtonLabelActive]}>
+												{option.label}
+											</Text>
+										</TouchableOpacity>
+									);
+								})}
+							</View>
+							<View style={styles.fontPreviewRow}>
+								<Text style={styles.fontPreviewText}>AaBbCc</Text>
+								<Text style={styles.fontPreviewCaption}>현재 크기</Text>
+							</View>
+						</View>
 					</View>
 				</View>
 

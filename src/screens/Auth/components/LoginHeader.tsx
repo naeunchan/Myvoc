@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { styles } from "@/screens/Auth/LoginScreen.styles";
+import { createLoginScreenStyles } from "@/screens/Auth/LoginScreen.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
 
 type LoginHeaderProps = {
 	title: string;
@@ -8,6 +9,7 @@ type LoginHeaderProps = {
 };
 
 export function LoginHeader({ title, subtitle }: LoginHeaderProps) {
+	const styles = useThemedStyles(createLoginScreenStyles);
 	return (
 		<View>
 			<Text style={styles.title}>{title}</Text>
