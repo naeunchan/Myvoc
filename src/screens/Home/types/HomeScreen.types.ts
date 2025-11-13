@@ -3,7 +3,6 @@ import { FavoriteWordEntry, MemorizationStatus } from "@/services/favorites/type
 
 export type HomeScreenProps = {
 	favorites: FavoriteWordEntry[];
-	lastSearchedWord: string | null;
 	mode: DictionaryMode;
 	onMoveToStatus: (word: string, status: MemorizationStatus) => void;
 	userName: string;

@@ -5,5 +5,4 @@ export type SummaryCardProps = {
 	userName: string;
 	mode: DictionaryMode;
 	counts: Record<MemorizationStatus, number>;
-	lastSearchedWord: string | null;
 };

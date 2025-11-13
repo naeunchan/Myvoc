@@ -8,24 +8,19 @@ describe("SummaryCard", () => {
 		userName: "Mia",
 		mode: "en-en" as const,
 		counts: { toMemorize: 3, review: 2, mastered: 1 },
-		lastSearchedWord: "hello",
 	};
 
-	it("renders stats and last search information", () => {
+	it("renders stats and greeting", () => {
 		const { getByText } = render(<SummaryCard {...baseProps} />);
 
 		expect(getByText("Mia님의 진행상황")).toBeTruthy();
 		expect(getByText("전체 단어")).toBeTruthy();
 		expect(getByText("6")).toBeTruthy(); // total
-		expect(getByText(baseProps.lastSearchedWord!)).toBeTruthy();
 	});
 
-	it("shows fallback texts when user name or last search missing", () => {
-		const { getByText } = render(
-			<SummaryCard {...baseProps} userName="" lastSearchedWord={null} />,
-		);
+	it("shows fallback greeting when user name missing", () => {
+		const { getByText } = render(<SummaryCard {...baseProps} userName="" />);
 
 		expect(getByText(SUMMARY_CARD_TEXT.defaultGreeting)).toBeTruthy();
-		expect(getByText(SUMMARY_CARD_TEXT.lastSearchFallback)).toBeTruthy();
 	});
 });

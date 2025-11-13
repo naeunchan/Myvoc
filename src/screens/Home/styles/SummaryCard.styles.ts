@@ -62,24 +62,9 @@ export const createSummaryCardStyles = (theme: AppThemeColors, fontScale: number
 			color: theme.textSecondary,
 			marginBottom: 6,
 		},
-		statValue: {
-			fontSize: scaleFont(20, fontScale),
-			fontWeight: "800",
-			color: theme.textPrimary,
-		},
-		footer: {
-			borderTopWidth: 1,
-			borderTopColor: theme.border,
-			paddingTop: 12,
-		},
-		footerLabel: {
-			fontSize: scaleFont(13, fontScale),
-			color: theme.textMuted,
-			marginBottom: 4,
-		},
-		footerValue: {
-			fontSize: scaleFont(15, fontScale),
-			color: theme.textPrimary,
-			fontWeight: "600",
-		},
-	});
+	statValue: {
+		fontSize: scaleFont(20, fontScale),
+		fontWeight: "800",
+		color: theme.textPrimary,
+	},
+});

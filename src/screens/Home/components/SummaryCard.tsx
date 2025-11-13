@@ -5,7 +5,7 @@ import { createSummaryCardStyles } from "@/screens/Home/styles/SummaryCard.style
 import { SummaryCardProps } from "@/screens/Home/types/SummaryCard.types";
 import { useThemedStyles } from "@/theme/useThemedStyles";
 
-export function SummaryCard({ userName, mode, counts, lastSearchedWord }: SummaryCardProps) {
+export function SummaryCard({ userName, mode, counts }: SummaryCardProps) {
 	const styles = useThemedStyles(createSummaryCardStyles);
 	const total = (counts?.toMemorize ?? 0) + (counts?.review ?? 0) + (counts?.mastered ?? 0);
 	const statValues = {
@@ -35,11 +35,6 @@ export function SummaryCard({ userName, mode, counts, lastSearchedWord }: Summar
 						<Text style={styles.statValue}>{statValues[stat.key]}</Text>
 					</View>
 				))}
-			</View>
-
-			<View style={styles.footer}>
-				<Text style={styles.footerLabel}>{SUMMARY_CARD_TEXT.lastSearchLabel}</Text>
-				<Text style={styles.footerValue}>{lastSearchedWord ?? SUMMARY_CARD_TEXT.lastSearchFallback}</Text>
 			</View>
 		</View>
 	);

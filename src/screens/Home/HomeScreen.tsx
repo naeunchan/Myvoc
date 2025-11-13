@@ -8,7 +8,7 @@ import { SummaryCard } from "@/screens/Home/components/SummaryCard";
 import { FavoritesList } from "@/screens/Home/components/FavoritesList";
 import { useThemedStyles } from "@/theme/useThemedStyles";
 
-export function HomeScreen({ favorites, lastSearchedWord, mode, onMoveToStatus, userName, onPlayWordAudio }: HomeScreenProps) {
+export function HomeScreen({ favorites, mode, onMoveToStatus, userName, onPlayWordAudio }: HomeScreenProps) {
 	const styles = useThemedStyles(createHomeScreenStyles);
 	const { toMemorizeEntries, counts } = useMemo(() => {
 		const summary = {
@@ -36,7 +36,7 @@ export function HomeScreen({ favorites, lastSearchedWord, mode, onMoveToStatus, 
 		<SafeAreaView style={styles.safeArea}>
 			<ScrollView contentContainerStyle={styles.scrollContent}>
 				<HomeHeader userName={userName} />
-				<SummaryCard userName={userName} mode={mode} counts={counts} lastSearchedWord={lastSearchedWord} />
+				<SummaryCard userName={userName} mode={mode} counts={counts} />
 				<FavoritesList
 					entries={toMemorizeEntries}
 					emptyMessage="외울 단어장에 저장된 단어가 없어요."

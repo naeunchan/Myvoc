@@ -38,7 +38,6 @@ const buildEntry = (status: FavoriteWordEntry["status"] = "toMemorize"): Favorit
 describe("HomeScreen", () => {
 	const baseProps = {
 		favorites: [buildEntry("toMemorize"), buildEntry("review"), buildEntry("mastered")],
-		lastSearchedWord: "apple",
 		mode: "en-en" as const,
 		onMoveToStatus: jest.fn(),
 		userName: "Alex",
@@ -56,7 +55,6 @@ describe("HomeScreen", () => {
 		expect(mockSummaryCard).toHaveBeenCalledWith(
 			expect.objectContaining({
 				userName: baseProps.userName,
-				lastSearchedWord: baseProps.lastSearchedWord,
 				mode: baseProps.mode,
 				counts: expect.objectContaining({ toMemorize: 1, review: 1, mastered: 1 }),
 			}),
