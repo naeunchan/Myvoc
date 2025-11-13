@@ -38,7 +38,6 @@ export function RootTabNavigator({
 	recentSearches,
 	onSelectRecentSearch,
 	onClearRecentSearches,
-	lastQuery,
 	userName,
 	onLogout,
 	canLogout,
@@ -73,12 +72,11 @@ export function RootTabNavigator({
 		>
 			<Tab.Screen name="Home">
 				{() => (
-					<HomeScreen
-						favorites={favorites}
-						lastSearchedWord={lastQuery}
-						mode={mode}
-						onMoveToStatus={onUpdateFavoriteStatus}
-						userName={userName}
+						<HomeScreen
+							favorites={favorites}
+							mode={mode}
+							onMoveToStatus={onUpdateFavoriteStatus}
+							userName={userName}
 						onPlayWordAudio={onPlayWordAudio}
 					/>
 				)}

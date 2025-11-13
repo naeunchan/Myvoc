@@ -27,7 +27,6 @@ export type RootTabNavigatorProps = {
 	recentSearches: SearchHistoryEntry[];
 	onSelectRecentSearch: (entry: SearchHistoryEntry) => void;
 	onClearRecentSearches: () => void;
-	lastQuery: string | null;
 	userName: string;
 	onLogout: () => void;
 	canLogout: boolean;

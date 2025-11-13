@@ -15,8 +15,6 @@ export const HOME_HEADER_TEXT = {
 export const SUMMARY_CARD_TEXT = {
 	sectionLabel: "현재 요약",
 	defaultGreeting: "내 학습 현황",
-	lastSearchLabel: "최근 검색",
-	lastSearchFallback: "아직 검색 기록이 없어요.",
 };
 
 export const SUMMARY_STAT_CONFIG = [

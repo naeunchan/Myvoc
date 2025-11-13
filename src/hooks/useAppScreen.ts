@@ -85,7 +85,6 @@ export function useAppScreen(): AppScreenHookResult {
 	const [favorites, setFavorites] = useState<FavoriteWordEntry[]>([]);
 	const [mode, setMode] = useState<DictionaryMode>("en-en");
 	const modeRef = useRef<DictionaryMode>("en-en");
-	const [lastQuery, setLastQuery] = useState<string | null>(null);
 	const [recentSearches, setRecentSearches] = useState<SearchHistoryEntry[]>([]);
 	const [themeMode, setThemeMode] = useState<ThemeMode>("light");
 	const [fontScale, setFontScale] = useState(DEFAULT_FONT_SCALE);
@@ -207,7 +206,6 @@ export function useAppScreen(): AppScreenHookResult {
 						setFavorites(hydratedFavorites);
 							setSearchTerm("");
 							setResult(null);
-							setLastQuery(null);
 							setError(null);
 							setAuthError(null);
 							return;
@@ -379,7 +377,6 @@ export function useAppScreen(): AppScreenHookResult {
 				setError(EMPTY_SEARCH_ERROR_MESSAGE);
 				setResult(null);
 				setExamplesVisible(false);
-				setLastQuery(null);
 				setLoading(false);
 				return;
 			}
@@ -388,7 +385,6 @@ export function useAppScreen(): AppScreenHookResult {
 			activeLookupRef.current = lookupId;
 
 			setError(null);
-			setLastQuery(normalizedTerm);
 			setLoading(true);
 			setExamplesVisible(false);
 
@@ -494,7 +490,6 @@ export function useAppScreen(): AppScreenHookResult {
 			modeRef.current = nextMode;
 			setResult(null);
 			setError(null);
-			setLastQuery(null);
 			setLoading(false);
 			setExamplesVisible(false);
 		},
@@ -669,7 +664,6 @@ export function useAppScreen(): AppScreenHookResult {
 		setSearchTerm("");
 		setResult(null);
 		setExamplesVisible(false);
-		setLastQuery(null);
 		setError(null);
 		setAuthError(null);
 	}, []);
@@ -685,7 +679,6 @@ export function useAppScreen(): AppScreenHookResult {
 			setSearchTerm("");
 			setResult(null);
 			setExamplesVisible(false);
-			setLastQuery(null);
 			setError(null);
 			setAuthMode("login");
 		} catch (err) {
@@ -736,7 +729,6 @@ export function useAppScreen(): AppScreenHookResult {
 			setSearchTerm("");
 			setResult(null);
 			setExamplesVisible(false);
-			setLastQuery(null);
 			setError(null);
 			setAuthError(null);
 		},
@@ -1008,7 +1000,6 @@ export function useAppScreen(): AppScreenHookResult {
 			recentSearches,
 			onSelectRecentSearch: handleSelectRecentSearch,
 			onClearRecentSearches: handleClearRecentSearches,
-			lastQuery,
 			userName,
 			onLogout: handleLogout,
 			canLogout,
@@ -1045,7 +1036,6 @@ export function useAppScreen(): AppScreenHookResult {
 			handleShowHelp,
 			isCurrentFavorite,
 			isGuest,
-			lastQuery,
 			loading,
 			mode,
 			themeMode,

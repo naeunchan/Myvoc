@@ -52,7 +52,6 @@ const createProps = (): RootTabNavigatorProps => {
 		recentSearches: [],
 		onSelectRecentSearch: noop,
 		onClearRecentSearches: noop,
-		lastQuery: null,
 		userName: "Alex",
 		onLogout: noop,
 		canLogout: true,

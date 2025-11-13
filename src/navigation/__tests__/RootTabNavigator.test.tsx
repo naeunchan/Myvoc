@@ -69,7 +69,6 @@ const buildProps = (): RootTabNavigatorProps => {
 		recentSearches: [],
 		onSelectRecentSearch: noop,
 		onClearRecentSearches: noop,
-		lastQuery: "apple",
 		userName: "Alex",
 		onLogout: noop,
 		canLogout: true,
@@ -98,7 +97,6 @@ describe("RootTabNavigator", () => {
 		expect(mockHomeScreen).toHaveBeenCalledWith(
 			expect.objectContaining({
 				favorites: props.favorites,
-				lastSearchedWord: props.lastQuery,
 				mode: props.mode,
 				userName: props.userName,
 				onPlayWordAudio: props.onPlayWordAudio,
