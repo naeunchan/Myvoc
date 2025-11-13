@@ -1,16 +1,19 @@
 import { Platform } from "react-native";
 import type { SQLiteDatabase } from "expo-sqlite";
-import type { WordResult } from "@/services/dictionary/types";
+import type { DictionaryMode, WordResult } from "@/services/dictionary/types";
 import {
 	FavoriteWordEntry,
 	MemorizationStatus,
 	createFavoriteEntry,
 	isMemorizationStatus,
 } from "@/services/favorites/types";
+import type { SearchHistoryEntry } from "@/services/searchHistory/types";
+import { SEARCH_HISTORY_LIMIT } from "@/services/searchHistory/types";
 
 const DATABASE_NAME = "myvoc.db";
 const isWeb = Platform.OS === "web";
 const APP_HELP_KEY = "app.help.seen";
+const SEARCH_HISTORY_KEY = "search.history";
 
 type ExpoSQLiteModule = typeof import("expo-sqlite");
 
@@ -115,6 +118,53 @@ function normalizeFavoriteEntry(payload: unknown): FavoriteWordEntry | null {
 	}
 
 	return null;
+}
+
+function isDictionaryModeValue(value: unknown): value is DictionaryMode {
+	return value === "en-en" || value === "en-ko";
+}
+
+function normalizeSearchHistoryPayload(payload: string | null | undefined): SearchHistoryEntry[] {
+	if (!payload) {
+		return [];
+	}
+
+	try {
+		const parsed = JSON.parse(payload);
+		if (!Array.isArray(parsed)) {
+			return [];
+		}
+
+		const normalized: SearchHistoryEntry[] = [];
+		for (const candidate of parsed) {
+			if (typeof candidate !== "object" || candidate === null) {
+				continue;
+			}
+			const record = candidate as Partial<SearchHistoryEntry>;
+			if (typeof record.term !== "string") {
+				continue;
+			}
+			const mode: DictionaryMode = isDictionaryModeValue(record.mode) ? record.mode : "en-en";
+			const searchedAt = typeof record.searchedAt === "string" ? record.searchedAt : new Date().toISOString();
+			normalized.push({
+				term: record.term,
+				mode,
+				searchedAt,
+			});
+			if (normalized.length >= SEARCH_HISTORY_LIMIT) {
+				break;
+			}
+		}
+
+		return normalized;
+	} catch (error) {
+		console.warn("검색 이력을 읽는 중 문제가 발생했어요.", error);
+		return [];
+	}
+}
+
+function serializeSearchHistoryPayload(entries: SearchHistoryEntry[]) {
+	return JSON.stringify(entries.slice(0, SEARCH_HISTORY_LIMIT));
 }
 
 async function initializeDatabaseNative() {
@@ -786,6 +836,63 @@ async function markAppHelpSeenWeb() {
 	writeWebState(nextState);
 }
 
+async function getSearchHistoryNative(): Promise<SearchHistoryEntry[]> {
+	const db = await getDatabase();
+	const rows = await db.getAllAsync<{ value: string }>(
+		"SELECT value FROM app_preferences WHERE key = ? LIMIT 1",
+		[SEARCH_HISTORY_KEY],
+	);
+	return normalizeSearchHistoryPayload(rows[0]?.value ?? null);
+}
+
+async function saveSearchHistoryNative(entries: SearchHistoryEntry[]) {
+	const db = await getDatabase();
+	await db.runAsync(
+		`
+			INSERT INTO app_preferences (key, value, updated_at)
+			VALUES (?, ?, CURRENT_TIMESTAMP)
+			ON CONFLICT(key)
+			DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+		`,
+		[SEARCH_HISTORY_KEY, serializeSearchHistoryPayload(entries)],
+	);
+}
+
+async function clearSearchHistoryNative() {
+	const db = await getDatabase();
+	await db.runAsync("DELETE FROM app_preferences WHERE key = ?", [SEARCH_HISTORY_KEY]);
+}
+
+async function getSearchHistoryWeb(): Promise<SearchHistoryEntry[]> {
+	const state = readWebState();
+	return normalizeSearchHistoryPayload(state.preferences[SEARCH_HISTORY_KEY]);
+}
+
+async function saveSearchHistoryWeb(entries: SearchHistoryEntry[]) {
+	const state = readWebState();
+	const nextState: WebDatabaseState = {
+		...state,
+		preferences: {
+			...state.preferences,
+			[SEARCH_HISTORY_KEY]: serializeSearchHistoryPayload(entries),
+		},
+	};
+	writeWebState(nextState);
+}
+
+async function clearSearchHistoryWeb() {
+	const state = readWebState();
+	if (!state.preferences[SEARCH_HISTORY_KEY]) {
+		return;
+	}
+	const nextPreferences = { ...state.preferences };
+	delete nextPreferences[SEARCH_HISTORY_KEY];
+	writeWebState({
+		...state,
+		preferences: nextPreferences,
+	});
+}
+
 async function setUserSessionNative(userId: number) {
 	const db = await getDatabase();
 	await db.runAsync(
@@ -1011,4 +1118,25 @@ export async function markAppHelpSeen() {
 		return markAppHelpSeenWeb();
 	}
 	return markAppHelpSeenNative();
+}
+
+export async function getSearchHistoryEntries() {
+	if (isWeb) {
+		return getSearchHistoryWeb();
+	}
+	return getSearchHistoryNative();
+}
+
+export async function saveSearchHistoryEntries(entries: SearchHistoryEntry[]) {
+	if (isWeb) {
+		return saveSearchHistoryWeb(entries);
+	}
+	return saveSearchHistoryNative(entries);
+}
+
+export async function clearSearchHistoryEntries() {
+	if (isWeb) {
+		return clearSearchHistoryWeb();
+	}
+	return clearSearchHistoryNative();
 }

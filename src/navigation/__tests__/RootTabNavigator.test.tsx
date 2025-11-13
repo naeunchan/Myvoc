@@ -62,6 +62,9 @@ const buildProps = (): RootTabNavigatorProps => {
 		onPlayPronunciation: noop,
 		mode: "en-en",
 		onModeChange: noop,
+		recentSearches: [],
+		onSelectRecentSearch: noop,
+		onClearRecentSearches: noop,
 		lastQuery: "apple",
 		userName: "Alex",
 		onLogout: noop,
@@ -109,6 +112,9 @@ describe("RootTabNavigator", () => {
 				examplesVisible: props.examplesVisible,
 				onToggleExamples: props.onToggleExamples,
 				mode: props.mode,
+				recentSearches: props.recentSearches,
+				onSelectRecentSearch: props.onSelectRecentSearch,
+				onClearRecentSearches: props.onClearRecentSearches,
 			}),
 		);
 	});

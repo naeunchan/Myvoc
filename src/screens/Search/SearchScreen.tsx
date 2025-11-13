@@ -12,6 +12,11 @@ const MODE_BUTTONS = [
 	{ label: "영한사전", value: "en-ko", disabled: true },
 ] as const;
 
+const MODE_LABELS: Record<string, string> = {
+	"en-en": "영영사전",
+	"en-ko": "영한사전",
+};
+
 export function SearchScreen({
 	searchTerm,
 	onChangeSearchTerm,
@@ -26,8 +31,12 @@ export function SearchScreen({
 	onPlayPronunciation,
 	mode,
 	onModeChange,
+	recentSearches,
+	onSelectRecentSearch,
+	onClearRecentSearches,
 }: SearchScreenProps) {
 	const showPlaceholder = !loading && !error && !result;
+	const hasRecentSearches = recentSearches.length > 0;
 
 	return (
 		<SafeAreaView style={styles.safeArea}>
@@ -80,6 +89,30 @@ export function SearchScreen({
 						/>
 					)}
 				</View>
+
+				{hasRecentSearches && (
+					<View style={styles.historyCard}>
+						<View style={styles.historyHeader}>
+							<Text style={styles.sectionLabel}>최근 검색</Text>
+							<TouchableOpacity style={styles.historyClearButton} onPress={onClearRecentSearches} accessibilityLabel="최근 검색 전체 삭제">
+								<Text style={styles.historyClearText}>전체 지우기</Text>
+							</TouchableOpacity>
+						</View>
+						<View style={styles.historyList}>
+							{recentSearches.map((entry) => (
+								<TouchableOpacity key={`${entry.term}-${entry.searchedAt}`} style={styles.historyItem} onPress={() => onSelectRecentSearch(entry)} accessibilityLabel={`${entry.term} 검색어로 이동`}>
+									<View style={styles.historyIconWrapper}>
+										<Ionicons name="time-outline" size={16} color="#334155" />
+									</View>
+									<View style={styles.historyTexts}>
+										<Text style={styles.historyWord}>{entry.term}</Text>
+										<Text style={styles.historyMeta}>{MODE_LABELS[entry.mode] ?? "사전"}</Text>
+									</View>
+								</TouchableOpacity>
+							))}
+						</View>
+					</View>
+				)}
 			</ScrollView>
 		</SafeAreaView>
 	);

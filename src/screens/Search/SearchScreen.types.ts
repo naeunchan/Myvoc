@@ -1,4 +1,5 @@
 import { DictionaryMode, WordResult } from "@/services/dictionary/types";
+import type { SearchHistoryEntry } from "@/services/searchHistory/types";
 
 export type SearchScreenProps = {
 	searchTerm: string;
@@ -14,4 +15,7 @@ export type SearchScreenProps = {
 	onPlayPronunciation: () => void;
 	mode: DictionaryMode;
 	onModeChange: (mode: DictionaryMode) => void;
+	recentSearches: SearchHistoryEntry[];
+	onSelectRecentSearch: (entry: SearchHistoryEntry) => void;
+	onClearRecentSearches: () => void;
 };

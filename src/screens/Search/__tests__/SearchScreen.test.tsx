@@ -35,6 +35,9 @@ describe("SearchScreen", () => {
 		onPlayPronunciation: jest.fn(),
 		mode: "en-en" as const,
 		onModeChange: jest.fn(),
+		recentSearches: [],
+		onSelectRecentSearch: jest.fn(),
+		onClearRecentSearches: jest.fn(),
 	};
 
 	beforeEach(() => {
@@ -78,5 +81,20 @@ describe("SearchScreen", () => {
 
 		fireEvent.press(getByText("영한사전 (준비중)"));
 		expect(props.onModeChange).not.toHaveBeenCalledWith("en-ko");
+	});
+
+	it("renders recent searches section when history is available", () => {
+		const props = {
+			...baseProps,
+			recentSearches: [{ term: "apple", mode: "en-en" as const, searchedAt: "2024-01-01T00:00:00.000Z" }],
+		};
+		const { getByText, getByLabelText } = render(<SearchScreen {...props} />);
+
+		expect(getByText("최근 검색")).toBeTruthy();
+		fireEvent.press(getByText("전체 지우기"));
+		expect(props.onClearRecentSearches).toHaveBeenCalled();
+
+		fireEvent.press(getByLabelText("apple 검색어로 이동"));
+		expect(props.onSelectRecentSearch).toHaveBeenCalledWith(props.recentSearches[0]);
 	});
 });

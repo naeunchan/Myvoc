@@ -100,4 +100,62 @@ export const styles = StyleSheet.create({
 		color: "#dc2626",
 		fontWeight: "600",
 	},
+	historyCard: {
+		backgroundColor: "#ffffff",
+		borderRadius: 24,
+		padding: 20,
+		gap: 12,
+		shadowColor: "#0f172a",
+		shadowOffset: { width: 0, height: 8 },
+		shadowOpacity: 0.06,
+		shadowRadius: 12,
+		elevation: 4,
+	},
+	historyHeader: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+	},
+	historyClearButton: {
+		paddingHorizontal: 8,
+		paddingVertical: 6,
+	},
+	historyClearText: {
+		fontSize: 13,
+		fontWeight: "600",
+		color: "#94a3b8",
+	},
+	historyList: {
+		gap: 10,
+	},
+	historyItem: {
+		flexDirection: "row",
+		alignItems: "center",
+		paddingVertical: 10,
+		paddingHorizontal: 12,
+		borderRadius: 18,
+		backgroundColor: "#f8fafc",
+	},
+	historyIconWrapper: {
+		width: 30,
+		height: 30,
+		borderRadius: 15,
+		backgroundColor: "#e2e8f0",
+		alignItems: "center",
+		justifyContent: "center",
+		marginRight: 10,
+	},
+	historyTexts: {
+		flex: 1,
+	},
+	historyWord: {
+		fontSize: 15,
+		fontWeight: "700",
+		color: "#0f172a",
+	},
+	historyMeta: {
+		fontSize: 12,
+		color: "#64748b",
+		marginTop: 2,
+	},
 });

@@ -1,5 +1,6 @@
 import { DictionaryMode, WordResult } from "@/services/dictionary/types";
 import { FavoriteWordEntry, MemorizationStatus } from "@/services/favorites/types";
+import type { SearchHistoryEntry } from "@/services/searchHistory/types";
 
 export type RootTabNavigatorProps = {
 	favorites: FavoriteWordEntry[];
@@ -18,6 +19,9 @@ export type RootTabNavigatorProps = {
 	onPlayPronunciation: () => void;
 	mode: DictionaryMode;
 	onModeChange: (mode: DictionaryMode) => void;
+	recentSearches: SearchHistoryEntry[];
+	onSelectRecentSearch: (entry: SearchHistoryEntry) => void;
+	onClearRecentSearches: () => void;
 	lastQuery: string | null;
 	userName: string;
 	onLogout: () => void;
