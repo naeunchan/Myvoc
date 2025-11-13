@@ -8,6 +8,7 @@ import { AuthenticatedActions } from "@/screens/Settings/components/Authenticate
 import { MISSING_USER_ERROR_MESSAGE } from "@/screens/App/AppScreen.constants";
 import { useThemedStyles } from "@/theme/useThemedStyles";
 import { FONT_SCALE_OPTIONS, THEME_MODE_OPTIONS } from "@/theme/constants";
+import { useAppAppearance } from "@/theme/AppearanceContext";
 
 const SUPPORT_EMAIL = "support@myvoc.app";
 const CONTACT_SUBJECT = "MyVoc 1:1 문의";
@@ -30,11 +31,12 @@ export function SettingsScreen({
 	profileUsername,
 	onNavigateProfile,
 	themeMode,
-	onChangeThemeMode,
 	fontScale,
-	onChangeFontScale,
+	onNavigateThemeSettings,
+	onNavigateFontSettings,
 }: SettingsScreenProps) {
 	const styles = useThemedStyles(createStyles);
+	const { theme } = useAppAppearance();
 	const handleLogoutPress = useCallback(() => {
 		if (!canLogout) {
 			return;
@@ -102,6 +104,8 @@ export function SettingsScreen({
 		return profileUsername ? `@${profileUsername}` : "계정 정보를 확인할 수 없어요.";
 	}, [isGuest, profileUsername]);
 	const initials = (displayName?.charAt(0) || "M").toUpperCase();
+	const themeModeLabel = useMemo(() => THEME_MODE_OPTIONS.find((option) => option.value === themeMode)?.label ?? "", [themeMode]);
+	const fontScaleLabel = useMemo(() => FONT_SCALE_OPTIONS.find((option) => option.value === fontScale)?.label ?? "", [fontScale]);
 
 	const renderRow = (label: string, options: RowOptions = {}) => {
 		const { onPress, value, isLast = false } = options;
@@ -149,54 +153,8 @@ export function SettingsScreen({
 				<View style={styles.section}>
 					<Text style={styles.sectionLabel}>디스플레이</Text>
 					<View style={styles.sectionCard}>
-						<View style={styles.preferenceGroup}>
-							<Text style={styles.preferenceTitle}>화면 모드</Text>
-							<View style={styles.preferenceOptions}>
-								{THEME_MODE_OPTIONS.map((option) => {
-									const isActive = option.value === themeMode;
-									return (
-										<TouchableOpacity
-											key={option.value}
-											style={[styles.preferenceButton, isActive && styles.preferenceButtonActive]}
-											onPress={() => onChangeThemeMode(option.value)}
-											activeOpacity={0.8}
-											accessibilityRole="button"
-											accessibilityState={{ selected: isActive }}
-										>
-											<Text style={[styles.preferenceButtonLabel, isActive && styles.preferenceButtonLabelActive]}>
-												{option.label}
-											</Text>
-										</TouchableOpacity>
-									);
-								})}
-							</View>
-						</View>
-						<View style={[styles.preferenceGroup, styles.preferenceGroupLast]}>
-							<Text style={styles.preferenceTitle}>글자 크기</Text>
-							<View style={styles.preferenceOptions}>
-								{FONT_SCALE_OPTIONS.map((option) => {
-									const isActive = option.value === fontScale;
-									return (
-										<TouchableOpacity
-											key={option.label}
-											style={[styles.preferenceButton, isActive && styles.preferenceButtonActive]}
-											onPress={() => onChangeFontScale(option.value)}
-											activeOpacity={0.8}
-											accessibilityRole="button"
-											accessibilityState={{ selected: isActive }}
-										>
-											<Text style={[styles.preferenceButtonLabel, isActive && styles.preferenceButtonLabelActive]}>
-												{option.label}
-											</Text>
-										</TouchableOpacity>
-									);
-								})}
-							</View>
-							<View style={styles.fontPreviewRow}>
-								<Text style={styles.fontPreviewText}>AaBbCc</Text>
-								<Text style={styles.fontPreviewCaption}>현재 크기</Text>
-							</View>
-						</View>
+						{renderRow("화면 모드", { onPress: onNavigateThemeSettings, value: themeModeLabel })}
+						{renderRow("글자 크기", { onPress: onNavigateFontSettings, value: fontScaleLabel, isLast: true })}
 					</View>
 				</View>
 

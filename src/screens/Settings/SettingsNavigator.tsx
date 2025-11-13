@@ -5,6 +5,8 @@ import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
 import { MyPageScreen } from "@/screens/Settings/MyPageScreen";
 import { MyPageNicknameScreen } from "@/screens/Settings/MyPageNicknameScreen";
 import { MyPagePasswordScreen } from "@/screens/Settings/MyPagePasswordScreen";
+import { ThemeModeScreen } from "@/screens/Settings/ThemeModeScreen";
+import { FontSizeScreen } from "@/screens/Settings/FontSizeScreen";
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
 
@@ -43,9 +45,13 @@ export function SettingsNavigator({
 							navigation.navigate("MyPage");
 						}}
 						themeMode={themeMode}
-						onChangeThemeMode={onThemeModeChange}
 						fontScale={fontScale}
-						onChangeFontScale={onFontScaleChange}
+						onNavigateThemeSettings={() => {
+							navigation.navigate("ThemeModeSettings");
+						}}
+						onNavigateFontSettings={() => {
+							navigation.navigate("FontSizeSettings");
+						}}
 					/>
 				)}
 			</Stack.Screen>
@@ -104,6 +110,24 @@ export function SettingsNavigator({
 						}}
 					/>
 				)}
+			</Stack.Screen>
+			<Stack.Screen
+				name="ThemeModeSettings"
+				options={{
+					title: "화면 모드",
+					headerBackButtonDisplayMode: "minimal",
+				}}
+			>
+				{() => <ThemeModeScreen themeMode={themeMode} onChangeThemeMode={onThemeModeChange} />}
+			</Stack.Screen>
+			<Stack.Screen
+				name="FontSizeSettings"
+				options={{
+					title: "글자 크기",
+					headerBackButtonDisplayMode: "minimal",
+				}}
+			>
+				{() => <FontSizeScreen fontScale={fontScale} onChangeFontScale={onFontScaleChange} />}
 			</Stack.Screen>
 		</Stack.Navigator>
 	);
