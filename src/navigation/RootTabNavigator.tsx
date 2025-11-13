@@ -29,6 +29,9 @@ export function RootTabNavigator({
 	onPlayPronunciation,
 	mode,
 	onModeChange,
+	recentSearches,
+	onSelectRecentSearch,
+	onClearRecentSearches,
 	lastQuery,
 	userName,
 	onLogout,
@@ -100,6 +103,9 @@ export function RootTabNavigator({
 						onPlayPronunciation={onPlayPronunciation}
 						mode={mode}
 						onModeChange={onModeChange}
+						recentSearches={recentSearches}
+						onSelectRecentSearch={onSelectRecentSearch}
+						onClearRecentSearches={onClearRecentSearches}
 					/>
 				)}
 			</Tab.Screen>

@@ -10,18 +10,21 @@ import {
 } from "@/services/favorites/types";
 import {
 	clearAutoLoginCredentials,
+	clearSearchHistoryEntries,
 	clearSession,
 	createUser,
 	findUserByUsername,
 	getActiveSession,
 	getAutoLoginCredentials,
 	getFavoritesByUser,
+	getSearchHistoryEntries,
 	hasSeenAppHelp,
 	hashPassword,
 	initializeDatabase,
 	markAppHelpSeen,
 	removeFavoriteForUser,
 	saveAutoLoginCredentials,
+	saveSearchHistoryEntries,
 	setGuestSession,
 	setUserSession,
 	updateUserPassword,
@@ -67,6 +70,7 @@ import { fetchDictionaryEntry } from "@/api/dictionary/freeDictionaryClient";
 import { applyExampleUpdates, clearPendingFlags } from "@/services/dictionary/utils/mergeExampleUpdates";
 import type { AppScreenHookResult } from "@/screens/App/AppScreen.types";
 import { playRemoteAudio } from "@/utils/audio";
+import { SearchHistoryEntry, SEARCH_HISTORY_LIMIT } from "@/services/searchHistory/types";
 
 export function useAppScreen(): AppScreenHookResult {
 	const [searchTerm, setSearchTerm] = useState("");
@@ -78,6 +82,7 @@ export function useAppScreen(): AppScreenHookResult {
 	const [mode, setMode] = useState<DictionaryMode>("en-en");
 	const modeRef = useRef<DictionaryMode>("en-en");
 	const [lastQuery, setLastQuery] = useState<string | null>(null);
+	const [recentSearches, setRecentSearches] = useState<SearchHistoryEntry[]>([]);
 	const [user, setUser] = useState<UserRecord | null>(null);
 	const [initializing, setInitializing] = useState(true);
 	const [isGuest, setIsGuest] = useState(false);
@@ -90,6 +95,12 @@ export function useAppScreen(): AppScreenHookResult {
 		return extra?.versionLabel ?? DEFAULT_VERSION_LABEL;
 	});
 	const activeLookupRef = useRef(0);
+
+	const persistSearchHistory = useCallback((entries: SearchHistoryEntry[]) => {
+		void saveSearchHistoryEntries(entries).catch((error) => {
+			console.warn("검색 이력을 저장하는 중 문제가 발생했어요.", error);
+		});
+	}, [saveSearchHistoryEntries]);
 
 	const ensurePhoneticForWord = useCallback(async (word: WordResult) => {
 		if (word.phonetic && word.phonetic.trim()) {
@@ -256,6 +267,54 @@ export function useAppScreen(): AppScreenHookResult {
 		modeRef.current = mode;
 	}, [mode]);
 
+	useEffect(() => {
+		let isMounted = true;
+
+		getSearchHistoryEntries()
+			.then((history) => {
+				if (isMounted) {
+					setRecentSearches(history);
+				}
+			})
+			.catch((error) => {
+				console.warn("검색 이력을 불러오는 중 문제가 발생했어요.", error);
+			});
+
+		return () => {
+			isMounted = false;
+		};
+	}, []);
+
+	const updateSearchHistory = useCallback(
+		(term: string, dictionaryMode: DictionaryMode) => {
+			const normalizedTerm = term.trim();
+			if (!normalizedTerm) {
+				return;
+			}
+
+			setRecentSearches((previous) => {
+				const lowerTerm = normalizedTerm.toLowerCase();
+				const filtered = previous.filter((entry) => entry.term.toLowerCase() !== lowerTerm);
+				const entry: SearchHistoryEntry = {
+					term: normalizedTerm,
+					mode: dictionaryMode,
+					searchedAt: new Date().toISOString(),
+				};
+				const next = [entry, ...filtered].slice(0, SEARCH_HISTORY_LIMIT);
+				persistSearchHistory(next);
+				return next;
+			});
+		},
+		[persistSearchHistory],
+	);
+
+	const handleClearRecentSearches = useCallback(() => {
+		setRecentSearches([]);
+		void clearSearchHistoryEntries().catch((error) => {
+			console.warn("검색 이력을 삭제하는 중 문제가 발생했어요.", error);
+		});
+	}, [clearSearchHistoryEntries]);
+
 	const executeSearch = useCallback(
 		async (term: string, dictionaryMode: DictionaryMode) => {
 			const normalizedTerm = term.trim();
@@ -342,8 +401,29 @@ export function useAppScreen(): AppScreenHookResult {
 	);
 
 	const handleSearch = useCallback(() => {
+		const trimmed = searchTerm.trim();
+		if (trimmed) {
+			updateSearchHistory(trimmed, mode);
+		}
 		void executeSearch(searchTerm, mode);
-	}, [executeSearch, mode, searchTerm]);
+	}, [executeSearch, mode, searchTerm, updateSearchHistory]);
+
+	const handleSelectRecentSearch = useCallback(
+		(entry: SearchHistoryEntry) => {
+			const normalizedTerm = entry.term.trim();
+			if (!normalizedTerm) {
+				return;
+			}
+			setSearchTerm(normalizedTerm);
+			if (modeRef.current !== entry.mode) {
+				setMode(entry.mode);
+				modeRef.current = entry.mode;
+			}
+			updateSearchHistory(normalizedTerm, entry.mode);
+			void executeSearch(normalizedTerm, entry.mode);
+		},
+		[executeSearch, updateSearchHistory],
+	);
 
 	const handleModeChange = useCallback(
 		(nextMode: DictionaryMode) => {
@@ -865,6 +945,9 @@ export function useAppScreen(): AppScreenHookResult {
 			onPlayPronunciation: playPronunciation,
 			mode,
 			onModeChange: handleModeChange,
+			recentSearches,
+			onSelectRecentSearch: handleSelectRecentSearch,
+			onClearRecentSearches: handleClearRecentSearches,
 			lastQuery,
 			userName,
 			onLogout: handleLogout,
@@ -887,6 +970,7 @@ export function useAppScreen(): AppScreenHookResult {
 			favorites,
 			handleGuestLoginRequest,
 			handleGuestSignUpRequest,
+			handleSelectRecentSearch,
 			handleToggleExamples,
 			handleProfilePasswordUpdate,
 			handleProfileUpdate,
@@ -902,6 +986,7 @@ export function useAppScreen(): AppScreenHookResult {
 			lastQuery,
 			loading,
 			mode,
+			recentSearches,
 			playPronunciation,
 			result,
 			searchTerm,
@@ -910,6 +995,7 @@ export function useAppScreen(): AppScreenHookResult {
 			user,
 			userName,
 			versionLabel,
+			handleClearRecentSearches,
 		],
 	);
 
