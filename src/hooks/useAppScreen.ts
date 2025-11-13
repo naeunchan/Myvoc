@@ -62,8 +62,11 @@ import {
 	PROFILE_UPDATE_ERROR_MESSAGE,
 	PASSWORD_REQUIRED_ERROR_MESSAGE,
 	PASSWORD_UPDATE_ERROR_MESSAGE,
+	PASSWORD_RESET_INPUT_ERROR_MESSAGE,
+	PASSWORD_RESET_SOCIAL_ERROR_MESSAGE,
 	SIGNUP_DUPLICATE_ERROR_MESSAGE,
 	SIGNUP_GENERIC_ERROR_MESSAGE,
+	SOCIAL_LOGIN_ERROR_MESSAGE,
 	TOGGLE_FAVORITE_ERROR_MESSAGE,
 	UPDATE_STATUS_ERROR_MESSAGE,
 } from "@/screens/App/AppScreen.constants";
@@ -869,6 +872,71 @@ export function useAppScreen(): AppScreenHookResult {
 		[clearAutoLoginCredentials, loadUserState, saveAutoLoginCredentials],
 	);
 
+	const handleSocialLogin = useCallback(
+		async (profile: SocialLoginProfile) => {
+			setAuthLoading(true);
+			setAuthError(null);
+			try {
+				const normalizedUsername = `${profile.provider}:${profile.id}`.toLowerCase();
+				let userRecord = await findUserByUsername(normalizedUsername);
+
+				if (!userRecord) {
+					const fallbackPassword = await hashPassword(`${profile.provider}:${profile.id}:${Date.now()}`);
+					const fallbackName = profile.name ?? profile.email ?? DEFAULT_GUEST_NAME;
+					await createUser(normalizedUsername, fallbackPassword, fallbackName);
+					userRecord = await findUserByUsername(normalizedUsername);
+				}
+
+				if (!userRecord) {
+					throw new Error(SOCIAL_LOGIN_ERROR_MESSAGE);
+				}
+
+				await loadUserState({
+					id: userRecord.id,
+					username: userRecord.username,
+					displayName: userRecord.displayName,
+				});
+			} catch (err) {
+				const message = err instanceof Error ? err.message : SOCIAL_LOGIN_ERROR_MESSAGE;
+				setAuthError(message);
+			} finally {
+				setAuthLoading(false);
+			}
+		},
+		[createUser, findUserByUsername, hashPassword, loadUserState],
+	);
+
+	const handlePasswordResetAsync = useCallback(
+		async (username: string, newPassword: string) => {
+			const trimmedUsername = username.trim().toLowerCase();
+			const trimmedPassword = newPassword.trim();
+			if (!trimmedUsername || !trimmedPassword) {
+				throw new Error(PASSWORD_RESET_INPUT_ERROR_MESSAGE);
+			}
+
+			const passwordValidationError = getGooglePasswordValidationError(trimmedPassword);
+			if (passwordValidationError) {
+				throw new Error(passwordValidationError);
+			}
+
+			const existingUser = await findUserByUsername(trimmedUsername);
+			if (!existingUser) {
+				throw new Error(MISSING_USER_ERROR_MESSAGE);
+			}
+
+			if (!existingUser.passwordHash) {
+				throw new Error(PASSWORD_RESET_SOCIAL_ERROR_MESSAGE);
+			}
+
+			try {
+				await updateUserPassword(existingUser.id, trimmedPassword);
+			} catch (err) {
+				const message = err instanceof Error ? err.message : PASSWORD_UPDATE_ERROR_MESSAGE;
+				throw new Error(message);
+			}
+		},
+		[findUserByUsername, updateUserPassword],
+	);
 	const toggleFavorite = useCallback(
 		(word: WordResult) => {
 			void toggleFavoriteAsync(word);
@@ -1058,11 +1126,13 @@ export function useAppScreen(): AppScreenHookResult {
 			onLogin: handleLogin,
 			onSignUp: handleSignUp,
 			onGuest: handleGuestAccess,
+			onSocialLogin: handleSocialLogin,
+			onResetPassword: handlePasswordResetAsync,
 			loading: authLoading,
 			errorMessage: authError,
 			initialMode: authMode,
 		}),
-		[authError, authLoading, authMode, handleGuestAccess, handleLogin, handleSignUp],
+		[authError, authLoading, authMode, handleGuestAccess, handleLogin, handlePasswordResetAsync, handleSignUp, handleSocialLogin],
 	);
 
 	return {

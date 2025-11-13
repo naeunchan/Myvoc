@@ -55,14 +55,16 @@ export const createLoginScreenStyles = (theme: AppThemeColors, fontScale: number
 			fontSize: scaleFont(16, fontScale),
 			fontWeight: "600",
 		},
-		ghostButton: {
+		guestButton: {
 			borderWidth: 1,
 			borderColor: theme.accent,
 			borderRadius: 12,
-			paddingVertical: 14,
+			paddingVertical: 12,
+			minHeight: 48,
 			alignItems: "center",
+			justifyContent: "center",
 		},
-		ghostButtonText: {
+		guestButtonText: {
 			color: theme.accent,
 			fontSize: scaleFont(16, fontScale),
 			fontWeight: "600",
@@ -130,5 +132,120 @@ export const createLoginScreenStyles = (theme: AppThemeColors, fontScale: number
 			color: theme.accentContrast,
 			fontSize: scaleFont(16, fontScale),
 			fontWeight: "600",
+		},
+		linkButton: {
+			alignSelf: "center",
+			marginVertical: 12,
+		},
+		linkButtonText: {
+			fontSize: scaleFont(14, fontScale),
+			color: theme.accent,
+			fontWeight: "600",
+		},
+		resetBackdrop: {
+			flex: 1,
+			backgroundColor: "rgba(15,23,42,0.6)",
+			alignItems: "center",
+			justifyContent: "center",
+			padding: 24,
+		},
+		resetContainer: {
+			width: "100%",
+			backgroundColor: theme.surface,
+			borderRadius: 20,
+			padding: 20,
+			gap: 12,
+		},
+		resetTitle: {
+			fontSize: scaleFont(18, fontScale),
+			fontWeight: "700",
+			color: theme.textPrimary,
+		},
+		resetDescription: {
+			fontSize: scaleFont(13, fontScale),
+			color: theme.textSecondary,
+		},
+		resetActions: {
+			flexDirection: "row",
+			gap: 12,
+			marginTop: 8,
+		},
+		resetButton: {
+			flex: 1,
+			borderRadius: 12,
+			paddingVertical: 12,
+			alignItems: "center",
+		},
+		resetButtonPrimary: {
+			backgroundColor: theme.accent,
+		},
+		resetButtonPrimaryText: {
+			color: theme.accentContrast,
+			fontSize: scaleFont(15, fontScale),
+			fontWeight: "600",
+		},
+		resetButtonSecondary: {
+			borderWidth: 1,
+			borderColor: theme.border,
+		},
+		resetButtonSecondaryText: {
+			color: theme.textPrimary,
+			fontSize: scaleFont(15, fontScale),
+			fontWeight: "600",
+		},
+		socialContainer: {
+			marginTop: 20,
+			marginBottom: 20,
+			gap: 14,
+		},
+		socialDivider: {
+			flexDirection: "row",
+			alignItems: "center",
+			gap: 10,
+		},
+		socialDividerLine: {
+			flex: 1,
+			height: 1,
+			backgroundColor: theme.border,
+		},
+		socialDividerText: {
+			fontSize: scaleFont(12, fontScale),
+			color: theme.textMuted,
+		},
+		socialButtonGroup: {
+			gap: 12,
+		},
+		socialButton: {
+			borderRadius: 12,
+			paddingVertical: 12,
+			paddingHorizontal: 16,
+			minHeight: 48,
+			alignItems: "center",
+			justifyContent: "center",
+			backgroundColor: theme.textPrimary,
+		},
+		socialGoogleButton: {
+			backgroundColor: theme.textPrimary,
+		},
+		socialAppleButton: {
+			backgroundColor: "#000000",
+		},
+		socialButtonDisabled: {
+			opacity: 0.6,
+		},
+		socialButtonContent: {
+			flexDirection: "row",
+			alignItems: "center",
+			gap: 8,
+		},
+		socialButtonText: {
+			color: theme.accentContrast,
+			fontSize: scaleFont(15, fontScale),
+			fontWeight: "600",
+		},
+		socialHelperText: {
+			fontSize: scaleFont(12, fontScale),
+			color: theme.textMuted,
+			textAlign: "center",
 		},
 	});
