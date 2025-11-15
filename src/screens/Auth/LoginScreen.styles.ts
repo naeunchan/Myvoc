@@ -165,6 +165,11 @@ export const createLoginScreenStyles = (theme: AppThemeColors, fontScale: number
 			fontSize: scaleFont(13, fontScale),
 			color: theme.textSecondary,
 		},
+		resetHelperText: {
+			fontSize: scaleFont(12, fontScale),
+			color: theme.textMuted,
+			marginBottom: 4,
+		},
 		resetActions: {
 			flexDirection: "row",
 			gap: 12,

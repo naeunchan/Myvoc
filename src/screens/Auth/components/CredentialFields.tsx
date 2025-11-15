@@ -15,37 +15,29 @@ type CredentialFieldsProps = {
 	onChangeDisplayName: (value: string) => void;
 };
 
-export function CredentialFields({
-	mode,
-	username,
-	password,
-	displayName,
-	loading,
-	onChangeUsername,
-	onChangePassword,
-	onChangeDisplayName,
-}: CredentialFieldsProps) {
+export function CredentialFields({ mode, username, password, displayName, loading, onChangeUsername, onChangePassword, onChangeDisplayName }: CredentialFieldsProps) {
 	const styles = useThemedStyles(createLoginScreenStyles);
 	const { theme } = useAppAppearance();
 	const isSignUp = mode === "signup";
 
 	return (
 		<View>
-			<Text style={styles.inputLabel}>아이디</Text>
+			<Text style={styles.inputLabel}>이메일</Text>
 			<TextInput
 				style={styles.textInput}
 				value={username}
 				onChangeText={onChangeUsername}
-				placeholder="아이디를 입력하세요"
+				placeholder="이메일 주소를 입력하세요"
 				autoCapitalize="none"
 				autoCorrect={false}
 				editable={!loading}
-				autoComplete="username"
-				textContentType="username"
+				autoComplete="email"
+				textContentType="emailAddress"
+				keyboardType="email-address"
 				returnKeyType="next"
 				placeholderTextColor={theme.textMuted}
 			/>
-			{isSignUp ? <Text style={styles.ruleText}>아이디는 6~30자의 영문 소문자, 숫자, 마침표만 사용할 수 있어요.</Text> : null}
+			{isSignUp ? <Text style={styles.ruleText}>가입 시 사용할 이메일 주소를 입력해주세요.</Text> : null}
 
 			<Text style={styles.inputLabel}>비밀번호</Text>
 			<TextInput
@@ -64,7 +56,7 @@ export function CredentialFields({
 
 			{isSignUp ? (
 				<View>
-					<Text style={styles.inputLabel}>표시 이름 (선택)</Text>
+					<Text style={styles.inputLabel}>닉네임 (선택)</Text>
 					<TextInput
 						style={styles.textInput}
 						value={displayName}

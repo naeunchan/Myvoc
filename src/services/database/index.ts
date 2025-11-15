@@ -507,7 +507,7 @@ async function createUserNative(username: string, password: string, displayName?
 async function createUserWeb(username: string, password: string, displayName?: string) {
 	const state = readWebState();
 	if (state.users.some((user) => user.username === username)) {
-		throw new Error("이미 사용 중인 아이디예요. 다른 아이디를 선택해주세요.");
+		throw new Error("이미 사용 중인 이메일이에요. 다른 이메일을 사용해주세요.");
 	}
 
 	const normalizedDisplayName = (displayName ?? username).trim() || username;
@@ -524,6 +524,38 @@ async function createUserWeb(username: string, password: string, displayName?: s
 	};
 	writeWebState(nextState);
 	return mapUserRow(newUser, normalizedDisplayName);
+}
+
+async function isDisplayNameTakenNative(displayName: string, excludeUserId?: number) {
+	const db = await getDatabase();
+	const normalizedDisplayName = displayName.trim();
+	if (!normalizedDisplayName) {
+		return false;
+	}
+	const params = excludeUserId != null ? [normalizedDisplayName, excludeUserId] : [normalizedDisplayName];
+	const query =
+		excludeUserId != null
+			? "SELECT 1 FROM users WHERE display_name IS NOT NULL AND LOWER(display_name) = LOWER(?) AND id != ? LIMIT 1"
+			: "SELECT 1 FROM users WHERE display_name IS NOT NULL AND LOWER(display_name) = LOWER(?) LIMIT 1";
+	const rows = await db.getAllAsync<{ exists: number }>(query, params);
+	return rows.length > 0;
+}
+
+function isDisplayNameTakenWeb(displayName: string, excludeUserId?: number) {
+	const normalizedDisplayName = displayName.trim().toLowerCase();
+	if (!normalizedDisplayName) {
+		return false;
+	}
+	const state = readWebState();
+	return state.users.some((user) => {
+		if (!user.display_name) {
+			return false;
+		}
+		if (excludeUserId != null && user.id === excludeUserId) {
+			return false;
+		}
+		return user.display_name.trim().toLowerCase() === normalizedDisplayName;
+	});
 }
 
 async function updateUserDisplayNameNative(userId: number, displayName: string | null) {
@@ -1057,7 +1089,7 @@ export async function initializeDatabase() {
 export async function findUserByUsername(username: string): Promise<UserWithPasswordRecord | null> {
 	const normalizedUsername = username.trim();
 	if (!normalizedUsername) {
-		throw new Error("사용자 이름을 입력해주세요.");
+		throw new Error("이메일 주소를 입력해주세요.");
 	}
 
 	if (isWeb) {
@@ -1069,7 +1101,7 @@ export async function findUserByUsername(username: string): Promise<UserWithPass
 export async function createUser(username: string, password: string, displayName?: string) {
 	const normalizedUsername = username.trim();
 	if (!normalizedUsername) {
-		throw new Error("사용자 이름을 입력해주세요.");
+		throw new Error("이메일 주소를 입력해주세요.");
 	}
 	const normalizedDisplayName = displayName ?? normalizedUsername;
 
@@ -1091,6 +1123,17 @@ export async function updateUserPassword(userId: number, password: string) {
 		return updateUserPasswordWeb(userId, password);
 	}
 	return updateUserPasswordNative(userId, password);
+}
+
+export async function isDisplayNameTaken(displayName: string, excludeUserId?: number) {
+	const normalizedDisplayName = displayName.trim();
+	if (!normalizedDisplayName) {
+		return false;
+	}
+	if (isWeb) {
+		return isDisplayNameTakenWeb(normalizedDisplayName, excludeUserId);
+	}
+	return isDisplayNameTakenNative(normalizedDisplayName, excludeUserId);
 }
 
 export async function getFavoritesByUser(userId: number): Promise<FavoriteWordEntry[]> {

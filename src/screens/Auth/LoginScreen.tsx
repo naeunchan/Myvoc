@@ -23,8 +23,7 @@ export function LoginScreen({ onLogin, onSignUp, onGuest, onSocialLogin, onReset
 	const [mode, setMode] = useState<"login" | "signup">(initialMode);
 	const [rememberMe, setRememberMe] = useState(false);
 	const [resetVisible, setResetVisible] = useState(false);
-	const [resetUsername, setResetUsername] = useState("");
-	const [resetPassword, setResetPassword] = useState("");
+	const [resetEmail, setResetEmail] = useState("");
 	const [resetError, setResetError] = useState<string | null>(null);
 	const [resetLoading, setResetLoading] = useState(false);
 
@@ -72,8 +71,7 @@ export function LoginScreen({ onLogin, onSignUp, onGuest, onSocialLogin, onReset
 
 	const handleOpenReset = useCallback(() => {
 		setResetVisible(true);
-		setResetUsername("");
-		setResetPassword("");
+		setResetEmail("");
 		setResetError(null);
 	}, []);
 
@@ -89,24 +87,23 @@ export function LoginScreen({ onLogin, onSignUp, onGuest, onSocialLogin, onReset
 		if (resetLoading) {
 			return;
 		}
-		const trimmedUser = resetUsername.trim();
-		const trimmedPassword = resetPassword.trim();
-		if (!trimmedUser || !trimmedPassword) {
+		const trimmedEmail = resetEmail.trim();
+		if (!trimmedEmail) {
 			setResetError(PASSWORD_RESET_INPUT_ERROR_MESSAGE);
 			return;
 		}
 		setResetLoading(true);
 		setResetError(null);
 		try {
-			await onResetPassword(trimmedUser, trimmedPassword);
-			Alert.alert("비밀번호 재설정", PASSWORD_RESET_SUCCESS_MESSAGE, [{ text: "확인", onPress: handleCloseReset }]);
+			await onResetPassword(trimmedEmail);
+			Alert.alert("이메일 인증 안내", PASSWORD_RESET_SUCCESS_MESSAGE, [{ text: "확인", onPress: handleCloseReset }]);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : "비밀번호를 재설정할 수 없어요.";
+			const message = error instanceof Error ? error.message : "인증 메일을 보내지 못했어요.";
 			setResetError(message);
 		} finally {
 			setResetLoading(false);
 		}
-	}, [handleCloseReset, onResetPassword, resetLoading, resetPassword, resetUsername]);
+	}, [handleCloseReset, onResetPassword, resetEmail, resetLoading]);
 
 	return (
 		<SafeAreaView style={styles.safeArea}>
@@ -126,8 +123,6 @@ export function LoginScreen({ onLogin, onSignUp, onGuest, onSocialLogin, onReset
 					onChangeDisplayName={setDisplayName}
 				/>
 
-				<Text style={styles.helperText}>{copy.helperText}</Text>
-
 				<RememberMeToggle value={rememberMe} disabled={loading} onChange={setRememberMe} />
 
 				<PrimaryActionButton label={copy.primaryButton} loading={loading} disabled={isPrimaryDisabled} onPress={handlePrimaryPress} mode={mode} />
@@ -146,12 +141,10 @@ export function LoginScreen({ onLogin, onSignUp, onGuest, onSocialLogin, onReset
 			</View>
 			<ForgotPasswordModal
 				visible={resetVisible}
-				username={resetUsername}
-				newPassword={resetPassword}
+				email={resetEmail}
 				errorMessage={resetError}
 				loading={resetLoading}
-				onChangeUsername={setResetUsername}
-				onChangePassword={setResetPassword}
+				onChangeEmail={setResetEmail}
 				onClose={handleCloseReset}
 				onSubmit={handleSubmitReset}
 			/>

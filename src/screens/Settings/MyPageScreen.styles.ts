@@ -101,9 +101,40 @@ export const createMyPageStyles = (theme: AppThemeColors, fontScale: number) =>
 			color: theme.textPrimary,
 			backgroundColor: theme.inputBackground,
 		},
+		inputRow: {
+			flexDirection: "row",
+			gap: 12,
+			alignItems: "center",
+		},
+		inputFlex: {
+			flex: 1,
+		},
+		checkButton: {
+			borderWidth: 1,
+			borderColor: theme.border,
+			borderRadius: 12,
+			paddingHorizontal: 12,
+			paddingVertical: 12,
+			justifyContent: "center",
+			alignItems: "center",
+			minWidth: 96,
+			backgroundColor: theme.surfaceMuted,
+		},
+		checkButtonDisabled: {
+			opacity: 0.6,
+		},
+		checkButtonText: {
+			fontSize: scaleFont(13, fontScale),
+			fontWeight: "600",
+			color: theme.textPrimary,
+		},
 		errorText: {
 			fontSize: scaleFont(13, fontScale),
 			color: theme.danger,
+		},
+		successText: {
+			fontSize: scaleFont(13, fontScale),
+			color: theme.success,
 		},
 		submitButton: {
 			backgroundColor: theme.accent,

@@ -15,7 +15,7 @@ export type LoginScreenProps = {
 	) => void;
 	onGuest: () => void;
 	onSocialLogin: (profile: SocialLoginProfile) => void;
-	onResetPassword: (username: string, newPassword: string) => Promise<void>;
+	onResetPassword: (username: string) => Promise<void>;
 	loading?: boolean;
 	errorMessage?: string | null;
 	initialMode?: "login" | "signup";

@@ -22,6 +22,7 @@ import {
 	hasSeenAppHelp,
 	hashPassword,
 	initializeDatabase,
+	isDisplayNameTaken,
 	markAppHelpSeen,
 	removeFavoriteForUser,
 	saveAutoLoginCredentials,
@@ -34,11 +35,9 @@ import {
 	upsertFavoriteForUser,
 	type UserRecord,
 } from "@/services/database";
-import {
-	getGooglePasswordValidationError,
-	getGoogleUsernameValidationError,
-} from "@/utils/authValidation";
-import type { LoginScreenProps } from "@/screens/Auth/LoginScreen.types";
+import { getEmailValidationError, getGooglePasswordValidationError } from "@/utils/authValidation";
+import { generateRandomDisplayName } from "@/utils/randomDisplayName";
+import type { LoginScreenProps, SocialLoginProfile } from "@/screens/Auth/LoginScreen.types";
 import type { RootTabNavigatorProps } from "@/navigation/RootTabNavigator.types";
 import {
 	ACCOUNT_REDIRECT_ERROR_MESSAGE,
@@ -60,6 +59,9 @@ import {
 	MISSING_USER_ERROR_MESSAGE,
 	REMOVE_FAVORITE_ERROR_MESSAGE,
 	PROFILE_UPDATE_ERROR_MESSAGE,
+	DISPLAY_NAME_AVAILABLE_MESSAGE,
+	DISPLAY_NAME_DUPLICATE_ERROR_MESSAGE,
+	DISPLAY_NAME_REQUIRED_ERROR_MESSAGE,
 	PASSWORD_REQUIRED_ERROR_MESSAGE,
 	PASSWORD_UPDATE_ERROR_MESSAGE,
 	PASSWORD_RESET_INPUT_ERROR_MESSAGE,
@@ -823,9 +825,9 @@ export function useAppScreen(): AppScreenHookResult {
 			const trimmedPassword = password.trim();
 			const trimmedDisplayName = displayName.trim();
 
-			const usernameValidationError = getGoogleUsernameValidationError(trimmedUsername);
-			if (usernameValidationError) {
-				setAuthError(usernameValidationError);
+			const emailValidationError = getEmailValidationError(trimmedUsername);
+			if (emailValidationError) {
+				setAuthError(emailValidationError);
 				return;
 			}
 
@@ -846,11 +848,28 @@ export function useAppScreen(): AppScreenHookResult {
 					return;
 				}
 
-				const newUser = await createUser(
-					sanitizedUsername,
-					trimmedPassword,
-					trimmedDisplayName || sanitizedUsername,
-				);
+			let displayNameToUse = trimmedDisplayName;
+			if (displayNameToUse) {
+				const taken = await isDisplayNameTaken(displayNameToUse);
+				if (taken) {
+					setAuthError(DISPLAY_NAME_DUPLICATE_ERROR_MESSAGE);
+					return;
+				}
+			} else {
+				let candidate = generateRandomDisplayName();
+				let attempt = 0;
+				while (await isDisplayNameTaken(candidate)) {
+					attempt += 1;
+					if (attempt > 25) {
+						candidate = `${generateRandomDisplayName()}${Date.now().toString().slice(-2)}`;
+					} else {
+						candidate = generateRandomDisplayName();
+					}
+				}
+				displayNameToUse = candidate;
+			}
+
+				const newUser = await createUser(sanitizedUsername, trimmedPassword, displayNameToUse);
 				if (rememberMe) {
 					const passwordHash = await hashPassword(trimmedPassword);
 					await saveAutoLoginCredentials(sanitizedUsername, passwordHash);
@@ -907,16 +926,10 @@ export function useAppScreen(): AppScreenHookResult {
 	);
 
 	const handlePasswordResetAsync = useCallback(
-		async (username: string, newPassword: string) => {
+		async (username: string) => {
 			const trimmedUsername = username.trim().toLowerCase();
-			const trimmedPassword = newPassword.trim();
-			if (!trimmedUsername || !trimmedPassword) {
+			if (!trimmedUsername) {
 				throw new Error(PASSWORD_RESET_INPUT_ERROR_MESSAGE);
-			}
-
-			const passwordValidationError = getGooglePasswordValidationError(trimmedPassword);
-			if (passwordValidationError) {
-				throw new Error(passwordValidationError);
 			}
 
 			const existingUser = await findUserByUsername(trimmedUsername);
@@ -928,14 +941,10 @@ export function useAppScreen(): AppScreenHookResult {
 				throw new Error(PASSWORD_RESET_SOCIAL_ERROR_MESSAGE);
 			}
 
-			try {
-				await updateUserPassword(existingUser.id, trimmedPassword);
-			} catch (err) {
-				const message = err instanceof Error ? err.message : PASSWORD_UPDATE_ERROR_MESSAGE;
-				throw new Error(message);
-			}
+			// 실제 이메일 발송 API가 연동되면 이 지점에서 호출하면 돼요.
+			await new Promise((resolve) => setTimeout(resolve, 600));
 		},
-		[findUserByUsername, updateUserPassword],
+		[findUserByUsername],
 	);
 	const toggleFavorite = useCallback(
 		(word: WordResult) => {
@@ -1007,12 +1016,33 @@ export function useAppScreen(): AppScreenHookResult {
 
 			const normalizedName = displayName.trim();
 			try {
+				if (normalizedName) {
+					const taken = await isDisplayNameTaken(normalizedName, user.id);
+					if (taken) {
+						throw new Error(DISPLAY_NAME_DUPLICATE_ERROR_MESSAGE);
+					}
+				}
 				const updated = await updateUserDisplayName(user.id, normalizedName || null);
 				setUser(updated);
 			} catch (err) {
 				const message = err instanceof Error ? err.message : PROFILE_UPDATE_ERROR_MESSAGE;
 				throw new Error(message);
 			}
+		},
+		[user],
+	);
+
+	const handleCheckDisplayName = useCallback(
+		async (displayName: string) => {
+			const normalizedName = displayName.trim();
+			if (!normalizedName) {
+				throw new Error(DISPLAY_NAME_REQUIRED_ERROR_MESSAGE);
+			}
+			const taken = await isDisplayNameTaken(normalizedName, user?.id);
+			if (taken) {
+				throw new Error(DISPLAY_NAME_DUPLICATE_ERROR_MESSAGE);
+			}
+			return DISPLAY_NAME_AVAILABLE_MESSAGE;
 		},
 		[user],
 	);
@@ -1080,6 +1110,7 @@ export function useAppScreen(): AppScreenHookResult {
 			profileDisplayName: user?.displayName ?? null,
 			profileUsername: user?.username ?? null,
 			onUpdateProfile: handleProfileUpdate,
+			onCheckDisplayName: handleCheckDisplayName,
 			onUpdatePassword: handleProfilePasswordUpdate,
 		}),
 		[
@@ -1093,6 +1124,7 @@ export function useAppScreen(): AppScreenHookResult {
 			handleToggleExamples,
 			handleProfilePasswordUpdate,
 			handleProfileUpdate,
+			handleCheckDisplayName,
 			handlePlayWordAudio,
 			handleLogout,
 			handleModeChange,

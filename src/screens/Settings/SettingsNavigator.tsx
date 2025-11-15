@@ -21,6 +21,7 @@ export function SettingsNavigator({
 	profileDisplayName,
 	profileUsername,
 	onUpdateProfile,
+	onCheckDisplayName,
 	onUpdatePassword,
 	themeMode,
 	onThemeModeChange,
@@ -88,6 +89,7 @@ export function SettingsNavigator({
 						username={profileUsername ?? ""}
 						displayName={profileDisplayName}
 						onUpdateProfile={onUpdateProfile}
+						onCheckNickname={onCheckDisplayName}
 						onGoBack={() => {
 							navigation.goBack();
 						}}

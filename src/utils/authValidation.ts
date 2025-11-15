@@ -1,25 +1,11 @@
-export const GOOGLE_USERNAME_MIN_LENGTH = 6;
-export const GOOGLE_USERNAME_MAX_LENGTH = 30;
-
-export function getGoogleUsernameValidationError(username: string): string | null {
-	if (!username) {
-		return "아이디를 입력해주세요.";
+export function getEmailValidationError(email: string): string | null {
+	const trimmedEmail = email.trim();
+	if (!trimmedEmail) {
+		return "이메일 주소를 입력해주세요.";
 	}
-	const lowercaseUsername = username.toLowerCase();
-	if (username !== lowercaseUsername) {
-		return "아이디는 영문 소문자, 숫자, 마침표만 사용할 수 있어요.";
-	}
-	if (lowercaseUsername.length < GOOGLE_USERNAME_MIN_LENGTH || lowercaseUsername.length > GOOGLE_USERNAME_MAX_LENGTH) {
-		return `아이디는 ${GOOGLE_USERNAME_MIN_LENGTH}자 이상 ${GOOGLE_USERNAME_MAX_LENGTH}자 이하로 입력해주세요.`;
-	}
-	if (!/^[a-z0-9.]+$/.test(lowercaseUsername)) {
-		return "아이디는 영문 소문자, 숫자, 마침표만 사용할 수 있어요.";
-	}
-	if (lowercaseUsername.startsWith(".") || lowercaseUsername.endsWith(".")) {
-		return "아이디는 마침표로 시작하거나 끝날 수 없어요.";
-	}
-	if (lowercaseUsername.includes("..")) {
-		return "아이디에는 연속된 마침표를 사용할 수 없어요.";
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	if (!emailRegex.test(trimmedEmail.toLowerCase())) {
+		return "유효한 이메일 주소를 입력해주세요.";
 	}
 	return null;
 }

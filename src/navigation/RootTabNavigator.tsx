@@ -50,6 +50,7 @@ export function RootTabNavigator({
 	profileDisplayName,
 	profileUsername,
 	onUpdateProfile,
+	onCheckDisplayName,
 	onUpdatePassword,
 }: RootTabNavigatorProps) {
 	const tabStyles = useThemedStyles(createTabStyles);
@@ -128,6 +129,7 @@ export function RootTabNavigator({
 						profileDisplayName={profileDisplayName}
 						profileUsername={profileUsername}
 						onUpdateProfile={onUpdateProfile}
+						onCheckDisplayName={onCheckDisplayName}
 						onUpdatePassword={onUpdatePassword}
 						themeMode={themeMode}
 						onThemeModeChange={onThemeModeChange}
