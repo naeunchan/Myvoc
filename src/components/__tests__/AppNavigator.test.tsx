@@ -66,6 +66,7 @@ const createProps = (): RootTabNavigatorProps => {
 		onUpdateProfile: asyncNoop,
 		onCheckDisplayName: jest.fn(() => Promise.resolve("ok")),
 		onUpdatePassword: asyncNoop,
+		onDeleteAccount: asyncNoop,
 	};
 };
 

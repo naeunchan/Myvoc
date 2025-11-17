@@ -41,4 +41,5 @@ export type RootTabNavigatorProps = {
 	onUpdateProfile: (displayName: string) => Promise<void>;
 	onCheckDisplayName: (displayName: string) => Promise<string>;
 	onUpdatePassword: (password: string) => Promise<void>;
+	onDeleteAccount: () => Promise<void>;
 };

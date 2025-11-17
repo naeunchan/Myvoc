@@ -101,6 +101,67 @@ export const createLoginScreenStyles = (theme: AppThemeColors, fontScale: number
 			marginBottom: 16,
 			lineHeight: scaleFont(16, fontScale),
 		},
+		verificationSection: {
+			marginBottom: 20,
+			padding: 16,
+			borderWidth: 1,
+			borderColor: theme.border,
+			borderRadius: 16,
+			backgroundColor: theme.surface,
+		},
+		verificationHeaderRow: {
+			flexDirection: "row",
+			alignItems: "center",
+			justifyContent: "space-between",
+			marginBottom: 12,
+		},
+		verificationDescription: {
+			fontSize: scaleFont(12, fontScale),
+			color: theme.textSecondary,
+			marginBottom: 12,
+			lineHeight: scaleFont(17, fontScale),
+		},
+		verificationSendButton: {
+			paddingVertical: 8,
+			paddingHorizontal: 14,
+			borderRadius: 999,
+			borderWidth: 1,
+			borderColor: theme.accent,
+		},
+		verificationSendButtonText: {
+			color: theme.accent,
+			fontSize: scaleFont(13, fontScale),
+			fontWeight: "600",
+		},
+		verificationCodeInput: {
+			marginBottom: 12,
+		},
+		verificationActionButton: {
+			backgroundColor: theme.accent,
+			paddingVertical: 12,
+			borderRadius: 12,
+			alignItems: "center",
+		},
+		verificationActionButtonDisabled: {
+			opacity: 0.6,
+		},
+		verificationActionButtonText: {
+			color: theme.accentContrast,
+			fontSize: scaleFont(14, fontScale),
+			fontWeight: "600",
+		},
+		verificationHintText: {
+			fontSize: scaleFont(12, fontScale),
+			color: theme.textMuted,
+			marginTop: 6,
+			lineHeight: scaleFont(16, fontScale),
+		},
+		verificationSuccessText: {
+			fontSize: scaleFont(12, fontScale),
+			color: theme.success,
+			marginTop: 6,
+			fontWeight: "600",
+		},
 		modeSwitch: {
 			flexDirection: "row",
 			justifyContent: "center",

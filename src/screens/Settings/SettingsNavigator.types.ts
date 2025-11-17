@@ -22,6 +22,7 @@ export type SettingsNavigatorProps = {
 	onUpdateProfile: (displayName: string) => Promise<void>;
 	onCheckDisplayName: (displayName: string) => Promise<string>;
 	onUpdatePassword: (password: string) => Promise<void>;
+	onDeleteAccount: () => Promise<void>;
 	themeMode: ThemeMode;
 	onThemeModeChange: (mode: ThemeMode) => void;
 	fontScale: number;

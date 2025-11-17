@@ -52,6 +52,7 @@ export function RootTabNavigator({
 	onUpdateProfile,
 	onCheckDisplayName,
 	onUpdatePassword,
+	onDeleteAccount,
 }: RootTabNavigatorProps) {
 	const tabStyles = useThemedStyles(createTabStyles);
 	const { theme } = useAppAppearance();
@@ -118,8 +119,8 @@ export function RootTabNavigator({
 			</Tab.Screen>
 			<Tab.Screen name="Settings">
 				{() => (
-					<SettingsNavigator
-						onLogout={onLogout}
+						<SettingsNavigator
+							onLogout={onLogout}
 						canLogout={canLogout}
 						isGuest={isGuest}
 						onRequestLogin={onRequestLogin}
@@ -130,7 +131,8 @@ export function RootTabNavigator({
 						profileUsername={profileUsername}
 						onUpdateProfile={onUpdateProfile}
 						onCheckDisplayName={onCheckDisplayName}
-						onUpdatePassword={onUpdatePassword}
+							onUpdatePassword={onUpdatePassword}
+							onDeleteAccount={onDeleteAccount}
 						themeMode={themeMode}
 						onThemeModeChange={onThemeModeChange}
 						fontScale={fontScale}
