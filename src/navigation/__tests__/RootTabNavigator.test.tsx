@@ -83,6 +83,7 @@ const buildProps = (): RootTabNavigatorProps => {
 		onUpdateProfile: asyncNoop,
 		onCheckDisplayName: jest.fn(() => Promise.resolve("ok")),
 		onUpdatePassword: asyncNoop,
+		onDeleteAccount: asyncNoop,
 	};
 };
 
@@ -149,6 +150,7 @@ describe("RootTabNavigator", () => {
 				onUpdateProfile: props.onUpdateProfile,
 				onCheckDisplayName: props.onCheckDisplayName,
 				onUpdatePassword: props.onUpdatePassword,
+				onDeleteAccount: props.onDeleteAccount,
 				themeMode: props.themeMode,
 				onThemeModeChange: props.onThemeModeChange,
 				fontScale: props.fontScale,

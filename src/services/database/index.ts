@@ -33,6 +33,20 @@ type SessionRow = {
 	is_guest: number;
 };
 
+type EmailVerificationRow = {
+	email: string;
+	code: string;
+	expires_at: string;
+	verified_at: string | null;
+};
+
+const EMAIL_VERIFICATION_EXPIRY_MS = 10 * 60 * 1000;
+
+type EmailVerificationPayload = {
+	code: string;
+	expiresAt: string;
+};
+
 export type UserRecord = {
 	id: number;
 	username: string;
@@ -86,6 +100,21 @@ export async function hashPassword(password: string) {
 	const firstPass = fnv1a32(`${salt}:${password}`);
 	const secondPass = fnv1a32(`${firstPass}:${password}`);
 	return `${firstPass}${secondPass}`;
+}
+
+function generateVerificationCode() {
+	return Math.floor(100000 + Math.random() * 900000)
+		.toString()
+		.padStart(6, "0");
+}
+
+function getVerificationExpiryTimestamp() {
+	return new Date(Date.now() + EMAIL_VERIFICATION_EXPIRY_MS).toISOString();
+}
+
+function isVerificationExpired(expiresAt: string) {
+	const expiryTime = new Date(expiresAt).getTime();
+	return Number.isNaN(expiryTime) || expiryTime <= Date.now();
 }
 
 function normalizeFavoriteEntry(payload: unknown): FavoriteWordEntry | null {
@@ -221,6 +250,15 @@ async function initializeDatabaseNative() {
 			updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 		);
 	`);
+	await db.execAsync(`
+		CREATE TABLE IF NOT EXISTS email_verifications (
+			email TEXT PRIMARY KEY,
+			code TEXT NOT NULL,
+			expires_at TEXT NOT NULL,
+			verified_at TEXT,
+			updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+		);
+	`);
 }
 
 const WEB_DB_STORAGE_KEY = "myvoc:web-db";
@@ -246,12 +284,20 @@ type WebAutoLoginState = {
 	updated_at: string;
 };
 
+type WebEmailVerificationState = {
+	code: string;
+	expires_at: string;
+	verified_at: string | null;
+	updated_at: string;
+};
+
 type WebDatabaseState = {
 	users: UserRow[];
 	favorites: WebFavoriteRow[];
 	session: WebSessionState | null;
 	autoLogin: WebAutoLoginState | null;
 	preferences: Record<string, string>;
+	emailVerifications: Record<string, WebEmailVerificationState>;
 };
 
 function cloneDefaultWebState(): WebDatabaseState {
@@ -261,6 +307,7 @@ function cloneDefaultWebState(): WebDatabaseState {
 		session: null,
 		autoLogin: null,
 		preferences: {},
+		emailVerifications: {},
 	};
 }
 
@@ -410,6 +457,39 @@ function normalizePreferences(value: unknown): Record<string, string> {
 	return normalized;
 }
 
+function normalizeEmailVerifications(value: unknown): Record<string, WebEmailVerificationState> {
+	if (typeof value !== "object" || value === null) {
+		return {};
+	}
+
+	const record = value as Record<string, unknown>;
+	const normalized: Record<string, WebEmailVerificationState> = {};
+	const fallbackTimestamp = new Date().toISOString();
+
+	for (const key of Object.keys(record)) {
+		const candidate = record[key];
+		if (typeof candidate !== "object" || candidate === null) {
+			continue;
+		}
+		const entry = candidate as Partial<WebEmailVerificationState>;
+		if (typeof entry.code !== "string" || typeof entry.expires_at !== "string") {
+			continue;
+		}
+		const normalizedKey = key.trim().toLowerCase();
+		if (!normalizedKey) {
+			continue;
+		}
+		normalized[normalizedKey] = {
+			code: entry.code,
+			expires_at: entry.expires_at,
+			verified_at: typeof entry.verified_at === "string" ? entry.verified_at : null,
+			updated_at: typeof entry.updated_at === "string" ? entry.updated_at : fallbackTimestamp,
+		};
+	}
+
+	return normalized;
+}
+
 function readWebState(): WebDatabaseState {
 	const storage = getBrowserStorage();
 	if (!storage) {
@@ -429,6 +509,7 @@ function readWebState(): WebDatabaseState {
 			session: normalizeSession(parsed.session),
 			autoLogin: normalizeAutoLogin(parsed.autoLogin),
 			preferences: normalizePreferences(parsed.preferences),
+			emailVerifications: normalizeEmailVerifications(parsed.emailVerifications),
 		};
 	} catch (error) {
 		console.warn("저장된 데이터베이스 상태를 읽는 중 문제가 발생했어요.", error);
@@ -524,6 +605,149 @@ async function createUserWeb(username: string, password: string, displayName?: s
 	};
 	writeWebState(nextState);
 	return mapUserRow(newUser, normalizedDisplayName);
+}
+
+async function sendEmailVerificationCodeNative(email: string): Promise<EmailVerificationPayload> {
+	const db = await getDatabase();
+	const code = generateVerificationCode();
+	const expiresAt = getVerificationExpiryTimestamp();
+	await db.runAsync(
+		`INSERT INTO email_verifications (email, code, expires_at, verified_at, updated_at)
+		VALUES (?, ?, ?, NULL, CURRENT_TIMESTAMP)
+		ON CONFLICT(email) DO UPDATE SET code = excluded.code, expires_at = excluded.expires_at, verified_at = NULL, updated_at = CURRENT_TIMESTAMP`,
+		[email, code, expiresAt],
+	);
+	return { code, expiresAt };
+}
+
+async function sendEmailVerificationCodeWeb(email: string): Promise<EmailVerificationPayload> {
+	const state = readWebState();
+	const code = generateVerificationCode();
+	const expiresAt = getVerificationExpiryTimestamp();
+	const timestamp = new Date().toISOString();
+	const nextState: WebDatabaseState = {
+		...state,
+		emailVerifications: {
+			...state.emailVerifications,
+			[email]: {
+				code,
+				expires_at: expiresAt,
+				verified_at: null,
+				updated_at: timestamp,
+			},
+		},
+	};
+	writeWebState(nextState);
+	return { code, expiresAt };
+}
+
+async function deleteUserAccountNative(userId: number, username: string) {
+	const db = await getDatabase();
+	await db.runAsync("DELETE FROM favorites WHERE user_id = ?", [userId]);
+	await db.runAsync("DELETE FROM users WHERE id = ?", [userId]);
+	await db.runAsync("DELETE FROM session", []);
+	await db.runAsync("DELETE FROM auto_login", []);
+	await db.runAsync("DELETE FROM app_preferences", []);
+	await db.runAsync("DELETE FROM email_verifications WHERE email = ?", [username]);
+}
+
+function deleteUserAccountWeb(userId: number, username: string) {
+	const state = readWebState();
+	const normalizedUsername = username.trim().toLowerCase();
+	const { [normalizedUsername]: _removed, ...restVerifications } = state.emailVerifications;
+	const nextState: WebDatabaseState = {
+		...state,
+		users: state.users.filter((user) => user.id !== userId),
+		favorites: state.favorites.filter((favorite) => favorite.user_id !== userId),
+		session: null,
+		autoLogin: null,
+		preferences: {},
+		emailVerifications: restVerifications,
+	};
+	writeWebState(nextState);
+}
+
+async function getEmailVerificationNative(email: string): Promise<EmailVerificationRow | null> {
+	const db = await getDatabase();
+	const rows = await db.getAllAsync<EmailVerificationRow>(
+		"SELECT email, code, expires_at, verified_at FROM email_verifications WHERE email = ? LIMIT 1",
+		[email],
+	);
+	return rows.length > 0 ? rows[0] : null;
+}
+
+function getEmailVerificationWeb(email: string): WebEmailVerificationState | null {
+	const state = readWebState();
+	return state.emailVerifications[email] ?? null;
+}
+
+async function verifyEmailVerificationCodeNative(email: string, code: string): Promise<boolean> {
+	const record = await getEmailVerificationNative(email);
+	if (!record) {
+		return false;
+	}
+	if (record.code !== code || isVerificationExpired(record.expires_at)) {
+		return false;
+	}
+	const db = await getDatabase();
+	await db.runAsync(
+		"UPDATE email_verifications SET verified_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE email = ?",
+		[email],
+	);
+	return true;
+}
+
+async function verifyEmailVerificationCodeWeb(email: string, code: string): Promise<boolean> {
+	const state = readWebState();
+	const record = state.emailVerifications[email];
+	if (!record) {
+		return false;
+	}
+	if (record.code !== code || isVerificationExpired(record.expires_at)) {
+		return false;
+	}
+	const timestamp = new Date().toISOString();
+	const nextState: WebDatabaseState = {
+		...state,
+		emailVerifications: {
+			...state.emailVerifications,
+			[email]: {
+				...record,
+				verified_at: timestamp,
+				updated_at: timestamp,
+			},
+		},
+	};
+	writeWebState(nextState);
+	return true;
+}
+
+async function isEmailVerificationVerifiedNative(email: string): Promise<boolean> {
+	const record = await getEmailVerificationNative(email);
+	return Boolean(record?.verified_at && !isVerificationExpired(record.expires_at));
+}
+
+async function isEmailVerificationVerifiedWeb(email: string): Promise<boolean> {
+	const record = getEmailVerificationWeb(email);
+	return Boolean(record?.verified_at && !isVerificationExpired(record.expires_at));
+}
+
+async function clearEmailVerificationNative(email: string) {
+	const db = await getDatabase();
+	await db.runAsync("DELETE FROM email_verifications WHERE email = ?", [email]);
+}
+
+function clearEmailVerificationWeb(email: string) {
+	const state = readWebState();
+	if (!state.emailVerifications[email]) {
+		return;
+	}
+	const { [email]: _removed, ...rest } = state.emailVerifications;
+	const nextState: WebDatabaseState = {
+		...state,
+		emailVerifications: rest,
+	};
+	writeWebState(nextState);
 }
 
 async function isDisplayNameTakenNative(displayName: string, excludeUserId?: number) {
@@ -1109,6 +1333,59 @@ export async function createUser(username: string, password: string, displayName
 		return createUserWeb(normalizedUsername, password, normalizedDisplayName);
 	}
 	return createUserNative(normalizedUsername, password, normalizedDisplayName);
+}
+
+export async function sendEmailVerificationCode(email: string): Promise<EmailVerificationPayload> {
+	const normalizedEmail = email.trim().toLowerCase();
+	if (!normalizedEmail) {
+		throw new Error("이메일 주소를 입력해주세요.");
+	}
+	if (isWeb) {
+		return sendEmailVerificationCodeWeb(normalizedEmail);
+	}
+	return sendEmailVerificationCodeNative(normalizedEmail);
+}
+
+export async function verifyEmailVerificationCode(email: string, code: string): Promise<boolean> {
+	const normalizedEmail = email.trim().toLowerCase();
+	const normalizedCode = code.trim();
+	if (!normalizedEmail || !normalizedCode) {
+		return false;
+	}
+	if (isWeb) {
+		return verifyEmailVerificationCodeWeb(normalizedEmail, normalizedCode);
+	}
+	return verifyEmailVerificationCodeNative(normalizedEmail, normalizedCode);
+}
+
+export async function isEmailVerificationVerified(email: string): Promise<boolean> {
+	const normalizedEmail = email.trim().toLowerCase();
+	if (!normalizedEmail) {
+		return false;
+	}
+	if (isWeb) {
+		return isEmailVerificationVerifiedWeb(normalizedEmail);
+	}
+	return isEmailVerificationVerifiedNative(normalizedEmail);
+}
+
+export async function clearEmailVerification(email: string) {
+	const normalizedEmail = email.trim().toLowerCase();
+	if (!normalizedEmail) {
+		return;
+	}
+	if (isWeb) {
+		return clearEmailVerificationWeb(normalizedEmail);
+	}
+	return clearEmailVerificationNative(normalizedEmail);
+}
+
+export async function deleteUserAccount(userId: number, username: string) {
+	const normalizedUsername = username.trim().toLowerCase();
+	if (isWeb) {
+		return deleteUserAccountWeb(userId, normalizedUsername);
+	}
+	return deleteUserAccountNative(userId, normalizedUsername);
 }
 
 export async function updateUserDisplayName(userId: number, displayName: string | null) {

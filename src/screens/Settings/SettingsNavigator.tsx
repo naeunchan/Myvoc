@@ -23,6 +23,7 @@ export function SettingsNavigator({
 	onUpdateProfile,
 	onCheckDisplayName,
 	onUpdatePassword,
+	onDeleteAccount,
 	themeMode,
 	onThemeModeChange,
 	fontScale,
@@ -74,6 +75,7 @@ export function SettingsNavigator({
 						onNavigatePassword={() => {
 							navigation.navigate("MyPagePassword");
 						}}
+						onDeleteAccount={onDeleteAccount}
 					/>
 				)}
 			</Stack.Screen>

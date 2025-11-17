@@ -44,6 +44,15 @@ export const createMyPageStyles = (theme: AppThemeColors, fontScale: number) =>
 			shadowRadius: 10,
 			elevation: 2,
 		},
+		deleteCard: {
+			marginTop: 8,
+			padding: 16,
+			borderRadius: 14,
+			backgroundColor: theme.surfaceMuted,
+			borderWidth: 1,
+			borderColor: theme.border,
+			gap: 12,
+		},
 		sectionTitle: {
 			fontSize: scaleFont(18, fontScale),
 			fontWeight: "700",
@@ -149,5 +158,24 @@ export const createMyPageStyles = (theme: AppThemeColors, fontScale: number) =>
 			fontSize: scaleFont(16, fontScale),
 			fontWeight: "600",
 			color: theme.accentContrast,
+		},
+		deleteButton: {
+			borderRadius: 12,
+			paddingVertical: 12,
+			alignItems: "center",
+			backgroundColor: theme.danger,
+		},
+		deleteButtonDisabled: {
+			opacity: 0.7,
+		},
+		deleteButtonText: {
+			color: theme.accentContrast,
+			fontSize: scaleFont(15, fontScale),
+			fontWeight: "700",
+		},
+		deleteDescription: {
+			fontSize: scaleFont(13, fontScale),
+			color: theme.textSecondary,
+			lineHeight: scaleFont(18, fontScale),
 		},
 	});

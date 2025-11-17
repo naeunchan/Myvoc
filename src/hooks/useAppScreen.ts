@@ -12,7 +12,9 @@ import {
 	clearAutoLoginCredentials,
 	clearSearchHistoryEntries,
 	clearSession,
+	clearEmailVerification,
 	createUser,
+	deleteUserAccount,
 	findUserByUsername,
 	getActiveSession,
 	getAutoLoginCredentials,
@@ -25,13 +27,16 @@ import {
 	isDisplayNameTaken,
 	markAppHelpSeen,
 	removeFavoriteForUser,
+	sendEmailVerificationCode,
 	saveAutoLoginCredentials,
 	saveSearchHistoryEntries,
 	setPreferenceValue,
 	setGuestSession,
 	setUserSession,
+	isEmailVerificationVerified,
 	updateUserPassword,
 	updateUserDisplayName,
+	verifyEmailVerificationCode,
 	upsertFavoriteForUser,
 	type UserRecord,
 } from "@/services/database";
@@ -68,6 +73,10 @@ import {
 	PASSWORD_RESET_SOCIAL_ERROR_MESSAGE,
 	SIGNUP_DUPLICATE_ERROR_MESSAGE,
 	SIGNUP_GENERIC_ERROR_MESSAGE,
+	EMAIL_VERIFICATION_REQUIRED_ERROR_MESSAGE,
+	EMAIL_VERIFICATION_CODE_REQUIRED_MESSAGE,
+	EMAIL_VERIFICATION_INVALID_ERROR_MESSAGE,
+	ACCOUNT_DELETION_ERROR_MESSAGE,
 	SOCIAL_LOGIN_ERROR_MESSAGE,
 	TOGGLE_FAVORITE_ERROR_MESSAGE,
 	UPDATE_STATUS_ERROR_MESSAGE,
@@ -848,26 +857,32 @@ export function useAppScreen(): AppScreenHookResult {
 					return;
 				}
 
-			let displayNameToUse = trimmedDisplayName;
-			if (displayNameToUse) {
-				const taken = await isDisplayNameTaken(displayNameToUse);
-				if (taken) {
-					setAuthError(DISPLAY_NAME_DUPLICATE_ERROR_MESSAGE);
+				const verified = await isEmailVerificationVerified(sanitizedUsername);
+				if (!verified) {
+					setAuthError(EMAIL_VERIFICATION_REQUIRED_ERROR_MESSAGE);
 					return;
 				}
-			} else {
-				let candidate = generateRandomDisplayName();
-				let attempt = 0;
-				while (await isDisplayNameTaken(candidate)) {
-					attempt += 1;
-					if (attempt > 25) {
-						candidate = `${generateRandomDisplayName()}${Date.now().toString().slice(-2)}`;
-					} else {
-						candidate = generateRandomDisplayName();
+
+				let displayNameToUse = trimmedDisplayName;
+				if (displayNameToUse) {
+					const taken = await isDisplayNameTaken(displayNameToUse);
+					if (taken) {
+						setAuthError(DISPLAY_NAME_DUPLICATE_ERROR_MESSAGE);
+						return;
 					}
+				} else {
+					let candidate = generateRandomDisplayName();
+					let attempt = 0;
+					while (await isDisplayNameTaken(candidate)) {
+						attempt += 1;
+						if (attempt > 25) {
+							candidate = `${generateRandomDisplayName()}${Date.now().toString().slice(-2)}`;
+						} else {
+							candidate = generateRandomDisplayName();
+						}
+					}
+					displayNameToUse = candidate;
 				}
-				displayNameToUse = candidate;
-			}
 
 				const newUser = await createUser(sanitizedUsername, trimmedPassword, displayNameToUse);
 				if (rememberMe) {
@@ -877,6 +892,7 @@ export function useAppScreen(): AppScreenHookResult {
 					await clearAutoLoginCredentials();
 				}
 				await loadUserState(newUser);
+				await clearEmailVerification(sanitizedUsername);
 			} catch (err) {
 				if (err instanceof Error && err.message.includes("UNIQUE")) {
 					setAuthError(SIGNUP_DUPLICATE_ERROR_MESSAGE);
@@ -888,8 +904,68 @@ export function useAppScreen(): AppScreenHookResult {
 				setAuthLoading(false);
 			}
 		},
-		[clearAutoLoginCredentials, loadUserState, saveAutoLoginCredentials],
+		[clearAutoLoginCredentials, clearEmailVerification, isEmailVerificationVerified, loadUserState, saveAutoLoginCredentials],
 	);
+
+	const handleEmailVerificationRequest = useCallback(
+		async (username: string) => {
+			const trimmedUsername = username.trim();
+			const emailValidationError = getEmailValidationError(trimmedUsername);
+			if (emailValidationError) {
+				throw new Error(emailValidationError);
+			}
+
+			const sanitizedUsername = trimmedUsername.toLowerCase();
+			const existingUser = await findUserByUsername(sanitizedUsername);
+			if (existingUser) {
+				throw new Error(SIGNUP_DUPLICATE_ERROR_MESSAGE);
+			}
+
+		return sendEmailVerificationCode(sanitizedUsername);
+		},
+		[findUserByUsername, sendEmailVerificationCode],
+	);
+
+	const handleEmailVerificationConfirm = useCallback(
+		async (username: string, code: string) => {
+			const trimmedUsername = username.trim();
+			const trimmedCode = code.trim();
+			if (!trimmedCode) {
+				throw new Error(EMAIL_VERIFICATION_CODE_REQUIRED_MESSAGE);
+			}
+
+			const emailValidationError = getEmailValidationError(trimmedUsername);
+			if (emailValidationError) {
+				throw new Error(emailValidationError);
+			}
+
+			const sanitizedUsername = trimmedUsername.toLowerCase();
+			const success = await verifyEmailVerificationCode(sanitizedUsername, trimmedCode);
+			if (!success) {
+				throw new Error(EMAIL_VERIFICATION_INVALID_ERROR_MESSAGE);
+			}
+			return true;
+		},
+		[verifyEmailVerificationCode],
+	);
+
+	const handleDeleteAccount = useCallback(async () => {
+		if (!user) {
+			throw new Error(MISSING_USER_ERROR_MESSAGE);
+		}
+		try {
+			await deleteUserAccount(user.id, user.username);
+			await clearSession();
+			await clearAutoLoginCredentials();
+			await clearSearchHistoryEntries();
+			setInitialAuthState();
+			setAuthMode("login");
+			setRecentSearches([]);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : ACCOUNT_DELETION_ERROR_MESSAGE;
+			throw new Error(message);
+		}
+	}, [clearAutoLoginCredentials, clearSearchHistoryEntries, clearSession, deleteUserAccount, setInitialAuthState, setRecentSearches, user]);
 
 	const handleSocialLogin = useCallback(
 		async (profile: SocialLoginProfile) => {
@@ -1112,6 +1188,7 @@ export function useAppScreen(): AppScreenHookResult {
 			onUpdateProfile: handleProfileUpdate,
 			onCheckDisplayName: handleCheckDisplayName,
 			onUpdatePassword: handleProfilePasswordUpdate,
+			onDeleteAccount: handleDeleteAccount,
 		}),
 		[
 			canLogout,
@@ -1125,6 +1202,7 @@ export function useAppScreen(): AppScreenHookResult {
 			handleProfilePasswordUpdate,
 			handleProfileUpdate,
 			handleCheckDisplayName,
+			handleDeleteAccount,
 			handlePlayWordAudio,
 			handleLogout,
 			handleModeChange,
@@ -1160,11 +1238,13 @@ export function useAppScreen(): AppScreenHookResult {
 			onGuest: handleGuestAccess,
 			onSocialLogin: handleSocialLogin,
 			onResetPassword: handlePasswordResetAsync,
+			onSendVerificationCode: handleEmailVerificationRequest,
+			onVerifyEmailCode: handleEmailVerificationConfirm,
 			loading: authLoading,
 			errorMessage: authError,
 			initialMode: authMode,
 		}),
-		[authError, authLoading, authMode, handleGuestAccess, handleLogin, handlePasswordResetAsync, handleSignUp, handleSocialLogin],
+		[authError, authLoading, authMode, handleEmailVerificationConfirm, handleEmailVerificationRequest, handleGuestAccess, handleLogin, handlePasswordResetAsync, handleSignUp, handleSocialLogin],
 	);
 
 	return {
