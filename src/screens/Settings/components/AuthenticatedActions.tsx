@@ -6,18 +6,27 @@ import { useThemedStyles } from "@/theme/useThemedStyles";
 type AuthenticatedActionsProps = {
 	canLogout: boolean;
 	onLogout: () => void;
-	onNavigateHome: () => void;
 	onNavigateProfile: () => void;
+	onNavigateAccountDeletion: () => void;
 };
 
-export function AuthenticatedActions({ canLogout, onLogout, onNavigateHome, onNavigateProfile }: AuthenticatedActionsProps) {
+export function AuthenticatedActions({
+	canLogout,
+	onLogout,
+	onNavigateProfile,
+	onNavigateAccountDeletion,
+}: AuthenticatedActionsProps) {
 	const styles = useThemedStyles(createStyles);
 	return (
 		<View style={styles.section}>
 			<Text style={styles.sectionLabel}>계정</Text>
 			<View style={styles.sectionCard}>
-				<TouchableOpacity style={[styles.row, styles.rowBorder]} activeOpacity={0.6} onPress={onNavigateHome}>
-					<Text style={styles.rowLabel}>초기 화면으로 이동</Text>
+				<TouchableOpacity style={[styles.row, styles.rowBorder]} activeOpacity={0.6} onPress={onNavigateProfile}>
+					<Text style={styles.rowLabel}>계정 정보 관리</Text>
+					<Text style={styles.rowChevron}>›</Text>
+				</TouchableOpacity>
+				<TouchableOpacity style={[styles.row, styles.rowBorder]} activeOpacity={0.6} onPress={onNavigateAccountDeletion}>
+					<Text style={[styles.rowLabel, styles.rowDangerText]}>회원탈퇴</Text>
 					<Text style={styles.rowChevron}>›</Text>
 				</TouchableOpacity>
 				{canLogout ? (

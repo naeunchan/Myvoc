@@ -38,6 +38,7 @@ export function RootTabNavigator({
 	recentSearches,
 	onSelectRecentSearch,
 	onClearRecentSearches,
+	onRetrySearch,
 	userName,
 	onLogout,
 	canLogout,
@@ -114,6 +115,7 @@ export function RootTabNavigator({
 						recentSearches={recentSearches}
 						onSelectRecentSearch={onSelectRecentSearch}
 						onClearRecentSearches={onClearRecentSearches}
+						onRetry={onRetrySearch}
 					/>
 				)}
 			</Tab.Screen>

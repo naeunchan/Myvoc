@@ -46,6 +46,9 @@ export function SettingsNavigator({
 						onNavigateProfile={() => {
 							navigation.navigate("MyPage");
 						}}
+						onNavigateAccountDeletion={() => {
+							navigation.navigate("MyPage");
+						}}
 						themeMode={themeMode}
 						fontScale={fontScale}
 						onNavigateThemeSettings={() => {

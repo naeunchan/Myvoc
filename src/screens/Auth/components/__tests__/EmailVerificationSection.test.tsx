@@ -34,7 +34,7 @@ describe("EmailVerificationSection", () => {
 
 	it("updates send button label when a code was sent", () => {
 		const props = { ...createProps(), status: "sent" as const };
-		const { getByText } = render(<EmailVerificationSection {...props} />);
+		const { getByText, getByTestId } = render(<EmailVerificationSection {...props} />);
 
 		expect(getByText("인증 메일 재전송")).toBeTruthy();
 	});
@@ -46,12 +46,14 @@ describe("EmailVerificationSection", () => {
 			code: "123456",
 			hintMessage: null,
 		};
-		const { getByText } = render(<EmailVerificationSection {...props} />);
+		const { getByText, getByTestId } = render(<EmailVerificationSection {...props} />);
 
 		expect(getByText("이메일 인증이 완료되었어요.")).toBeTruthy();
 		const verifyButton = getByText("인증 완료");
-		expect(verifyButton.parent).toHaveProp("disabled", true);
-		const sendButton = getByText("인증 메일 보내기");
-		expect(sendButton.parent).toHaveProp("disabled", true);
+		expect(verifyButton).toBeTruthy();
+		const verifyTouchable = getByTestId("email-verification-verify-button");
+		expect(verifyTouchable.props.accessibilityState?.disabled).toBe(true);
+		const sendTouchable = getByTestId("email-verification-send-button");
+		expect(sendTouchable.props.accessibilityState?.disabled).toBe(true);
 	});
 });

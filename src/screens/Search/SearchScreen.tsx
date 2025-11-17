@@ -36,6 +36,7 @@ export function SearchScreen({
 	recentSearches,
 	onSelectRecentSearch,
 	onClearRecentSearches,
+	onRetry,
 }: SearchScreenProps) {
 	const styles = useThemedStyles(createSearchScreenStyles);
 	const { theme } = useAppAppearance();
@@ -90,6 +91,7 @@ export function SearchScreen({
 							isFavorite={isCurrentFavorite}
 							onToggleFavorite={onToggleFavorite}
 							onPlayPronunciation={onPlayPronunciation}
+							onRetry={onRetry ?? onSubmit}
 						/>
 					)}
 				</View>

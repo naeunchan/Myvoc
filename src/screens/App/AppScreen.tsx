@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { LoadingState } from "@/components/LoadingState";
-import { LoginScreen } from "@/screens/Auth/LoginScreen";
+import { AuthNavigator } from "@/screens/Auth/AuthNavigator";
 import { AppNavigator } from "@/components/AppNavigator";
 import { AppHelpModal } from "@/components/AppHelpModal";
 import { INITIAL_LOADING_MESSAGE } from "@/screens/App/AppScreen.constants";
@@ -18,6 +18,7 @@ export function AppScreen() {
 		isHelpVisible,
 		isAuthenticated,
 		loginBindings,
+		onPasswordResetRequest,
 		navigatorProps,
 		handleDismissHelp,
 		themeMode,
@@ -41,7 +42,7 @@ export function AppScreen() {
 						{initializing ? (
 							<LoadingState message={INITIAL_LOADING_MESSAGE} />
 						) : !isAuthenticated ? (
-							<LoginScreen {...loginBindings} />
+							<AuthNavigator loginProps={loginBindings} onResetPassword={onPasswordResetRequest} />
 						) : (
 							<AppNavigator {...navigatorProps} />
 						)}

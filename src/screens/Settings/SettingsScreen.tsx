@@ -30,6 +30,7 @@ export function SettingsScreen({
 	profileDisplayName,
 	profileUsername,
 	onNavigateProfile,
+	onNavigateAccountDeletion,
 	themeMode,
 	fontScale,
 	onNavigateThemeSettings,
@@ -72,6 +73,14 @@ export function SettingsScreen({
 		}
 		onNavigateProfile();
 	}, [profileUsername, onNavigateProfile]);
+
+	const handleNavigateAccountDeletion = useCallback(() => {
+		if (!profileUsername) {
+			Alert.alert("회원탈퇴", MISSING_USER_ERROR_MESSAGE);
+			return;
+		}
+		onNavigateAccountDeletion();
+	}, [onNavigateAccountDeletion, profileUsername]);
 
 	const handleContactSupport = useCallback(async () => {
 		const subject = encodeURIComponent(CONTACT_SUBJECT);
@@ -167,8 +176,8 @@ export function SettingsScreen({
 					<AuthenticatedActions
 						canLogout={canLogout}
 						onLogout={handleLogoutPress}
-						onNavigateHome={onLogout}
 						onNavigateProfile={handleNavigateProfile}
+						onNavigateAccountDeletion={handleNavigateAccountDeletion}
 					/>
 				)}
 			</ScrollView>

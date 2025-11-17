@@ -1,18 +1,22 @@
 import React from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { WordResult } from "@/services/dictionary/types";
 import { WordResultCard } from "@/services/dictionary/components/WordResultCard";
-import { styles } from "@/screens/Search/SearchScreen.styles";
+import { createSearchScreenStyles } from "@/screens/Search/SearchScreen.styles";
+import { useThemedStyles } from "@/theme/useThemedStyles";
+import type { AppError } from "@/errors/AppError";
+import { shouldRetry } from "@/errors/AppError";
 
 type SearchResultsProps = {
 	loading: boolean;
-	error: string | null;
+	error: AppError | null;
 	result: WordResult | null;
 	examplesVisible: boolean;
 	onToggleExamples: () => void;
 	isFavorite: boolean;
 	onToggleFavorite: (word: WordResult) => void;
 	onPlayPronunciation: () => void;
+	onRetry?: () => void;
 };
 
 export function SearchResults({
@@ -24,7 +28,9 @@ export function SearchResults({
 	isFavorite,
 	onToggleFavorite,
 	onPlayPronunciation,
+	onRetry,
 }: SearchResultsProps) {
+	const styles = useThemedStyles(createSearchScreenStyles);
 	if (loading) {
 		return (
 			<View style={styles.centered} testID="search-results-loading">
@@ -34,10 +40,17 @@ export function SearchResults({
 	}
 
 	if (error) {
+		const canRetry = shouldRetry(error) && typeof onRetry === "function";
 		return (
-			<Text style={styles.errorText} testID="search-results-error">
-				{error}
-			</Text>
+			<View style={styles.errorCard} testID="search-results-error">
+				<Text style={styles.errorTitle}>잠깐 문제가 생겼어요</Text>
+				<Text style={styles.errorDescription}>{error.message}</Text>
+				{canRetry ? (
+					<TouchableOpacity style={styles.retryButton} onPress={onRetry} accessibilityRole="button">
+						<Text style={styles.retryButtonLabel}>다시 시도하기</Text>
+					</TouchableOpacity>
+				) : null}
+			</View>
 		);
 	}
 

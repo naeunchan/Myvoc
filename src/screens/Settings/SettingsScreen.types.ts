@@ -11,6 +11,7 @@ export type SettingsScreenProps = {
 	profileDisplayName: string | null;
 	profileUsername: string | null;
 	onNavigateProfile: () => void;
+	onNavigateAccountDeletion: () => void;
 	themeMode: ThemeMode;
 	fontScale: number;
 	onNavigateThemeSettings: () => void;

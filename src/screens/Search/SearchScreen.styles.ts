@@ -103,6 +103,37 @@ export const createSearchScreenStyles = (theme: AppThemeColors, fontScale: numbe
 			color: theme.danger,
 			fontWeight: "600",
 		},
+		errorCard: {
+			borderRadius: 20,
+			padding: 20,
+			gap: 10,
+			backgroundColor: theme.surface,
+			borderWidth: 1,
+			borderColor: theme.border,
+		},
+		errorTitle: {
+			fontSize: scaleFont(16, fontScale),
+			fontWeight: "700",
+			color: theme.textPrimary,
+		},
+		errorDescription: {
+			fontSize: scaleFont(14, fontScale),
+			color: theme.textSecondary,
+			lineHeight: scaleFont(20, fontScale),
+		},
+		retryButton: {
+			alignSelf: "flex-start",
+			marginTop: 4,
+			borderRadius: 999,
+			paddingHorizontal: 16,
+			paddingVertical: 8,
+			backgroundColor: theme.accent,
+		},
+		retryButtonLabel: {
+			color: theme.accentContrast,
+			fontSize: scaleFont(13, fontScale),
+			fontWeight: "700",
+		},
 		historyCard: {
 			backgroundColor: theme.surface,
 			borderRadius: 24,
