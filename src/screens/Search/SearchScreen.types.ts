@@ -1,12 +1,13 @@
 import { DictionaryMode, WordResult } from "@/services/dictionary/types";
 import type { SearchHistoryEntry } from "@/services/searchHistory/types";
+import type { AppError } from "@/errors/AppError";
 
 export type SearchScreenProps = {
 	searchTerm: string;
 	onChangeSearchTerm: (text: string) => void;
 	onSubmit: () => void;
 	loading: boolean;
-	error: string | null;
+	error: AppError | null;
 	result: WordResult | null;
 	examplesVisible: boolean;
 	onToggleExamples: () => void;
@@ -18,4 +19,5 @@ export type SearchScreenProps = {
 	recentSearches: SearchHistoryEntry[];
 	onSelectRecentSearch: (entry: SearchHistoryEntry) => void;
 	onClearRecentSearches: () => void;
+	onRetry?: () => void;
 };

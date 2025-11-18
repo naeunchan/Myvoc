@@ -2,6 +2,7 @@ import { DictionaryMode, WordResult } from "@/services/dictionary/types";
 import { FavoriteWordEntry, MemorizationStatus } from "@/services/favorites/types";
 import type { SearchHistoryEntry } from "@/services/searchHistory/types";
 import type { ThemeMode } from "@/theme/types";
+import type { AppError } from "@/errors/AppError";
 
 export type RootTabNavigatorProps = {
 	favorites: FavoriteWordEntry[];
@@ -12,7 +13,7 @@ export type RootTabNavigatorProps = {
 	onChangeSearchTerm: (text: string) => void;
 	onSubmitSearch: () => void;
 	loading: boolean;
-	error: string | null;
+	error: AppError | null;
 	result: WordResult | null;
 	examplesVisible: boolean;
 	onToggleExamples: () => void;
@@ -27,6 +28,7 @@ export type RootTabNavigatorProps = {
 	recentSearches: SearchHistoryEntry[];
 	onSelectRecentSearch: (entry: SearchHistoryEntry) => void;
 	onClearRecentSearches: () => void;
+	onRetrySearch: () => void;
 	userName: string;
 	onLogout: () => void;
 	canLogout: boolean;
@@ -42,4 +44,7 @@ export type RootTabNavigatorProps = {
 	onCheckDisplayName: (displayName: string) => Promise<string>;
 	onUpdatePassword: (password: string) => Promise<void>;
 	onDeleteAccount: () => Promise<void>;
+	onExportBackup: () => Promise<void>;
+	onImportBackup: () => Promise<void>;
+	onShowOnboarding: () => void;
 };

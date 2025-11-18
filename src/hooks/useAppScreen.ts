@@ -70,6 +70,7 @@ import {
 	PASSWORD_REQUIRED_ERROR_MESSAGE,
 	PASSWORD_UPDATE_ERROR_MESSAGE,
 	PASSWORD_RESET_INPUT_ERROR_MESSAGE,
+	PASSWORD_RESET_RATE_LIMIT_ERROR_MESSAGE,
 	PASSWORD_RESET_SOCIAL_ERROR_MESSAGE,
 	SIGNUP_DUPLICATE_ERROR_MESSAGE,
 	SIGNUP_GENERIC_ERROR_MESSAGE,
@@ -87,13 +88,20 @@ import { applyExampleUpdates, clearPendingFlags } from "@/services/dictionary/ut
 import type { AppScreenHookResult } from "@/screens/App/AppScreen.types";
 import { playRemoteAudio } from "@/utils/audio";
 import { SearchHistoryEntry, SEARCH_HISTORY_LIMIT } from "@/services/searchHistory/types";
-import { DEFAULT_FONT_SCALE, FONT_SCALE_PREFERENCE_KEY, THEME_MODE_PREFERENCE_KEY } from "@/theme/constants";
+import { DEFAULT_FONT_SCALE, FONT_SCALE_PREFERENCE_KEY, ONBOARDING_PREFERENCE_KEY, THEME_MODE_PREFERENCE_KEY } from "@/theme/constants";
 import type { ThemeMode } from "@/theme/types";
+import type { AppError } from "@/errors/AppError";
+import { createAppError, normalizeError } from "@/errors/AppError";
+import { captureAppError, setUserContext } from "@/logging/logger";
+import { exportBackupToFile, importBackupFromDocument } from "@/services/backup/manualBackup";
+
+const PASSWORD_RESET_THROTTLE_MS = 60 * 1000;
+const passwordResetTracker = new Map<string, number>();
 
 export function useAppScreen(): AppScreenHookResult {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<AppError | null>(null);
 	const [result, setResult] = useState<WordResult | null>(null);
 	const [examplesVisible, setExamplesVisible] = useState(false);
 	const [favorites, setFavorites] = useState<FavoriteWordEntry[]>([]);
@@ -109,11 +117,19 @@ export function useAppScreen(): AppScreenHookResult {
 	const [authLoading, setAuthLoading] = useState(false);
 	const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 	const [isHelpVisible, setIsHelpVisible] = useState(false);
+	const [isOnboardingVisible, setIsOnboardingVisible] = useState(false);
 	const [versionLabel] = useState(() => {
 		const extra = Constants.expoConfig?.extra;
 		return extra?.versionLabel ?? DEFAULT_VERSION_LABEL;
 	});
 	const activeLookupRef = useRef(0);
+
+	const setErrorMessage = useCallback(
+		(message: string, kind: AppError["kind"] = "UnknownError", extras?: Partial<AppError>) => {
+			setError(createAppError(kind, message, extras));
+		},
+		[],
+	);
 
 	const persistSearchHistory = useCallback((entries: SearchHistoryEntry[]) => {
 		void saveSearchHistoryEntries(entries).catch((error) => {
@@ -265,7 +281,7 @@ export function useAppScreen(): AppScreenHookResult {
 					return;
 				}
 				const message = err instanceof Error ? err.message : DATABASE_INIT_ERROR_MESSAGE;
-				setError(message);
+				setErrorMessage(message);
 			} finally {
 				if (isMounted) {
 					setIsHelpVisible(shouldShowHelp);
@@ -315,6 +331,26 @@ export function useAppScreen(): AppScreenHookResult {
 				console.warn("글자 크기를 불러오는 중 문제가 발생했어요.", error);
 			});
 
+		return () => {
+			isMounted = false;
+		};
+	}, []);
+
+	useEffect(() => {
+		let isMounted = true;
+		getPreferenceValue(ONBOARDING_PREFERENCE_KEY)
+			.then((value) => {
+				if (!isMounted) {
+					return;
+				}
+				setIsOnboardingVisible(value === "true" ? false : true);
+			})
+			.catch((error) => {
+				console.warn("온보딩 상태를 불러오는 중 문제가 발생했어요.", error);
+				if (isMounted) {
+					setIsOnboardingVisible(true);
+				}
+			});
 		return () => {
 			isMounted = false;
 		};
@@ -388,7 +424,7 @@ export function useAppScreen(): AppScreenHookResult {
 			const normalizedTerm = term.trim();
 			if (!normalizedTerm) {
 				activeLookupRef.current += 1;
-				setError(EMPTY_SEARCH_ERROR_MESSAGE);
+				setErrorMessage(EMPTY_SEARCH_ERROR_MESSAGE, "ValidationError", { retryable: false });
 				setResult(null);
 				setExamplesVisible(false);
 				setLoading(false);
@@ -440,8 +476,11 @@ export function useAppScreen(): AppScreenHookResult {
 				setResult(null);
 				setExamplesVisible(false);
 				setLoading(false);
-				const message = err instanceof Error ? err.message : GENERIC_ERROR_MESSAGE;
-				setError(message);
+				const appError = normalizeError(err, GENERIC_ERROR_MESSAGE);
+				setError(appError);
+				if (appError.kind !== "ValidationError") {
+					captureAppError(appError, { scope: "search.execute" });
+				}
 			}
 		},
 		[],
@@ -524,7 +563,7 @@ export function useAppScreen(): AppScreenHookResult {
 	const removeFavoritePersisted = useCallback(
 		async (word: string) => {
 			if (!user) {
-				setError(MISSING_USER_ERROR_MESSAGE);
+				setErrorMessage(MISSING_USER_ERROR_MESSAGE, "AuthError");
 				return;
 			}
 
@@ -537,7 +576,7 @@ export function useAppScreen(): AppScreenHookResult {
 			} catch (err) {
 				setFavorites(previousFavorites);
 				const message = err instanceof Error ? err.message : REMOVE_FAVORITE_ERROR_MESSAGE;
-				setError(message);
+				setErrorMessage(message);
 			}
 		},
 		[favorites, user],
@@ -552,7 +591,7 @@ export function useAppScreen(): AppScreenHookResult {
 
 			if (isGuest) {
 				if (!existingEntry && previousFavorites.length >= 10) {
-					setError(FAVORITE_LIMIT_MESSAGE);
+					setErrorMessage(FAVORITE_LIMIT_MESSAGE, "ValidationError", { retryable: false });
 					return;
 				}
 				setError(null);
@@ -565,7 +604,7 @@ export function useAppScreen(): AppScreenHookResult {
 			}
 
 			if (!user) {
-				setError(MISSING_USER_ERROR_MESSAGE);
+				setErrorMessage(MISSING_USER_ERROR_MESSAGE, "AuthError");
 				return;
 			}
 
@@ -583,7 +622,7 @@ export function useAppScreen(): AppScreenHookResult {
 			} catch (err) {
 				setFavorites(previousFavorites);
 				const message = err instanceof Error ? err.message : TOGGLE_FAVORITE_ERROR_MESSAGE;
-				setError(message);
+				setErrorMessage(message);
 			}
 		},
 		[ensurePhoneticForWord, favorites, isGuest, removeFavoritePersisted, user],
@@ -611,7 +650,7 @@ export function useAppScreen(): AppScreenHookResult {
 
 			if (!user) {
 				setFavorites(previousFavorites);
-				setError(MISSING_USER_ERROR_MESSAGE);
+				setErrorMessage(MISSING_USER_ERROR_MESSAGE, "AuthError");
 				return;
 			}
 
@@ -620,7 +659,7 @@ export function useAppScreen(): AppScreenHookResult {
 			} catch (err) {
 				setFavorites(previousFavorites);
 				const message = err instanceof Error ? err.message : UPDATE_STATUS_ERROR_MESSAGE;
-				setError(message);
+				setErrorMessage(message);
 			}
 		},
 		[favorites, isGuest, user],
@@ -650,7 +689,7 @@ export function useAppScreen(): AppScreenHookResult {
 			await playRemoteAudio(uri);
 		} catch (err) {
 			const message = err instanceof Error ? err.message : AUDIO_PLAY_ERROR_MESSAGE;
-			setError(message);
+			setErrorMessage(message);
 			Alert.alert(AUDIO_PLAY_ERROR_MESSAGE, message);
 		}
 	}, [result?.word]);
@@ -757,6 +796,20 @@ export function useAppScreen(): AppScreenHookResult {
 		setIsHelpVisible(false);
 		markAppHelpSeen().catch((err) => {
 			console.warn(HELP_MODAL_SAVE_ERROR_MESSAGE, err);
+		});
+	}, []);
+
+	const handleShowOnboarding = useCallback(() => {
+		setIsOnboardingVisible(true);
+		void setPreferenceValue(ONBOARDING_PREFERENCE_KEY, "false").catch((error) => {
+			console.warn("온보딩 상태를 업데이트하는 중 문제가 발생했어요.", error);
+		});
+	}, []);
+
+	const handleCompleteOnboarding = useCallback(() => {
+		setIsOnboardingVisible(false);
+		void setPreferenceValue(ONBOARDING_PREFERENCE_KEY, "true").catch((error) => {
+			console.warn("온보딩 상태를 저장하는 중 문제가 발생했어요.", error);
 		});
 	}, []);
 
@@ -1008,6 +1061,16 @@ export function useAppScreen(): AppScreenHookResult {
 				throw new Error(PASSWORD_RESET_INPUT_ERROR_MESSAGE);
 			}
 
+			const emailValidationError = getEmailValidationError(trimmedUsername);
+			if (emailValidationError) {
+				throw new Error(emailValidationError);
+			}
+
+			const lastRequest = passwordResetTracker.get(trimmedUsername);
+			if (lastRequest && Date.now() - lastRequest < PASSWORD_RESET_THROTTLE_MS) {
+				throw new Error(PASSWORD_RESET_RATE_LIMIT_ERROR_MESSAGE);
+			}
+
 			const existingUser = await findUserByUsername(trimmedUsername);
 			if (!existingUser) {
 				throw new Error(MISSING_USER_ERROR_MESSAGE);
@@ -1017,8 +1080,14 @@ export function useAppScreen(): AppScreenHookResult {
 				throw new Error(PASSWORD_RESET_SOCIAL_ERROR_MESSAGE);
 			}
 
+			const verificationCode = Math.floor(100000 + Math.random() * 900000)
+				.toString()
+				.padStart(6, "0");
+			passwordResetTracker.set(trimmedUsername, Date.now());
+			console.info(`[password-reset] dev-only code for ${trimmedUsername}: ${verificationCode}`);
+
 			// 실제 이메일 발송 API가 연동되면 이 지점에서 호출하면 돼요.
-			await new Promise((resolve) => setTimeout(resolve, 600));
+			await new Promise((resolve) => setTimeout(resolve, 800));
 		},
 		[findUserByUsername],
 	);
@@ -1149,6 +1218,43 @@ export function useAppScreen(): AppScreenHookResult {
 	const canLogout = user !== null;
 	const userName = user?.displayName ?? user?.username ?? DEFAULT_GUEST_NAME;
 
+	const handleBackupExport = useCallback(async () => {
+		try {
+			await exportBackupToFile();
+			Alert.alert("백업 완료", "데이터 백업 파일을 저장하거나 공유했어요.");
+		} catch (error) {
+			const message = error instanceof Error ? error.message : "백업을 생성하지 못했어요.";
+			Alert.alert("백업 실패", message);
+		}
+	}, []);
+
+	const handleBackupImport = useCallback(async () => {
+		try {
+			const restored = await importBackupFromDocument();
+			if (!restored) {
+				return;
+			}
+			if (user?.username) {
+				const refreshed = await findUserByUsername(user.username);
+				if (refreshed) {
+					await loadUserState({
+						id: refreshed.id,
+						username: refreshed.username,
+						displayName: refreshed.displayName,
+					});
+				} else {
+					setInitialAuthState();
+				}
+			}
+			const history = await getSearchHistoryEntries();
+			setRecentSearches(history);
+			Alert.alert("복원 완료", "백업 데이터로 복원했어요.");
+		} catch (error) {
+			const message = error instanceof Error ? error.message : "백업 데이터를 불러오지 못했어요.";
+			Alert.alert("복원 실패", message);
+		}
+	}, [findUserByUsername, getSearchHistoryEntries, loadUserState, setInitialAuthState, user?.username]);
+
 	const navigatorProps = useMemo<RootTabNavigatorProps>(
 		() => ({
 			favorites,
@@ -1174,6 +1280,7 @@ export function useAppScreen(): AppScreenHookResult {
 			recentSearches,
 			onSelectRecentSearch: handleSelectRecentSearch,
 			onClearRecentSearches: handleClearRecentSearches,
+			onRetrySearch: handleSearch,
 			userName,
 			onLogout: handleLogout,
 			canLogout,
@@ -1189,6 +1296,9 @@ export function useAppScreen(): AppScreenHookResult {
 			onCheckDisplayName: handleCheckDisplayName,
 			onUpdatePassword: handleProfilePasswordUpdate,
 			onDeleteAccount: handleDeleteAccount,
+			onExportBackup: handleBackupExport,
+			onImportBackup: handleBackupImport,
+			onShowOnboarding: handleShowOnboarding,
 		}),
 		[
 			canLogout,
@@ -1202,6 +1312,7 @@ export function useAppScreen(): AppScreenHookResult {
 			handleProfilePasswordUpdate,
 			handleProfileUpdate,
 			handleCheckDisplayName,
+			handleShowOnboarding,
 			handleDeleteAccount,
 			handlePlayWordAudio,
 			handleLogout,
@@ -1212,6 +1323,8 @@ export function useAppScreen(): AppScreenHookResult {
 			handleSearch,
 			handleSearchTermChange,
 			handleShowHelp,
+			handleBackupExport,
+			handleBackupImport,
 			isCurrentFavorite,
 			isGuest,
 			loading,
@@ -1237,24 +1350,31 @@ export function useAppScreen(): AppScreenHookResult {
 			onSignUp: handleSignUp,
 			onGuest: handleGuestAccess,
 			onSocialLogin: handleSocialLogin,
-			onResetPassword: handlePasswordResetAsync,
 			onSendVerificationCode: handleEmailVerificationRequest,
 			onVerifyEmailCode: handleEmailVerificationConfirm,
 			loading: authLoading,
 			errorMessage: authError,
 			initialMode: authMode,
 		}),
-		[authError, authLoading, authMode, handleEmailVerificationConfirm, handleEmailVerificationRequest, handleGuestAccess, handleLogin, handlePasswordResetAsync, handleSignUp, handleSocialLogin],
+		[authError, authLoading, authMode, handleEmailVerificationConfirm, handleEmailVerificationRequest, handleGuestAccess, handleLogin, handleSignUp, handleSocialLogin],
 	);
+
+	useEffect(() => {
+		setUserContext(user?.id ?? null);
+	}, [user?.id]);
 
 	return {
 		versionLabel,
 		initializing,
 		isHelpVisible,
+		isOnboardingVisible,
 		isAuthenticated,
 		loginBindings,
+		onPasswordResetRequest: handlePasswordResetAsync,
 		navigatorProps,
 		handleDismissHelp,
+		onShowOnboarding: handleShowOnboarding,
+		onCompleteOnboarding: handleCompleteOnboarding,
 		themeMode,
 		fontScale,
 		onThemeModeChange: handleThemeModeChange,

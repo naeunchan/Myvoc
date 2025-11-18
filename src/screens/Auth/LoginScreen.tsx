@@ -9,18 +9,16 @@ import { RememberMeToggle } from "@/screens/Auth/components/RememberMeToggle";
 import { PrimaryActionButton } from "@/screens/Auth/components/PrimaryActionButton";
 import { GuestButton } from "@/screens/Auth/components/GuestButton";
 import { AuthModeSwitch } from "@/screens/Auth/components/AuthModeSwitch";
-import { ForgotPasswordModal } from "@/screens/Auth/components/ForgotPasswordModal";
 import { SocialLoginButtons } from "@/screens/Auth/components/SocialLoginButtons";
 import { EmailVerificationSection } from "@/screens/Auth/components/EmailVerificationSection";
 import { getLoginCopy } from "@/screens/Auth/constants/loginCopy";
 import { useThemedStyles } from "@/theme/useThemedStyles";
+import { t } from "@/shared/i18n";
 import {
 	EMAIL_VERIFICATION_CODE_REQUIRED_MESSAGE,
 	EMAIL_VERIFICATION_INVALID_ERROR_MESSAGE,
 	EMAIL_VERIFICATION_REQUIRED_ERROR_MESSAGE,
 	EMAIL_VERIFICATION_SENT_MESSAGE,
-	PASSWORD_RESET_INPUT_ERROR_MESSAGE,
-	PASSWORD_RESET_SUCCESS_MESSAGE,
 } from "@/screens/App/AppScreen.constants";
 
 export function LoginScreen({
@@ -28,12 +26,12 @@ export function LoginScreen({
 	onSignUp,
 	onGuest,
 	onSocialLogin,
-	onResetPassword,
 	onSendVerificationCode,
 	onVerifyEmailCode,
 	loading = false,
 	errorMessage,
 	initialMode = "login",
+	onRequestPasswordReset,
 }: LoginScreenProps) {
 	const styles = useThemedStyles(createLoginScreenStyles);
 	const [username, setUsername] = useState("");
@@ -41,10 +39,6 @@ export function LoginScreen({
 	const [displayName, setDisplayName] = useState("");
 	const [mode, setMode] = useState<"login" | "signup">(initialMode);
 	const [rememberMe, setRememberMe] = useState(false);
-	const [resetVisible, setResetVisible] = useState(false);
-	const [resetEmail, setResetEmail] = useState("");
-	const [resetError, setResetError] = useState<string | null>(null);
-	const [resetLoading, setResetLoading] = useState(false);
 	const [verificationCode, setVerificationCode] = useState("");
 	const [verificationStatus, setVerificationStatus] = useState<"idle" | "sent" | "verified">("idle");
 	const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
@@ -174,41 +168,13 @@ export function LoginScreen({
 		resetVerificationState();
 	}, [loading, resetVerificationState]);
 
-	const handleOpenReset = useCallback(() => {
-		setResetVisible(true);
-		setResetEmail("");
-		setResetError(null);
-	}, []);
-
-	const handleCloseReset = useCallback(() => {
-		if (resetLoading) {
+	const handleForgotPasswordPress = useCallback(() => {
+		if (loading) {
 			return;
 		}
-		setResetVisible(false);
-		setResetError(null);
-	}, [resetLoading]);
-
-	const handleSubmitReset = useCallback(async () => {
-		if (resetLoading) {
-			return;
-		}
-		const trimmedEmail = resetEmail.trim();
-		if (!trimmedEmail) {
-			setResetError(PASSWORD_RESET_INPUT_ERROR_MESSAGE);
-			return;
-		}
-		setResetLoading(true);
-		setResetError(null);
-		try {
-			await onResetPassword(trimmedEmail);
-			Alert.alert("이메일 인증 안내", PASSWORD_RESET_SUCCESS_MESSAGE, [{ text: "확인", onPress: handleCloseReset }]);
-		} catch (error) {
-			const message = error instanceof Error ? error.message : "인증 메일을 보내지 못했어요.";
-			setResetError(message);
-		} finally {
-			setResetLoading(false);
-		}
-	}, [handleCloseReset, onResetPassword, resetEmail, resetLoading]);
+		const suggestedEmail = trimmedUsername || trimmedDisplayName || "";
+		onRequestPasswordReset?.(suggestedEmail);
+	}, [loading, onRequestPasswordReset, trimmedDisplayName, trimmedUsername]);
 
 	return (
 		<SafeAreaView style={styles.safeArea}>
@@ -249,8 +215,14 @@ export function LoginScreen({
 
 				<PrimaryActionButton label={copy.primaryButton} loading={loading} disabled={isPrimaryDisabled} onPress={handlePrimaryPress} mode={mode} />
 
-				<TouchableOpacity style={styles.linkButton} onPress={handleOpenReset} disabled={loading}>
-					<Text style={styles.linkButtonText}>비밀번호를 잊으셨나요?</Text>
+				<TouchableOpacity
+					style={styles.linkButton}
+					onPress={handleForgotPasswordPress}
+					disabled={loading}
+					accessibilityRole="button"
+					accessibilityLabel={t("auth.forgotPassword")}
+				>
+					<Text style={styles.linkButtonText}>{t("auth.forgotPassword")}</Text>
 				</TouchableOpacity>
 
 				<SocialLoginButtons disabled={loading} />
@@ -261,15 +233,6 @@ export function LoginScreen({
 
 				<Text style={styles.footerNote}>게스트 모드에서는 단어 저장이 최대 10개로 제한돼요.</Text>
 			</View>
-			<ForgotPasswordModal
-				visible={resetVisible}
-				email={resetEmail}
-				errorMessage={resetError}
-				loading={resetLoading}
-				onChangeEmail={setResetEmail}
-				onClose={handleCloseReset}
-				onSubmit={handleSubmitReset}
-			/>
 		</SafeAreaView>
 	);
 }

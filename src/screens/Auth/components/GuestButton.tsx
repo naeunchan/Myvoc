@@ -11,7 +11,15 @@ type GuestButtonProps = {
 export function GuestButton({ loading, onPress }: GuestButtonProps) {
 	const styles = useThemedStyles(createLoginScreenStyles);
 	return (
-		<TouchableOpacity style={[styles.guestButton, loading && styles.disabledButton]} onPress={onPress} disabled={loading} activeOpacity={0.9}>
+		<TouchableOpacity
+			style={[styles.guestButton, loading && styles.disabledButton]}
+			onPress={onPress}
+			disabled={loading}
+			activeOpacity={0.9}
+			accessibilityRole="button"
+			accessibilityLabel="게스트로 둘러보기"
+			accessibilityState={{ disabled: loading }}
+		>
 			<Text style={styles.guestButtonText}>게스트로 둘러보기</Text>
 		</TouchableOpacity>
 	);

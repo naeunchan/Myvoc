@@ -15,10 +15,10 @@ export type LoginScreenProps = {
 	) => void;
 	onGuest: () => void;
 	onSocialLogin: (profile: SocialLoginProfile) => void;
-	onResetPassword: (username: string) => Promise<void>;
 	onSendVerificationCode: (email: string) => Promise<{ code: string; expiresAt: string }>;
 	onVerifyEmailCode: (email: string, code: string) => Promise<boolean>;
 	loading?: boolean;
 	errorMessage?: string | null;
 	initialMode?: "login" | "signup";
+	onRequestPasswordReset?: (email: string) => void;
 };

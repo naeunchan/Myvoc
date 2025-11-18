@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { LoadingState } from "@/components/LoadingState";
-import { LoginScreen } from "@/screens/Auth/LoginScreen";
+import { AuthNavigator } from "@/screens/Auth/AuthNavigator";
 import { AppNavigator } from "@/components/AppNavigator";
 import { AppHelpModal } from "@/components/AppHelpModal";
 import { INITIAL_LOADING_MESSAGE } from "@/screens/App/AppScreen.constants";
@@ -11,15 +11,19 @@ import { useAppScreen } from "@/hooks/useAppScreen";
 import { AppAppearanceProvider } from "@/theme/AppearanceContext";
 import { createAppScreenStyles } from "@/screens/App/AppScreen.styles";
 import { APP_THEMES } from "@/theme/themes";
+import { OnboardingModal } from "@/screens/Onboarding/OnboardingModal";
 
 export function AppScreen() {
 	const {
 		initializing,
 		isHelpVisible,
+		isOnboardingVisible,
 		isAuthenticated,
 		loginBindings,
+		onPasswordResetRequest,
 		navigatorProps,
 		handleDismissHelp,
+		onCompleteOnboarding,
 		themeMode,
 		fontScale,
 		onThemeModeChange,
@@ -41,13 +45,14 @@ export function AppScreen() {
 						{initializing ? (
 							<LoadingState message={INITIAL_LOADING_MESSAGE} />
 						) : !isAuthenticated ? (
-							<LoginScreen {...loginBindings} />
+							<AuthNavigator loginProps={loginBindings} onResetPassword={onPasswordResetRequest} />
 						) : (
 							<AppNavigator {...navigatorProps} />
 						)}
 					</View>
 				</View>
 				<AppHelpModal visible={isHelpVisible} onDismiss={handleDismissHelp} />
+				<OnboardingModal visible={isOnboardingVisible} onComplete={onCompleteOnboarding} />
 			</SafeAreaProvider>
 		</AppAppearanceProvider>
 	);

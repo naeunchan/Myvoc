@@ -38,6 +38,7 @@ export function RootTabNavigator({
 	recentSearches,
 	onSelectRecentSearch,
 	onClearRecentSearches,
+	onRetrySearch,
 	userName,
 	onLogout,
 	canLogout,
@@ -53,6 +54,9 @@ export function RootTabNavigator({
 	onCheckDisplayName,
 	onUpdatePassword,
 	onDeleteAccount,
+	onExportBackup,
+	onImportBackup,
+	onShowOnboarding,
 }: RootTabNavigatorProps) {
 	const tabStyles = useThemedStyles(createTabStyles);
 	const { theme } = useAppAppearance();
@@ -114,13 +118,14 @@ export function RootTabNavigator({
 						recentSearches={recentSearches}
 						onSelectRecentSearch={onSelectRecentSearch}
 						onClearRecentSearches={onClearRecentSearches}
+						onRetry={onRetrySearch}
 					/>
 				)}
 			</Tab.Screen>
 			<Tab.Screen name="Settings">
 				{() => (
-						<SettingsNavigator
-							onLogout={onLogout}
+					<SettingsNavigator
+						onLogout={onLogout}
 						canLogout={canLogout}
 						isGuest={isGuest}
 						onRequestLogin={onRequestLogin}
@@ -131,8 +136,11 @@ export function RootTabNavigator({
 						profileUsername={profileUsername}
 						onUpdateProfile={onUpdateProfile}
 						onCheckDisplayName={onCheckDisplayName}
-							onUpdatePassword={onUpdatePassword}
-							onDeleteAccount={onDeleteAccount}
+						onUpdatePassword={onUpdatePassword}
+						onDeleteAccount={onDeleteAccount}
+						onExportBackup={onExportBackup}
+						onImportBackup={onImportBackup}
+						onShowOnboarding={onShowOnboarding}
 						themeMode={themeMode}
 						onThemeModeChange={onThemeModeChange}
 						fontScale={fontScale}

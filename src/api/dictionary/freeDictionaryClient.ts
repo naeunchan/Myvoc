@@ -1,5 +1,7 @@
 import { DictionaryMode } from "@/services/dictionary/types";
 import { DefinitionEntry, MeaningEntry, WordResult } from "@/services/dictionary/types/WordResult";
+import { AppError, createAppError } from "@/errors/AppError";
+import { captureAppError } from "@/logging/logger";
 
 const MAX_MEANINGS = 2;
 const MAX_DEFINITIONS = 2;
@@ -137,15 +139,31 @@ async function fetchFromSource(word: string): Promise<FreeDictionaryResponse> {
 		? `${proxyEndpoint}?word=${encodedWord}`
 		: `https://api.dictionaryapi.dev/api/v2/entries/en/${encodedWord}`;
 
-	const response = await fetch(requestUrl, {
-		headers: {
-			"Accept": "application/json",
-			"Cache-Control": "no-cache",
-		},
-	});
+	let response: Response;
+	try {
+		response = await fetch(requestUrl, {
+			headers: {
+				"Accept": "application/json",
+				"Cache-Control": "no-cache",
+			},
+		});
+	} catch (error) {
+		const appError = createAppError("NetworkError", "인터넷 연결을 확인한 뒤 다시 시도해주세요.", {
+			cause: error,
+			code: "DICTIONARY_FETCH_FAILED",
+			retryable: true,
+		});
+		captureAppError(appError, { requestUrl });
+		throw appError;
+	}
 
 	if (!response.ok) {
-		throw new Error("사전 데이터를 불러올 수 없어요.");
+		const appError = createAppError("ServerError", "사전 데이터를 불러올 수 없어요.", {
+			code: `HTTP_${response.status}`,
+			retryable: response.status >= 500,
+		});
+		captureAppError(appError, { status: response.status, requestUrl });
+		throw appError;
 	}
 
 	return (await response.json()) as FreeDictionaryResponse;
@@ -163,7 +181,9 @@ export async function fetchDictionaryEntry(word: string, mode: DictionaryMode): 
 
 	const rawResponse = await fetchFromSource(normalized);
 	if (!Array.isArray(rawResponse) || rawResponse.length === 0) {
-		throw new Error("사전 정보를 찾을 수 없어요.");
+		throw createAppError("ValidationError", "사전 정보를 찾을 수 없어요.", {
+			code: "DICTIONARY_EMPTY",
+		});
 	}
 
 	const shouldTranslate = mode === "en-ko";
@@ -176,5 +196,7 @@ export async function fetchDictionaryEntry(word: string, mode: DictionaryMode): 
 		}
 	}
 
-	throw new Error("사전 정보를 찾을 수 없어요.");
+	throw createAppError("ValidationError", "사전 정보를 찾을 수 없어요.", {
+		code: "DICTIONARY_EMPTY",
+	});
 }

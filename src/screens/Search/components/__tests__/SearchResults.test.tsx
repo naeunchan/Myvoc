@@ -1,7 +1,8 @@
 import React from "react";
-import { render } from "@testing-library/react-native";
+import { fireEvent, render } from "@testing-library/react-native";
 import { SearchResults } from "@/screens/Search/components/SearchResults";
 import { WordResult } from "@/services/dictionary/types";
+import type { AppError } from "@/errors/AppError";
 
 const mockWordResultCard = jest.fn();
 
@@ -49,9 +50,19 @@ describe("SearchResults", () => {
 		expect(getByTestId("search-results-loading")).toBeTruthy();
 	});
 
-	it("renders error text", () => {
-		const { getByTestId } = render(<SearchResults {...defaultProps} loading={false} error="에러" result={null} />);
-		expect(getByTestId("search-results-error").children.join("")).toContain("에러");
+	it("renders error text and retry button", () => {
+		const mockRetry = jest.fn();
+		const error: AppError = {
+			kind: "NetworkError",
+			message: "네트워크 오류",
+			retryable: true,
+		};
+		const { getByTestId, getByText } = render(
+			<SearchResults {...defaultProps} loading={false} error={error} result={null} onRetry={mockRetry} />,
+		);
+		expect(getByTestId("search-results-error").children.join("")).toContain("네트워크 오류");
+		fireEvent.press(getByText("다시 시도하기"));
+		expect(mockRetry).toHaveBeenCalled();
 	});
 
 	it("renders null when no result", () => {

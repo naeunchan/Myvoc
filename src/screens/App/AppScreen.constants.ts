@@ -44,3 +44,6 @@ export const SOCIAL_LOGIN_UNAVAILABLE_MESSAGE = "해당 소셜 로그인 옵션�
 export const PASSWORD_RESET_SUCCESS_MESSAGE = "가입한 이메일로 인증 메일을 보냈어요. 메일함을 확인해주세요.";
 export const PASSWORD_RESET_INPUT_ERROR_MESSAGE = "가입한 이메일 주소를 입력해주세요.";
 export const PASSWORD_RESET_SOCIAL_ERROR_MESSAGE = "소셜 로그인으로 만든 계정은 여기서 비밀번호를 찾을 수 없어요.";
+export const PASSWORD_RESET_RATE_LIMIT_ERROR_MESSAGE = "요청이 너무 잦아요. 잠시 후 다시 시도해주세요.";
+export const PASSWORD_RESET_SOCIAL_NOTE =
+	"Google 또는 Apple로 로그인했다면 각 서비스의 보안 설정에서 비밀번호를 관리할 수 있어요.";

@@ -196,6 +196,102 @@ function serializeSearchHistoryPayload(entries: SearchHistoryEntry[]) {
 	return JSON.stringify(entries.slice(0, SEARCH_HISTORY_LIMIT));
 }
 
+export type BackupPayload = {
+	version: number;
+	exportedAt: string;
+	users: Array<Pick<UserRow, "username" | "display_name" | "password_hash">>;
+	favorites: Record<string, FavoriteWordEntry[]>;
+	searchHistory: SearchHistoryEntry[];
+};
+
+export async function exportBackup(): Promise<BackupPayload> {
+	const db = await getDatabase();
+	const timestamp = new Date().toISOString();
+	const users = await db.getAllAsync<Pick<UserRow, "username" | "display_name" | "password_hash">>(
+		"SELECT username, display_name, password_hash FROM users",
+	);
+	const favorites: Record<string, FavoriteWordEntry[]> = {};
+
+	for (const user of users) {
+		const favoriteRows = await db.getAllAsync<{ data: string }>(
+			"SELECT data FROM favorites f JOIN users u ON u.id = f.user_id WHERE u.username = ?",
+			user.username,
+		);
+		favorites[user.username] = favoriteRows
+			.map((row) => {
+				try {
+					return normalizeFavoriteEntry(JSON.parse(row.data));
+				} catch {
+					return null;
+				}
+			})
+			.filter((entry): entry is FavoriteWordEntry => entry !== null);
+	}
+
+	const searchHistory = await getSearchHistoryNative();
+
+	return {
+		version: 1,
+		exportedAt: timestamp,
+		users,
+		favorites,
+		searchHistory,
+	};
+}
+
+export async function importBackup(payload: BackupPayload) {
+	if (!payload || payload.version !== 1) {
+		throw new Error("지원하지 않는 백업 형식이에요.");
+	}
+	const db = await getDatabase();
+	await db.withTransactionAsync(async (tx) => {
+		for (const user of payload.users) {
+			const normalizedUsername = user.username.toLowerCase();
+			let existing = await tx.getFirstAsync<UserRow>(
+				"SELECT id FROM users WHERE username = ?",
+				normalizedUsername,
+			);
+			if (!existing) {
+				await tx.runAsync(
+					"INSERT INTO users (username, display_name, password_hash) VALUES (?, ?, ?)",
+					normalizedUsername,
+					user.display_name,
+					user.password_hash,
+				);
+				existing = await tx.getFirstAsync<UserRow>(
+					"SELECT id FROM users WHERE username = ?",
+					normalizedUsername,
+				);
+			} else {
+				await tx.runAsync(
+					"UPDATE users SET display_name = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+					user.display_name,
+					user.password_hash,
+					existing.id,
+				);
+			}
+			if (!existing) {
+				continue;
+			}
+			await tx.runAsync("DELETE FROM favorites WHERE user_id = ?", existing.id);
+			const favoriteEntries = payload.favorites[user.username] ?? [];
+			for (const entry of favoriteEntries) {
+				await tx.runAsync(
+					`
+						INSERT INTO favorites (user_id, word, data, updated_at)
+						VALUES (?, ?, ?, ?)
+					`,
+					existing.id,
+					entry.word.word,
+					JSON.stringify(entry),
+					entry.updatedAt ?? new Date().toISOString(),
+				);
+			}
+		}
+	});
+	await saveSearchHistoryNative(payload.searchHistory ?? []);
+}
+
 async function initializeDatabaseNative() {
 	const db = await getDatabase();
 	await db.execAsync("PRAGMA foreign_keys = ON;");

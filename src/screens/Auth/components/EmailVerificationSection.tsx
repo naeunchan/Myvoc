@@ -51,6 +51,9 @@ export function EmailVerificationSection({
 					onPress={onSendCode}
 					disabled={sendDisabled}
 					activeOpacity={0.8}
+					testID="email-verification-send-button"
+					accessibilityRole="button"
+					accessibilityState={{ disabled: sendDisabled }}
 				>
 					{sending ? (
 						<ActivityIndicator size="small" color={theme.accent} />
@@ -79,6 +82,9 @@ export function EmailVerificationSection({
 				onPress={onVerifyCode}
 				disabled={verifyDisabled}
 				activeOpacity={0.85}
+				testID="email-verification-verify-button"
+				accessibilityRole="button"
+				accessibilityState={{ disabled: verifyDisabled }}
 			>
 				{verifying ? (
 					<ActivityIndicator size="small" color={theme.accentContrast} />
