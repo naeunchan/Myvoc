@@ -46,7 +46,12 @@ export function SearchResults({
 				<Text style={styles.errorTitle}>잠깐 문제가 생겼어요</Text>
 				<Text style={styles.errorDescription}>{error.message}</Text>
 				{canRetry ? (
-					<TouchableOpacity style={styles.retryButton} onPress={onRetry} accessibilityRole="button">
+					<TouchableOpacity
+						style={styles.retryButton}
+						onPress={onRetry}
+						accessibilityRole="button"
+						accessibilityLabel="다시 시도하기"
+					>
 						<Text style={styles.retryButtonLabel}>다시 시도하기</Text>
 					</TouchableOpacity>
 				) : null}

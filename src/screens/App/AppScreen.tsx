@@ -11,16 +11,19 @@ import { useAppScreen } from "@/hooks/useAppScreen";
 import { AppAppearanceProvider } from "@/theme/AppearanceContext";
 import { createAppScreenStyles } from "@/screens/App/AppScreen.styles";
 import { APP_THEMES } from "@/theme/themes";
+import { OnboardingModal } from "@/screens/Onboarding/OnboardingModal";
 
 export function AppScreen() {
 	const {
 		initializing,
 		isHelpVisible,
+		isOnboardingVisible,
 		isAuthenticated,
 		loginBindings,
 		onPasswordResetRequest,
 		navigatorProps,
 		handleDismissHelp,
+		onCompleteOnboarding,
 		themeMode,
 		fontScale,
 		onThemeModeChange,
@@ -49,6 +52,7 @@ export function AppScreen() {
 					</View>
 				</View>
 				<AppHelpModal visible={isHelpVisible} onDismiss={handleDismissHelp} />
+				<OnboardingModal visible={isOnboardingVisible} onComplete={onCompleteOnboarding} />
 			</SafeAreaProvider>
 		</AppAppearanceProvider>
 	);

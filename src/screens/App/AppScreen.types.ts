@@ -6,11 +6,14 @@ export type AppScreenHookResult = {
 	versionLabel: string;
 	initializing: boolean;
 	isHelpVisible: boolean;
+	isOnboardingVisible: boolean;
 	isAuthenticated: boolean;
 	loginBindings: LoginScreenProps;
 	navigatorProps: RootTabNavigatorProps;
 	onPasswordResetRequest: (email: string) => Promise<void>;
 	handleDismissHelp: () => void;
+	onShowOnboarding: () => void;
+	onCompleteOnboarding: () => void;
 	themeMode: ThemeMode;
 	fontScale: number;
 	onThemeModeChange: (mode: ThemeMode) => void;

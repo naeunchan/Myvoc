@@ -7,11 +7,15 @@ export type SettingsScreenProps = {
 	onRequestLogin: () => void;
 	onRequestSignUp: () => void;
 	onShowHelp: () => void;
+	onShowOnboarding: () => void;
 	appVersion: string;
 	profileDisplayName: string | null;
 	profileUsername: string | null;
 	onNavigateProfile: () => void;
 	onNavigateAccountDeletion: () => void;
+	onNavigateLegal: () => void;
+	onExportBackup: () => void;
+	onImportBackup: () => void;
 	themeMode: ThemeMode;
 	fontScale: number;
 	onNavigateThemeSettings: () => void;

@@ -57,6 +57,9 @@ export function SearchScreen({
 									style={[styles.modeButton, isActive && styles.modeButtonActive, option.disabled && styles.modeButtonDisabled]}
 									activeOpacity={option.disabled ? 1 : 0.85}
 									disabled={option.disabled}
+									accessibilityRole="button"
+									accessibilityState={{ selected: isActive, disabled: option.disabled }}
+									accessibilityLabel={`${option.label}${option.disabled ? " (준비중)" : ""}`}
 									onPress={() => {
 										if (!isActive && !option.disabled) {
 											onModeChange(option.value);
@@ -100,13 +103,24 @@ export function SearchScreen({
 					<View style={styles.historyCard}>
 						<View style={styles.historyHeader}>
 							<Text style={styles.sectionLabel}>최근 검색</Text>
-							<TouchableOpacity style={styles.historyClearButton} onPress={onClearRecentSearches} accessibilityLabel="최근 검색 전체 삭제">
+							<TouchableOpacity
+								style={styles.historyClearButton}
+								onPress={onClearRecentSearches}
+								accessibilityRole="button"
+								accessibilityLabel="최근 검색 전체 삭제"
+							>
 								<Text style={styles.historyClearText}>전체 지우기</Text>
 							</TouchableOpacity>
 						</View>
 						<View style={styles.historyList}>
 							{recentSearches.map((entry) => (
-								<TouchableOpacity key={`${entry.term}-${entry.searchedAt}`} style={styles.historyItem} onPress={() => onSelectRecentSearch(entry)} accessibilityLabel={`${entry.term} 검색어로 이동`}>
+								<TouchableOpacity
+									key={`${entry.term}-${entry.searchedAt}`}
+									style={styles.historyItem}
+									onPress={() => onSelectRecentSearch(entry)}
+									accessibilityRole="button"
+									accessibilityLabel={`${entry.term} 검색어로 이동`}
+								>
 									<View style={styles.historyIconWrapper}>
 										<Ionicons name="time-outline" size={16} color={theme.textPrimary} />
 									</View>

@@ -13,6 +13,7 @@ import { SocialLoginButtons } from "@/screens/Auth/components/SocialLoginButtons
 import { EmailVerificationSection } from "@/screens/Auth/components/EmailVerificationSection";
 import { getLoginCopy } from "@/screens/Auth/constants/loginCopy";
 import { useThemedStyles } from "@/theme/useThemedStyles";
+import { t } from "@/shared/i18n";
 import {
 	EMAIL_VERIFICATION_CODE_REQUIRED_MESSAGE,
 	EMAIL_VERIFICATION_INVALID_ERROR_MESSAGE,
@@ -214,8 +215,14 @@ export function LoginScreen({
 
 				<PrimaryActionButton label={copy.primaryButton} loading={loading} disabled={isPrimaryDisabled} onPress={handlePrimaryPress} mode={mode} />
 
-				<TouchableOpacity style={styles.linkButton} onPress={handleForgotPasswordPress} disabled={loading}>
-					<Text style={styles.linkButtonText}>비밀번호를 잊으셨나요?</Text>
+				<TouchableOpacity
+					style={styles.linkButton}
+					onPress={handleForgotPasswordPress}
+					disabled={loading}
+					accessibilityRole="button"
+					accessibilityLabel={t("auth.forgotPassword")}
+				>
+					<Text style={styles.linkButtonText}>{t("auth.forgotPassword")}</Text>
 				</TouchableOpacity>
 
 				<SocialLoginButtons disabled={loading} />

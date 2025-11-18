@@ -9,6 +9,7 @@ import { MISSING_USER_ERROR_MESSAGE } from "@/screens/App/AppScreen.constants";
 import { useThemedStyles } from "@/theme/useThemedStyles";
 import { FONT_SCALE_OPTIONS, THEME_MODE_OPTIONS } from "@/theme/constants";
 import { useAppAppearance } from "@/theme/AppearanceContext";
+import { LEGAL_URLS } from "@/shared/constants/legal";
 
 const SUPPORT_EMAIL = "support@myvoc.app";
 const CONTACT_SUBJECT = "MyVoc 1:1 문의";
@@ -26,11 +27,15 @@ export function SettingsScreen({
 	onRequestLogin,
 	onRequestSignUp,
 	onShowHelp,
+	onShowOnboarding,
 	appVersion,
 	profileDisplayName,
 	profileUsername,
 	onNavigateProfile,
 	onNavigateAccountDeletion,
+	onNavigateLegal,
+	onExportBackup,
+	onImportBackup,
 	themeMode,
 	fontScale,
 	onNavigateThemeSettings,
@@ -100,6 +105,18 @@ export function SettingsScreen({
 		}
 	}, [appVersion, isGuest, profileUsername]);
 
+	const handleOpenLegalUrl = useCallback(async (url: string) => {
+		try {
+			const canOpen = await Linking.canOpenURL(url);
+			if (!canOpen) {
+				throw new Error("링크를 열 수 없어요.");
+			}
+			await Linking.openURL(url);
+		} catch (error) {
+			Alert.alert("연결 오류", "링크를 열 수 없어요. 잠시 후 다시 시도해주세요.");
+		}
+	}, []);
+
 	const displayName = useMemo(() => {
 		if (profileDisplayName && profileDisplayName.trim()) {
 			return profileDisplayName;
@@ -154,7 +171,11 @@ export function SettingsScreen({
 					<Text style={styles.sectionLabel}>일반</Text>
 					<View style={styles.sectionCard}>
 						{renderRow("도움말 다시 보기", { onPress: onShowHelp })}
+						{renderRow("튜토리얼 다시 보기", { onPress: onShowOnboarding })}
 						{renderRow("1:1 문의 보내기", { onPress: handleContactSupport })}
+						{renderRow("개인정보 처리방침", { onPress: () => { void handleOpenLegalUrl(LEGAL_URLS.privacyPolicy); } })}
+						{renderRow("서비스 이용약관", { onPress: () => { void handleOpenLegalUrl(LEGAL_URLS.termsOfService); } })}
+						{renderRow("법적 고지 및 정보", { onPress: onNavigateLegal })}
 						{renderRow("앱 버전", { value: appVersion, isLast: true })}
 					</View>
 				</View>
@@ -164,6 +185,14 @@ export function SettingsScreen({
 					<View style={styles.sectionCard}>
 						{renderRow("화면 모드", { onPress: onNavigateThemeSettings, value: themeModeLabel })}
 						{renderRow("글자 크기", { onPress: onNavigateFontSettings, value: fontScaleLabel, isLast: true })}
+					</View>
+				</View>
+
+				<View style={styles.section}>
+					<Text style={styles.sectionLabel}>백업 및 복원</Text>
+					<View style={styles.sectionCard}>
+						{renderRow("데이터 백업 내보내기", { onPress: onExportBackup })}
+						{renderRow("백업에서 복원하기", { onPress: onImportBackup, isLast: true })}
 					</View>
 				</View>
 

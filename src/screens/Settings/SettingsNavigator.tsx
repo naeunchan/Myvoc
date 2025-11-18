@@ -7,6 +7,8 @@ import { MyPageNicknameScreen } from "@/screens/Settings/MyPageNicknameScreen";
 import { MyPagePasswordScreen } from "@/screens/Settings/MyPagePasswordScreen";
 import { ThemeModeScreen } from "@/screens/Settings/ThemeModeScreen";
 import { FontSizeScreen } from "@/screens/Settings/FontSizeScreen";
+import { LegalInfoScreen } from "@/screens/Settings/LegalInfoScreen";
+import { DeleteAccountScreen } from "@/screens/Settings/DeleteAccountScreen";
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
 
@@ -24,6 +26,9 @@ export function SettingsNavigator({
 	onCheckDisplayName,
 	onUpdatePassword,
 	onDeleteAccount,
+	onExportBackup,
+	onImportBackup,
+	onShowOnboarding,
 	themeMode,
 	onThemeModeChange,
 	fontScale,
@@ -31,29 +36,35 @@ export function SettingsNavigator({
 }: SettingsNavigatorProps) {
 	return (
 		<Stack.Navigator>
-			<Stack.Screen name="SettingsHome" options={{ headerShown: false, title: "설정" }}>
-				{({ navigation }) => (
-					<SettingsScreen
+				<Stack.Screen name="SettingsHome" options={{ headerShown: false, title: "설정" }}>
+					{({ navigation }) => (
+						<SettingsScreen
 						onLogout={onLogout}
 						canLogout={canLogout}
 						isGuest={isGuest}
 						onRequestLogin={onRequestLogin}
-						onRequestSignUp={onRequestSignUp}
-						onShowHelp={onShowHelp}
-						appVersion={appVersion}
+							onRequestSignUp={onRequestSignUp}
+							onShowHelp={onShowHelp}
+							onShowOnboarding={onShowOnboarding}
+							appVersion={appVersion}
 						profileDisplayName={profileDisplayName}
 						profileUsername={profileUsername}
-						onNavigateProfile={() => {
-							navigation.navigate("MyPage");
-						}}
-						onNavigateAccountDeletion={() => {
-							navigation.navigate("MyPage");
-						}}
-						themeMode={themeMode}
-						fontScale={fontScale}
-						onNavigateThemeSettings={() => {
-							navigation.navigate("ThemeModeSettings");
-						}}
+							onNavigateProfile={() => {
+								navigation.navigate("MyPage");
+							}}
+							onNavigateAccountDeletion={() => {
+								navigation.navigate("DeleteAccount");
+							}}
+							onNavigateLegal={() => {
+								navigation.navigate("LegalInfo");
+							}}
+							onExportBackup={onExportBackup}
+							onImportBackup={onImportBackup}
+							themeMode={themeMode}
+							fontScale={fontScale}
+							onNavigateThemeSettings={() => {
+								navigation.navigate("ThemeModeSettings");
+							}}
 						onNavigateFontSettings={() => {
 							navigation.navigate("FontSizeSettings");
 						}}
@@ -78,10 +89,12 @@ export function SettingsNavigator({
 						onNavigatePassword={() => {
 							navigation.navigate("MyPagePassword");
 						}}
-						onDeleteAccount={onDeleteAccount}
+						onNavigateDeleteAccount={() => {
+							navigation.navigate("DeleteAccount");
+						}}
 					/>
 				)}
-			</Stack.Screen>
+				</Stack.Screen>
 			<Stack.Screen
 				name="MyPageNickname"
 				options={{
@@ -135,6 +148,37 @@ export function SettingsNavigator({
 				}}
 			>
 				{() => <FontSizeScreen fontScale={fontScale} onChangeFontScale={onFontScaleChange} />}
+			</Stack.Screen>
+			<Stack.Screen
+				name="LegalInfo"
+				options={{
+					title: "법적 고지 및 정보",
+					headerBackButtonDisplayMode: "minimal",
+				}}
+			>
+				{() => <LegalInfoScreen appVersion={appVersion} />}
+			</Stack.Screen>
+			<Stack.Screen
+				name="DeleteAccount"
+				options={{
+					title: "회원탈퇴",
+					headerBackButtonDisplayMode: "minimal",
+				}}
+			>
+				{({ navigation }) => (
+					<DeleteAccountScreen
+						onDeleteAccount={onDeleteAccount}
+						onComplete={() => {
+							try {
+								if (navigation.canGoBack()) {
+									navigation.popToTop();
+								}
+							} catch {
+								// Navigator may have unmounted after account deletion; safe to ignore.
+							}
+						}}
+					/>
+				)}
 			</Stack.Screen>
 		</Stack.Navigator>
 	);

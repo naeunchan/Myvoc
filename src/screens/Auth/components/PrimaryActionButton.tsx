@@ -21,6 +21,9 @@ export function PrimaryActionButton({ label, loading, disabled, onPress, mode }:
 			onPress={onPress}
 			disabled={disabled}
 			activeOpacity={0.9}
+			accessibilityRole="button"
+			accessibilityLabel={label}
+			accessibilityState={{ disabled }}
 		>
 			{loading ? (
 				<View style={styles.buttonLoadingRow}>

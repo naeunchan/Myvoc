@@ -5,6 +5,8 @@ export type SettingsStackParamList = {
 	MyPagePassword: undefined;
 	ThemeModeSettings: undefined;
 	FontSizeSettings: undefined;
+	LegalInfo: undefined;
+	DeleteAccount: undefined;
 };
 
 import type { ThemeMode } from "@/theme/types";
@@ -23,6 +25,9 @@ export type SettingsNavigatorProps = {
 	onCheckDisplayName: (displayName: string) => Promise<string>;
 	onUpdatePassword: (password: string) => Promise<void>;
 	onDeleteAccount: () => Promise<void>;
+	onExportBackup: () => Promise<void>;
+	onImportBackup: () => Promise<void>;
+	onShowOnboarding: () => void;
 	themeMode: ThemeMode;
 	onThemeModeChange: (mode: ThemeMode) => void;
 	fontScale: number;

@@ -88,11 +88,12 @@ import { applyExampleUpdates, clearPendingFlags } from "@/services/dictionary/ut
 import type { AppScreenHookResult } from "@/screens/App/AppScreen.types";
 import { playRemoteAudio } from "@/utils/audio";
 import { SearchHistoryEntry, SEARCH_HISTORY_LIMIT } from "@/services/searchHistory/types";
-import { DEFAULT_FONT_SCALE, FONT_SCALE_PREFERENCE_KEY, THEME_MODE_PREFERENCE_KEY } from "@/theme/constants";
+import { DEFAULT_FONT_SCALE, FONT_SCALE_PREFERENCE_KEY, ONBOARDING_PREFERENCE_KEY, THEME_MODE_PREFERENCE_KEY } from "@/theme/constants";
 import type { ThemeMode } from "@/theme/types";
 import type { AppError } from "@/errors/AppError";
 import { createAppError, normalizeError } from "@/errors/AppError";
 import { captureAppError, setUserContext } from "@/logging/logger";
+import { exportBackupToFile, importBackupFromDocument } from "@/services/backup/manualBackup";
 
 const PASSWORD_RESET_THROTTLE_MS = 60 * 1000;
 const passwordResetTracker = new Map<string, number>();
@@ -116,6 +117,7 @@ export function useAppScreen(): AppScreenHookResult {
 	const [authLoading, setAuthLoading] = useState(false);
 	const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 	const [isHelpVisible, setIsHelpVisible] = useState(false);
+	const [isOnboardingVisible, setIsOnboardingVisible] = useState(false);
 	const [versionLabel] = useState(() => {
 		const extra = Constants.expoConfig?.extra;
 		return extra?.versionLabel ?? DEFAULT_VERSION_LABEL;
@@ -329,6 +331,26 @@ export function useAppScreen(): AppScreenHookResult {
 				console.warn("글자 크기를 불러오는 중 문제가 발생했어요.", error);
 			});
 
+		return () => {
+			isMounted = false;
+		};
+	}, []);
+
+	useEffect(() => {
+		let isMounted = true;
+		getPreferenceValue(ONBOARDING_PREFERENCE_KEY)
+			.then((value) => {
+				if (!isMounted) {
+					return;
+				}
+				setIsOnboardingVisible(value === "true" ? false : true);
+			})
+			.catch((error) => {
+				console.warn("온보딩 상태를 불러오는 중 문제가 발생했어요.", error);
+				if (isMounted) {
+					setIsOnboardingVisible(true);
+				}
+			});
 		return () => {
 			isMounted = false;
 		};
@@ -777,6 +799,20 @@ export function useAppScreen(): AppScreenHookResult {
 		});
 	}, []);
 
+	const handleShowOnboarding = useCallback(() => {
+		setIsOnboardingVisible(true);
+		void setPreferenceValue(ONBOARDING_PREFERENCE_KEY, "false").catch((error) => {
+			console.warn("온보딩 상태를 업데이트하는 중 문제가 발생했어요.", error);
+		});
+	}, []);
+
+	const handleCompleteOnboarding = useCallback(() => {
+		setIsOnboardingVisible(false);
+		void setPreferenceValue(ONBOARDING_PREFERENCE_KEY, "true").catch((error) => {
+			console.warn("온보딩 상태를 저장하는 중 문제가 발생했어요.", error);
+		});
+	}, []);
+
 	const handleLogoutAsync = useCallback(async () => {
 		setAuthLoading(true);
 		setAuthError(null);
@@ -1182,6 +1218,43 @@ export function useAppScreen(): AppScreenHookResult {
 	const canLogout = user !== null;
 	const userName = user?.displayName ?? user?.username ?? DEFAULT_GUEST_NAME;
 
+	const handleBackupExport = useCallback(async () => {
+		try {
+			await exportBackupToFile();
+			Alert.alert("백업 완료", "데이터 백업 파일을 저장하거나 공유했어요.");
+		} catch (error) {
+			const message = error instanceof Error ? error.message : "백업을 생성하지 못했어요.";
+			Alert.alert("백업 실패", message);
+		}
+	}, []);
+
+	const handleBackupImport = useCallback(async () => {
+		try {
+			const restored = await importBackupFromDocument();
+			if (!restored) {
+				return;
+			}
+			if (user?.username) {
+				const refreshed = await findUserByUsername(user.username);
+				if (refreshed) {
+					await loadUserState({
+						id: refreshed.id,
+						username: refreshed.username,
+						displayName: refreshed.displayName,
+					});
+				} else {
+					setInitialAuthState();
+				}
+			}
+			const history = await getSearchHistoryEntries();
+			setRecentSearches(history);
+			Alert.alert("복원 완료", "백업 데이터로 복원했어요.");
+		} catch (error) {
+			const message = error instanceof Error ? error.message : "백업 데이터를 불러오지 못했어요.";
+			Alert.alert("복원 실패", message);
+		}
+	}, [findUserByUsername, getSearchHistoryEntries, loadUserState, setInitialAuthState, user?.username]);
+
 	const navigatorProps = useMemo<RootTabNavigatorProps>(
 		() => ({
 			favorites,
@@ -1223,6 +1296,9 @@ export function useAppScreen(): AppScreenHookResult {
 			onCheckDisplayName: handleCheckDisplayName,
 			onUpdatePassword: handleProfilePasswordUpdate,
 			onDeleteAccount: handleDeleteAccount,
+			onExportBackup: handleBackupExport,
+			onImportBackup: handleBackupImport,
+			onShowOnboarding: handleShowOnboarding,
 		}),
 		[
 			canLogout,
@@ -1236,6 +1312,7 @@ export function useAppScreen(): AppScreenHookResult {
 			handleProfilePasswordUpdate,
 			handleProfileUpdate,
 			handleCheckDisplayName,
+			handleShowOnboarding,
 			handleDeleteAccount,
 			handlePlayWordAudio,
 			handleLogout,
@@ -1246,6 +1323,8 @@ export function useAppScreen(): AppScreenHookResult {
 			handleSearch,
 			handleSearchTermChange,
 			handleShowHelp,
+			handleBackupExport,
+			handleBackupImport,
 			isCurrentFavorite,
 			isGuest,
 			loading,
@@ -1288,11 +1367,14 @@ export function useAppScreen(): AppScreenHookResult {
 		versionLabel,
 		initializing,
 		isHelpVisible,
+		isOnboardingVisible,
 		isAuthenticated,
 		loginBindings,
 		onPasswordResetRequest: handlePasswordResetAsync,
 		navigatorProps,
 		handleDismissHelp,
+		onShowOnboarding: handleShowOnboarding,
+		onCompleteOnboarding: handleCompleteOnboarding,
 		themeMode,
 		fontScale,
 		onThemeModeChange: handleThemeModeChange,
