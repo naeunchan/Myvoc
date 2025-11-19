@@ -32,14 +32,6 @@ export function captureException(error: unknown, context?: Record<string, unknow
 	}
 }
 
-export function captureMessage(message: string, context?: Record<string, unknown>) {
-	if (hasSentryDsn) {
-		Sentry.Native.captureMessage(message, { level: "warning", extra: context });
-	} else {
-		console.warn("[logger]", message, context);
-	}
-}
-
 export function captureAppError(error: AppError, context?: Record<string, unknown>) {
 	const payload = {
 		kind: error.kind,

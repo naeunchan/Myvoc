@@ -8,7 +8,6 @@ import { AuthenticatedActions } from "@/screens/Settings/components/Authenticate
 import { MISSING_USER_ERROR_MESSAGE } from "@/screens/App/AppScreen.constants";
 import { useThemedStyles } from "@/theme/useThemedStyles";
 import { FONT_SCALE_OPTIONS, THEME_MODE_OPTIONS } from "@/theme/constants";
-import { useAppAppearance } from "@/theme/AppearanceContext";
 import { LEGAL_DOCUMENTS, type LegalDocumentId } from "@/legal/legalDocuments";
 import { LegalDocumentModal } from "@/screens/Settings/components/LegalDocumentModal";
 
@@ -41,7 +40,6 @@ export function SettingsScreen({
 	onNavigateFontSettings,
 }: SettingsScreenProps) {
 	const styles = useThemedStyles(createStyles);
-	const { theme } = useAppAppearance();
 	const handleLogoutPress = useCallback(() => {
 		if (!canLogout) {
 			return;

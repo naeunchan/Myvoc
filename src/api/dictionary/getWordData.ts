@@ -2,7 +2,7 @@ import { DictionaryMode, WordResult } from "@/services/dictionary/types";
 import { ExampleUpdate, generateDefinitionExamples } from "@/api/dictionary/exampleGenerator";
 import { fetchDictionaryEntry } from "@/api/dictionary/freeDictionaryClient";
 
-export type WordDataResult = {
+type WordDataResult = {
 	base: WordResult;
 	examplesPromise: Promise<ExampleUpdate[]>;
 };

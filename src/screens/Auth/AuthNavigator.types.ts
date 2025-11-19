@@ -12,5 +12,3 @@ export type AuthNavigatorProps = {
 	loginProps: LoginScreenProps;
 	onResetPassword: (email: string) => Promise<void>;
 };
-
-export type PasswordResetScreenRouteProps = NativeStackScreenProps<AuthStackParamList, "PasswordReset">;

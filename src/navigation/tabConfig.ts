@@ -7,11 +7,6 @@ type TabVisualConfig = {
 	icon: string;
 };
 
-export const TAB_BAR_COLORS = {
-	active: "#1f2937",
-	inactive: "#9ca3af",
-} as const;
-
 export const TAB_BAR_OPTIONS = {
 	showLabel: false,
 } as const;

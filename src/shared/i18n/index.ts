@@ -59,14 +59,6 @@ function resolveDefaultLocale(): Locale {
 
 let activeLocale: Locale = resolveDefaultLocale();
 
-export function setLocale(locale: Locale) {
-	activeLocale = locale;
-}
-
-export function getLocale(): Locale {
-	return activeLocale;
-}
-
 export function t(key: string): string {
 	const localePack = translations[activeLocale];
 	if (localePack?.[key]) {
