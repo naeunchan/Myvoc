@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Alert, Linking, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SettingsScreenProps } from "@/screens/Settings/SettingsScreen.types";
@@ -9,7 +9,8 @@ import { MISSING_USER_ERROR_MESSAGE } from "@/screens/App/AppScreen.constants";
 import { useThemedStyles } from "@/theme/useThemedStyles";
 import { FONT_SCALE_OPTIONS, THEME_MODE_OPTIONS } from "@/theme/constants";
 import { useAppAppearance } from "@/theme/AppearanceContext";
-import { LEGAL_URLS } from "@/shared/constants/legal";
+import { LEGAL_DOCUMENTS, type LegalDocumentId } from "@/legal/legalDocuments";
+import { LegalDocumentModal } from "@/screens/Settings/components/LegalDocumentModal";
 
 const SUPPORT_EMAIL = "support@myvoc.app";
 const CONTACT_SUBJECT = "MyVoc 1:1 문의";
@@ -26,14 +27,12 @@ export function SettingsScreen({
 	isGuest,
 	onRequestLogin,
 	onRequestSignUp,
-	onShowHelp,
 	onShowOnboarding,
 	appVersion,
 	profileDisplayName,
 	profileUsername,
 	onNavigateProfile,
 	onNavigateAccountDeletion,
-	onNavigateLegal,
 	onExportBackup,
 	onImportBackup,
 	themeMode,
@@ -105,16 +104,10 @@ export function SettingsScreen({
 		}
 	}, [appVersion, isGuest, profileUsername]);
 
-	const handleOpenLegalUrl = useCallback(async (url: string) => {
-		try {
-			const canOpen = await Linking.canOpenURL(url);
-			if (!canOpen) {
-				throw new Error("링크를 열 수 없어요.");
-			}
-			await Linking.openURL(url);
-		} catch (error) {
-			Alert.alert("연결 오류", "링크를 열 수 없어요. 잠시 후 다시 시도해주세요.");
-		}
+	const [activeDocument, setActiveDocument] = useState<LegalDocumentId | null>(null);
+
+	const handleOpenDocument = useCallback((id: LegalDocumentId) => {
+		setActiveDocument(id);
 	}, []);
 
 	const displayName = useMemo(() => {
@@ -160,22 +153,16 @@ export function SettingsScreen({
 						<Text style={styles.profileName}>{displayName}</Text>
 						<Text style={styles.profileSubtitle}>{profileSubtitle}</Text>
 					</View>
-					{!isGuest ? (
-						<TouchableOpacity style={styles.profileAction} onPress={handleNavigateProfile} activeOpacity={0.8}>
-							<Text style={styles.profileActionText}>관리</Text>
-						</TouchableOpacity>
-					) : null}
 				</View>
 
 				<View style={styles.section}>
 					<Text style={styles.sectionLabel}>일반</Text>
 					<View style={styles.sectionCard}>
-						{renderRow("도움말 다시 보기", { onPress: onShowHelp })}
 						{renderRow("튜토리얼 다시 보기", { onPress: onShowOnboarding })}
 						{renderRow("1:1 문의 보내기", { onPress: handleContactSupport })}
-						{renderRow("개인정보 처리방침", { onPress: () => { void handleOpenLegalUrl(LEGAL_URLS.privacyPolicy); } })}
-						{renderRow("서비스 이용약관", { onPress: () => { void handleOpenLegalUrl(LEGAL_URLS.termsOfService); } })}
-						{renderRow("법적 고지 및 정보", { onPress: onNavigateLegal })}
+						{renderRow("개인정보 처리방침", { onPress: () => handleOpenDocument("privacyPolicy") })}
+						{renderRow("서비스 이용약관", { onPress: () => handleOpenDocument("termsOfService") })}
+						{renderRow("법적 고지 및 정보", { onPress: () => handleOpenDocument("legalNotice") })}
 						{renderRow("앱 버전", { value: appVersion, isLast: true })}
 					</View>
 				</View>
@@ -210,6 +197,16 @@ export function SettingsScreen({
 					/>
 				)}
 			</ScrollView>
+			{activeDocument ? (
+				<LegalDocumentModal
+					title={LEGAL_DOCUMENTS[activeDocument].title}
+					content={LEGAL_DOCUMENTS[activeDocument].content}
+					visible
+					onClose={() => {
+						setActiveDocument(null);
+					}}
+				/>
+			) : null}
 		</SafeAreaView>
 	);
 }

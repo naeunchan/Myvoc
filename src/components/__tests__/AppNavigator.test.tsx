@@ -58,7 +58,6 @@ const createProps = (): RootTabNavigatorProps => {
 		isGuest: false,
 		onRequestLogin: noop,
 		onRequestSignUp: noop,
-		onShowHelp: noop,
 		onPlayWordAudio: noop,
 		appVersion: "1.0.0",
 		profileDisplayName: "Alex",
@@ -67,6 +66,9 @@ const createProps = (): RootTabNavigatorProps => {
 		onCheckDisplayName: jest.fn(() => Promise.resolve("ok")),
 		onUpdatePassword: asyncNoop,
 		onDeleteAccount: asyncNoop,
+		onExportBackup: asyncNoop,
+		onImportBackup: asyncNoop,
+		onShowOnboarding: noop,
 	};
 };
 

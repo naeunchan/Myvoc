@@ -75,7 +75,6 @@ const buildProps = (): RootTabNavigatorProps => {
 		isGuest: false,
 		onRequestLogin: noop,
 		onRequestSignUp: noop,
-		onShowHelp: noop,
 		onPlayWordAudio: noop,
 		appVersion: "1.0.0",
 		profileDisplayName: "Alex",
@@ -84,6 +83,9 @@ const buildProps = (): RootTabNavigatorProps => {
 		onCheckDisplayName: jest.fn(() => Promise.resolve("ok")),
 		onUpdatePassword: asyncNoop,
 		onDeleteAccount: asyncNoop,
+		onExportBackup: asyncNoop,
+		onImportBackup: asyncNoop,
+		onShowOnboarding: noop,
 	};
 };
 
@@ -143,7 +145,6 @@ describe("RootTabNavigator", () => {
 				isGuest: props.isGuest,
 				onRequestLogin: props.onRequestLogin,
 				onRequestSignUp: props.onRequestSignUp,
-				onShowHelp: props.onShowHelp,
 				appVersion: props.appVersion,
 				profileDisplayName: props.profileDisplayName,
 				profileUsername: props.profileUsername,

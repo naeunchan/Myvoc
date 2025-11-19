@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { DarkTheme as NavigationDarkTheme, DefaultTheme as NavigationDefaultTheme, NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createNativeStackNavigator, type NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { LoginScreen } from "@/screens/Auth/LoginScreen";
 import { PasswordResetScreen } from "@/screens/Auth/PasswordResetScreen";
 import { AuthNavigatorProps, AuthStackParamList } from "@/screens/Auth/AuthNavigator.types";
@@ -18,16 +18,25 @@ export function AuthNavigator({ loginProps, onResetPassword }: AuthNavigatorProp
 				background: theme.background,
 				card: theme.surface,
 				border: theme.border,
-				primary: theme.accent,
+				primary: theme.textPrimary,
 				text: theme.textPrimary,
 			},
 		}),
 		[mode, theme],
 	);
+	const stackScreenOptions = useMemo<NativeStackNavigationOptions>(
+		() => ({
+			contentStyle: { backgroundColor: theme.background },
+			headerStyle: { backgroundColor: theme.background },
+			headerTintColor: theme.textPrimary,
+			headerTitleStyle: { color: theme.textPrimary },
+		}),
+		[theme.background, theme.textPrimary],
+	);
 
 	return (
 		<NavigationContainer independent theme={navigationTheme}>
-			<Stack.Navigator>
+			<Stack.Navigator screenOptions={stackScreenOptions}>
 				<Stack.Screen name="Login" options={{ headerShown: false }}>
 					{({ navigation }) => (
 						<LoginScreen

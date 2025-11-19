@@ -1,5 +1,5 @@
 import React from "react";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createNativeStackNavigator, type NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import { SettingsNavigatorProps, SettingsStackParamList } from "@/screens/Settings/SettingsNavigator.types";
 import { SettingsScreen } from "@/screens/Settings/SettingsScreen";
 import { MyPageScreen } from "@/screens/Settings/MyPageScreen";
@@ -7,8 +7,9 @@ import { MyPageNicknameScreen } from "@/screens/Settings/MyPageNicknameScreen";
 import { MyPagePasswordScreen } from "@/screens/Settings/MyPagePasswordScreen";
 import { ThemeModeScreen } from "@/screens/Settings/ThemeModeScreen";
 import { FontSizeScreen } from "@/screens/Settings/FontSizeScreen";
-import { LegalInfoScreen } from "@/screens/Settings/LegalInfoScreen";
 import { DeleteAccountScreen } from "@/screens/Settings/DeleteAccountScreen";
+import { useAppAppearance } from "@/theme/AppearanceContext";
+import { SettingsHeader } from "@/screens/Settings/components/SettingsHeader";
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
 
@@ -18,7 +19,6 @@ export function SettingsNavigator({
 	isGuest,
 	onRequestLogin,
 	onRequestSignUp,
-	onShowHelp,
 	appVersion,
 	profileDisplayName,
 	profileUsername,
@@ -34,17 +34,71 @@ export function SettingsNavigator({
 	fontScale,
 	onFontScaleChange,
 }: SettingsNavigatorProps) {
+	const { theme } = useAppAppearance();
+	const baseHeaderOptions = React.useMemo<NativeStackNavigationOptions>(
+		() => ({
+			contentStyle: { backgroundColor: theme.background },
+			headerShadowVisible: false,
+			navigationBarColor: theme.background,
+			header: (props) => <SettingsHeader {...props} />,
+		}),
+		[theme.background],
+	);
+
+	const settingsHomeOptions = React.useMemo<NativeStackNavigationOptions>(() => ({ headerShown: false, title: "설정" }), []);
+	const myPageOptions = React.useMemo<NativeStackNavigationOptions>(
+		() => ({
+			title: "마이 페이지",
+			headerBackTitle: "",
+			headerBackButtonDisplayMode: "minimal",
+		}),
+		[],
+	);
+	const myPageNicknameOptions = React.useMemo<NativeStackNavigationOptions>(
+		() => ({
+			title: "닉네임 설정",
+			headerBackButtonDisplayMode: "minimal",
+		}),
+		[],
+	);
+	const myPagePasswordOptions = React.useMemo<NativeStackNavigationOptions>(
+		() => ({
+			title: "비밀번호 변경",
+			headerBackButtonDisplayMode: "minimal",
+		}),
+		[],
+	);
+	const themeModeOptions = React.useMemo<NativeStackNavigationOptions>(
+		() => ({
+			title: "화면 모드",
+			headerBackButtonDisplayMode: "minimal",
+		}),
+		[],
+	);
+	const fontSizeOptions = React.useMemo<NativeStackNavigationOptions>(
+		() => ({
+			title: "글자 크기",
+			headerBackButtonDisplayMode: "minimal",
+		}),
+		[],
+	);
+	const deleteAccountOptions = React.useMemo<NativeStackNavigationOptions>(
+		() => ({
+			title: "회원탈퇴",
+			headerBackButtonDisplayMode: "minimal",
+		}),
+		[],
+	);
 	return (
-		<Stack.Navigator>
-				<Stack.Screen name="SettingsHome" options={{ headerShown: false, title: "설정" }}>
-					{({ navigation }) => (
-						<SettingsScreen
+		<Stack.Navigator screenOptions={baseHeaderOptions}>
+			<Stack.Screen name="SettingsHome" options={settingsHomeOptions}>
+				{({ navigation }) => (
+					<SettingsScreen
 						onLogout={onLogout}
 						canLogout={canLogout}
 						isGuest={isGuest}
 						onRequestLogin={onRequestLogin}
 							onRequestSignUp={onRequestSignUp}
-							onShowHelp={onShowHelp}
 							onShowOnboarding={onShowOnboarding}
 							appVersion={appVersion}
 						profileDisplayName={profileDisplayName}
@@ -54,9 +108,6 @@ export function SettingsNavigator({
 							}}
 							onNavigateAccountDeletion={() => {
 								navigation.navigate("DeleteAccount");
-							}}
-							onNavigateLegal={() => {
-								navigation.navigate("LegalInfo");
 							}}
 							onExportBackup={onExportBackup}
 							onImportBackup={onImportBackup}
@@ -71,14 +122,7 @@ export function SettingsNavigator({
 					/>
 				)}
 			</Stack.Screen>
-			<Stack.Screen
-				name="MyPage"
-				options={{
-					title: "마이 페이지",
-					headerBackTitle: "",
-					headerBackButtonDisplayMode: "minimal",
-				}}
-			>
+			<Stack.Screen name="MyPage" options={myPageOptions}>
 				{({ navigation }) => (
 					<MyPageScreen
 						username={profileUsername ?? ""}
@@ -94,14 +138,8 @@ export function SettingsNavigator({
 						}}
 					/>
 				)}
-				</Stack.Screen>
-			<Stack.Screen
-				name="MyPageNickname"
-				options={{
-					title: "닉네임 설정",
-					headerBackButtonDisplayMode: "minimal",
-				}}
-			>
+			</Stack.Screen>
+			<Stack.Screen name="MyPageNickname" options={myPageNicknameOptions}>
 				{({ navigation }) => (
 					<MyPageNicknameScreen
 						username={profileUsername ?? ""}
@@ -114,13 +152,7 @@ export function SettingsNavigator({
 					/>
 				)}
 			</Stack.Screen>
-			<Stack.Screen
-				name="MyPagePassword"
-				options={{
-					title: "비밀번호 변경",
-					headerBackButtonDisplayMode: "minimal",
-				}}
-			>
+			<Stack.Screen name="MyPagePassword" options={myPagePasswordOptions}>
 				{({ navigation }) => (
 					<MyPagePasswordScreen
 						username={profileUsername ?? ""}
@@ -131,40 +163,13 @@ export function SettingsNavigator({
 					/>
 				)}
 			</Stack.Screen>
-			<Stack.Screen
-				name="ThemeModeSettings"
-				options={{
-					title: "화면 모드",
-					headerBackButtonDisplayMode: "minimal",
-				}}
-			>
+			<Stack.Screen name="ThemeModeSettings" options={themeModeOptions}>
 				{() => <ThemeModeScreen themeMode={themeMode} onChangeThemeMode={onThemeModeChange} />}
 			</Stack.Screen>
-			<Stack.Screen
-				name="FontSizeSettings"
-				options={{
-					title: "글자 크기",
-					headerBackButtonDisplayMode: "minimal",
-				}}
-			>
+			<Stack.Screen name="FontSizeSettings" options={fontSizeOptions}>
 				{() => <FontSizeScreen fontScale={fontScale} onChangeFontScale={onFontScaleChange} />}
 			</Stack.Screen>
-			<Stack.Screen
-				name="LegalInfo"
-				options={{
-					title: "법적 고지 및 정보",
-					headerBackButtonDisplayMode: "minimal",
-				}}
-			>
-				{() => <LegalInfoScreen appVersion={appVersion} />}
-			</Stack.Screen>
-			<Stack.Screen
-				name="DeleteAccount"
-				options={{
-					title: "회원탈퇴",
-					headerBackButtonDisplayMode: "minimal",
-				}}
-			>
+			<Stack.Screen name="DeleteAccount" options={deleteAccountOptions}>
 				{({ navigation }) => (
 					<DeleteAccountScreen
 						onDeleteAccount={onDeleteAccount}

@@ -6,18 +6,17 @@ import { HomeHeaderProps } from "@/screens/Home/types/HomeHeader.types";
 import { useThemedStyles } from "@/theme/useThemedStyles";
 
 export function HomeHeader({ userName }: HomeHeaderProps) {
-	const styles = useThemedStyles(createHomeHeaderStyles);
-	const displayName = userName?.trim() ? `${userName}님` : HOME_HEADER_TEXT.defaultDisplayName;
+    const styles = useThemedStyles(createHomeHeaderStyles);
+    const displayName = userName?.trim() ? `${userName}님` : HOME_HEADER_TEXT.defaultDisplayName;
 
-	return (
-		<View style={styles.container}>
-			<Text style={styles.badge}>{HOME_HEADER_TEXT.badgeLabel}</Text>
-			<Text style={styles.title}>
-				{displayName}
-				{"\n"}
-				{HOME_HEADER_TEXT.titleSuffix}
-			</Text>
-			<Text style={styles.subtitle}>{HOME_HEADER_TEXT.subtitle}</Text>
-		</View>
-	);
+    return (
+        <View style={styles.container}>
+            <Text style={styles.badge}>{HOME_HEADER_TEXT.badgeLabel}</Text>
+            <Text style={styles.title}>
+                {displayName}
+                {"\n"}
+                {HOME_HEADER_TEXT.titleSuffix}
+            </Text>
+        </View>
+    );
 }
