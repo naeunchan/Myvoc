@@ -8,7 +8,7 @@ const createProps = () => ({
 	displayName: "Alex",
 	onNavigateNickname: jest.fn(),
 	onNavigatePassword: jest.fn(),
-	onDeleteAccount: jest.fn(() => Promise.resolve()),
+	onNavigateDeleteAccount: jest.fn(),
 });
 
 describe("MyPageScreen", () => {
@@ -26,24 +26,11 @@ describe("MyPageScreen", () => {
 		expect(props.onNavigateNickname).not.toHaveBeenCalled();
 	});
 
-	it("confirms and executes account deletion", async () => {
-		const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+	it("navigates to password screen when tapped", () => {
 		const props = createProps();
 		const { getByText } = render(<MyPageScreen {...props} />);
 
-		fireEvent.press(getByText("회원탈퇴"));
-		expect(alertSpy).toHaveBeenCalledWith("회원탈퇴", expect.stringContaining("모두 삭제"));
-
-		const confirmButton = alertSpy.mock.calls[0][2]?.find((action) => action?.style === "destructive");
-		expect(confirmButton).toBeDefined();
-
-		await act(async () => {
-			await confirmButton?.onPress?.();
-		});
-
-		await waitFor(() => {
-			expect(props.onDeleteAccount).toHaveBeenCalled();
-			expect(alertSpy).toHaveBeenLastCalledWith("회원탈퇴 완료", expect.any(String));
-		});
+		fireEvent.press(getByText("비밀번호 변경"));
+		expect(props.onNavigatePassword).toHaveBeenCalled();
 	});
 });

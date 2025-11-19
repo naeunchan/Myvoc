@@ -5,7 +5,6 @@ export type SettingsStackParamList = {
 	MyPagePassword: undefined;
 	ThemeModeSettings: undefined;
 	FontSizeSettings: undefined;
-	LegalInfo: undefined;
 	DeleteAccount: undefined;
 };
 
@@ -17,7 +16,6 @@ export type SettingsNavigatorProps = {
 	isGuest: boolean;
 	onRequestLogin: () => void;
 	onRequestSignUp: () => void;
-	onShowHelp: () => void;
 	appVersion: string;
 	profileDisplayName: string | null;
 	profileUsername: string | null;

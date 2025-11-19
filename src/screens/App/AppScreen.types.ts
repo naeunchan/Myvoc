@@ -5,6 +5,7 @@ import type { ThemeMode } from "@/theme/types";
 export type AppScreenHookResult = {
 	versionLabel: string;
 	initializing: boolean;
+	appearanceReady: boolean;
 	isHelpVisible: boolean;
 	isOnboardingVisible: boolean;
 	isAuthenticated: boolean;

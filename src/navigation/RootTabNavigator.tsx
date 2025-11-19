@@ -45,7 +45,6 @@ export function RootTabNavigator({
 	isGuest,
 	onRequestLogin,
 	onRequestSignUp,
-	onShowHelp,
 	onPlayWordAudio,
 	appVersion,
 	profileDisplayName,
@@ -64,10 +63,10 @@ export function RootTabNavigator({
 		<Tab.Navigator
 			screenOptions={({ route }) => {
 				const { icon, label } = TAB_VISUAL_CONFIG[route.name];
-				return {
-					headerShown: false,
-					tabBarActiveTintColor: theme.tabIconActive,
-					tabBarInactiveTintColor: theme.tabIconInactive,
+					return {
+						headerShown: false,
+						tabBarActiveTintColor: theme.accent,
+						tabBarInactiveTintColor: theme.textSecondary,
 					tabBarLabelStyle: tabStyles.tabLabel,
 					tabBarStyle: tabStyles.tabBar,
 					tabBarShowLabel: TAB_BAR_OPTIONS.showLabel,
@@ -130,7 +129,6 @@ export function RootTabNavigator({
 						isGuest={isGuest}
 						onRequestLogin={onRequestLogin}
 						onRequestSignUp={onRequestSignUp}
-						onShowHelp={onShowHelp}
 						appVersion={appVersion}
 						profileDisplayName={profileDisplayName}
 						profileUsername={profileUsername}

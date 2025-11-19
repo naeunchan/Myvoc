@@ -35,7 +35,6 @@ export type RootTabNavigatorProps = {
 	isGuest: boolean;
 	onRequestLogin: () => void;
 	onRequestSignUp: () => void;
-	onShowHelp: () => void;
 	onPlayWordAudio: (word: WordResult) => void;
 	appVersion: string;
 	profileDisplayName: string | null;

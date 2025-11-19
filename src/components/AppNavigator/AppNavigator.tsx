@@ -14,7 +14,7 @@ export function AppNavigator(props: AppNavigatorProps) {
 				background: theme.background,
 				card: theme.surface,
 				border: theme.border,
-				primary: theme.accent,
+				primary: theme.textPrimary,
 				text: theme.textPrimary,
 			},
 		}),

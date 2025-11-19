@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Dimensions, FlatList, Modal, NativeScrollEvent, NativeSyntheticEvent, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -60,8 +60,16 @@ export function OnboardingModal({ visible, onComplete }: OnboardingModalProps) {
 		}
 		const nextIndex = activeIndex + 1;
 		listRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-		setActiveIndex(nextIndex);
 	};
+
+	useEffect(() => {
+		if (visible) {
+			setActiveIndex(0);
+			setTimeout(() => {
+				listRef.current?.scrollToOffset({ offset: 0, animated: false });
+			}, 0);
+		}
+	}, [visible]);
 
 	return (
 		<Modal visible={visible} animationType="fade" transparent>

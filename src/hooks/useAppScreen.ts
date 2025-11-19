@@ -110,6 +110,7 @@ export function useAppScreen(): AppScreenHookResult {
 	const [recentSearches, setRecentSearches] = useState<SearchHistoryEntry[]>([]);
 	const [themeMode, setThemeMode] = useState<ThemeMode>("light");
 	const [fontScale, setFontScale] = useState(DEFAULT_FONT_SCALE);
+	const [appearanceReady, setAppearanceReady] = useState(false);
 	const [user, setUser] = useState<UserRecord | null>(null);
 	const [initializing, setInitializing] = useState(true);
 	const [isGuest, setIsGuest] = useState(false);
@@ -303,33 +304,33 @@ export function useAppScreen(): AppScreenHookResult {
 
 	useEffect(() => {
 		let isMounted = true;
+		async function loadAppearancePreferences() {
+			try {
+				const [storedMode, storedScale] = await Promise.all([
+					getPreferenceValue(THEME_MODE_PREFERENCE_KEY),
+					getPreferenceValue(FONT_SCALE_PREFERENCE_KEY),
+				]);
 
-		getPreferenceValue(THEME_MODE_PREFERENCE_KEY)
-			.then((storedMode) => {
-				if (!isMounted || !storedMode) {
-					return;
-				}
 				if (storedMode === "dark" || storedMode === "light") {
 					setThemeMode(storedMode);
 				}
-			})
-			.catch((error) => {
-				console.warn("테마 정보를 불러오는 중 문제가 발생했어요.", error);
-			});
 
-		getPreferenceValue(FONT_SCALE_PREFERENCE_KEY)
-			.then((storedScale) => {
-				if (!isMounted || !storedScale) {
-					return;
+				if (storedScale) {
+					const parsed = Number(storedScale);
+					if (Number.isFinite(parsed) && parsed >= 0.85 && parsed <= 1.3) {
+						setFontScale(parsed);
+					}
 				}
-				const parsed = Number(storedScale);
-				if (Number.isFinite(parsed) && parsed >= 0.85 && parsed <= 1.3) {
-					setFontScale(parsed);
+			} catch (error) {
+				console.warn("모양새 설정을 불러오는 중 문제가 발생했어요.", error);
+			} finally {
+				if (isMounted) {
+					setAppearanceReady(true);
 				}
-			})
-			.catch((error) => {
-				console.warn("글자 크기를 불러오는 중 문제가 발생했어요.", error);
-			});
+			}
+		}
+
+		void loadAppearancePreferences();
 
 		return () => {
 			isMounted = false;
@@ -787,10 +788,6 @@ export function useAppScreen(): AppScreenHookResult {
 		},
 		[hydrateFavorites],
 	);
-
-	const handleShowHelp = useCallback(() => {
-		setIsHelpVisible(true);
-	}, []);
 
 	const handleDismissHelp = useCallback(() => {
 		setIsHelpVisible(false);
@@ -1287,7 +1284,6 @@ export function useAppScreen(): AppScreenHookResult {
 			isGuest,
 			onRequestLogin: handleGuestLoginRequest,
 			onRequestSignUp: handleGuestSignUpRequest,
-			onShowHelp: handleShowHelp,
 			onPlayWordAudio: handlePlayWordAudio,
 			appVersion: versionLabel,
 			profileDisplayName: user?.displayName ?? null,
@@ -1322,7 +1318,6 @@ export function useAppScreen(): AppScreenHookResult {
 			handleRemoveFavorite,
 			handleSearch,
 			handleSearchTermChange,
-			handleShowHelp,
 			handleBackupExport,
 			handleBackupImport,
 			isCurrentFavorite,
@@ -1366,6 +1361,7 @@ export function useAppScreen(): AppScreenHookResult {
 	return {
 		versionLabel,
 		initializing,
+		appearanceReady,
 		isHelpVisible,
 		isOnboardingVisible,
 		isAuthenticated,

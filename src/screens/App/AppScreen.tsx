@@ -16,6 +16,7 @@ import { OnboardingModal } from "@/screens/Onboarding/OnboardingModal";
 export function AppScreen() {
 	const {
 		initializing,
+		appearanceReady,
 		isHelpVisible,
 		isOnboardingVisible,
 		isAuthenticated,
@@ -42,7 +43,7 @@ export function AppScreen() {
 				<StatusBar style={themeMode === "dark" ? "light" : "dark"} />
 				<View style={styles.container}>
 					<View style={styles.content}>
-						{initializing ? (
+						{initializing || !appearanceReady ? (
 							<LoadingState message={INITIAL_LOADING_MESSAGE} />
 						) : !isAuthenticated ? (
 							<AuthNavigator loginProps={loginBindings} onResetPassword={onPasswordResetRequest} />
