@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "myvoc",
-    "slug": "myvoc",
+    "name": "vocationary",
+    "slug": "vocationary",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.myvoc"
+      "bundleIdentifier": "com.anonymous.vocationary"
     },
     "android": {
       "adaptiveIcon": {
@@ -27,7 +27,7 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
-      "package": "com.anonymous.myvoc"
+      "package": "com.anonymous.vocationary"
     },
     "web": {
       "favicon": "./assets/favicon.png"

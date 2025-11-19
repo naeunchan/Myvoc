@@ -9,7 +9,7 @@ This app already supports email/password and guest access through the local SQLi
 ### App-side configuration
 
 1. **Bundle Identifier**  
-   `app.json` currently uses `com.anonymous.myvoc`. Update this to your production bundle identifier before release.
+   `app.json` currently uses `com.anonymous.vocationary`. Update this to your production bundle identifier before release.
 
 2. **Expo config / entitlements**  
    When building with EAS for iOS, ensure that `expo build` or `eas build` uses a credentials profile that enables *Sign in with Apple*.  

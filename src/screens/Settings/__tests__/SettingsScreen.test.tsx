@@ -57,7 +57,7 @@ describe("SettingsScreen", () => {
 		});
 
 		expect(Linking.canOpenURL).toHaveBeenCalled();
-		expect(Linking.openURL).toHaveBeenCalledWith(expect.stringContaining("mailto:support@myvoc.app"));
+		expect(Linking.openURL).toHaveBeenCalledWith(expect.stringContaining("mailto:support@vocationary.app"));
 	});
 
 	it("shows alert when mail composer unavailable", async () => {
@@ -70,7 +70,7 @@ describe("SettingsScreen", () => {
 			fireEvent.press(getByText("1:1 문의 보내기"));
 		});
 
-		expect(alertSpy).toHaveBeenCalledWith("문의하기", expect.stringContaining("support@myvoc.app"));
+		expect(alertSpy).toHaveBeenCalledWith("문의하기", expect.stringContaining("support@vocationary.app"));
 	});
 
 	it("displays profile displayName and username subtitle", () => {

@@ -10,7 +10,7 @@ import {
 import type { SearchHistoryEntry } from "@/services/searchHistory/types";
 import { SEARCH_HISTORY_LIMIT } from "@/services/searchHistory/types";
 
-const DATABASE_NAME = "myvoc.db";
+const DATABASE_NAME = "vocationary.db";
 const isWeb = Platform.OS === "web";
 const APP_HELP_KEY = "app.help.seen";
 const SEARCH_HISTORY_KEY = "search.history";
@@ -96,7 +96,7 @@ function fnv1a32(input: string) {
 }
 
 export async function hashPassword(password: string) {
-	const salt = "myvoc::salt";
+	const salt = "vocationary::salt";
 	const firstPass = fnv1a32(`${salt}:${password}`);
 	const secondPass = fnv1a32(`${firstPass}:${password}`);
 	return `${firstPass}${secondPass}`;
@@ -357,7 +357,7 @@ async function initializeDatabaseNative() {
 	`);
 }
 
-const WEB_DB_STORAGE_KEY = "myvoc:web-db";
+const WEB_DB_STORAGE_KEY = "vocationary:web-db";
 
 type WebFavoriteRow = {
 	id: number;
