@@ -53,7 +53,7 @@ export type UserRecord = {
 	displayName: string | null;
 };
 
-export type UserWithPasswordRecord = UserRecord & {
+type UserWithPasswordRecord = UserRecord & {
 	passwordHash: string | null;
 };
 
@@ -1267,11 +1267,6 @@ async function setPreferenceValueNative(key: string, value: string) {
 	);
 }
 
-async function removePreferenceValueNative(key: string) {
-	const db = await getDatabase();
-	await db.runAsync("DELETE FROM app_preferences WHERE key = ?", [key]);
-}
-
 async function getPreferenceValueWeb(key: string): Promise<string | null> {
 	const state = readWebState();
 	return typeof state.preferences[key] === "string" ? (state.preferences[key] as string) : null;
@@ -1287,19 +1282,6 @@ async function setPreferenceValueWeb(key: string, value: string) {
 		},
 	};
 	writeWebState(nextState);
-}
-
-async function removePreferenceValueWeb(key: string) {
-	const state = readWebState();
-	if (!(key in state.preferences)) {
-		return;
-	}
-	const nextPreferences = { ...state.preferences };
-	delete nextPreferences[key];
-	writeWebState({
-		...state,
-		preferences: nextPreferences,
-	});
 }
 
 async function setUserSessionNative(userId: number) {
@@ -1605,13 +1587,6 @@ export async function setPreferenceValue(key: string, value: string) {
 		return setPreferenceValueWeb(key, value);
 	}
 	return setPreferenceValueNative(key, value);
-}
-
-export async function removePreferenceValue(key: string) {
-	if (isWeb) {
-		return removePreferenceValueWeb(key);
-	}
-	return removePreferenceValueNative(key);
 }
 
 export async function getSearchHistoryEntries() {

@@ -13,7 +13,7 @@ export function FavoritesFlashcard({ entries, status, onMoveToStatus, onRemoveFa
 	const { theme } = useAppAppearance();
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [showMeaning, setShowMeaning] = useState(false);
-	const [queue, setQueue] = useState<number[]>([]);
+	const [, setQueue] = useState<number[]>([]);
 
 	const shuffleIndices = useCallback(
 		(excludeIndex?: number) => {

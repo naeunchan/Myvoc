@@ -23,8 +23,6 @@ export const SUMMARY_STAT_CONFIG = [
     { key: "mastered", label: "터득한 단어" },
 ] as const;
 
-export type SummaryStatKey = (typeof SUMMARY_STAT_CONFIG)[number]["key"];
-
 export const FAVORITES_LIST_TEXT = {
     sectionLabel: "외울 단어장",
     subtitle: "오늘 복습할 단어를 여기서 관리하세요.",

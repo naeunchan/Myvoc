@@ -1,6 +1,6 @@
 import { DictionaryMode } from "@/services/dictionary/types";
 import { DefinitionEntry, MeaningEntry, WordResult } from "@/services/dictionary/types/WordResult";
-import { AppError, createAppError } from "@/errors/AppError";
+import { createAppError } from "@/errors/AppError";
 import { captureAppError } from "@/logging/logger";
 
 const MAX_MEANINGS = 2;
