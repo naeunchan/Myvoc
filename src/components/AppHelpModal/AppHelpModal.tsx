@@ -15,9 +15,9 @@ export function AppHelpModal({ visible, onDismiss }: AppHelpModalProps) {
 						contentContainerStyle={styles.scrollContent}
 						showsVerticalScrollIndicator={false}
 					>
-						<Text style={styles.title}>MyVoc 사용 안내</Text>
+						<Text style={styles.title}>Vocationary 사용 안내</Text>
 						<Text style={styles.description}>
-							MyVoc은 영어 단어를 검색하고 저장하며 반복 학습할 수 있도록 도와주는 단어 학습 도구예요. 아래 순서를 참고해 첫 학습을
+							Vocationary는 영어 단어를 검색하고 저장하며 반복 학습할 수 있도록 도와주는 단어 학습 도구예요. 아래 순서를 참고해 첫 학습을
 							시작해보세요.
 						</Text>
 						<View style={styles.section}>

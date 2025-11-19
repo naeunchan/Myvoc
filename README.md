@@ -1,4 +1,4 @@
-# Myvoc
+# Vocationary
 
 > v1.0.0
 

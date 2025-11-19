@@ -18,7 +18,7 @@ async function ensureBackupDirectory() {
 export async function exportBackupToFile() {
 	await ensureBackupDirectory();
 	const payload = await exportBackup();
-	const fileName = `myvoc-backup-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+	const fileName = `vocationary-backup-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
 	const fileUri = `${BACKUP_DIRECTORY}/${fileName}`;
 	await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(payload, null, 2), {
 		encoding: FileSystem.EncodingType.UTF8,
@@ -27,7 +27,7 @@ export async function exportBackupToFile() {
 	if (await Sharing.isAvailableAsync()) {
 		await Sharing.shareAsync(fileUri, {
 			mimeType: "application/json",
-			dialogTitle: "MyVoc 백업 내보내기",
+			dialogTitle: "Vocationary 백업 내보내기",
 			UTI: "public.json",
 		});
 	}
